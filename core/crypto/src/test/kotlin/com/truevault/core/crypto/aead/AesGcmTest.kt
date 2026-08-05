@@ -2,6 +2,7 @@ package com.truevault.core.crypto.aead
 
 import com.google.common.truth.Truth.assertThat
 import java.security.GeneralSecurityException
+import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
 import org.junit.Assert.assertThrows
 import org.junit.Test
@@ -92,6 +93,24 @@ class AesGcmTest {
         val sealed = AesGcm.encrypt(key, ByteArray(0))
 
         assertThat(AesGcm.decrypt(key, sealed)).isEmpty()
+    }
+
+    @Test
+    fun `the nonce comes from the cipher, not from the caller`() {
+        // Regression guard. Android Keystore keys are created with
+        // setRandomizedEncryptionRequired(true) and reject a caller-provided IV outright, which
+        // once made every vault operation fail on a real device. The JVM provider accepts either,
+        // so what this test pins is that encrypt() exposes no way to supply one and that the
+        // returned nonce is the one the provider generated.
+        val sealed = AesGcm.encrypt(key, plaintext)
+        val reference = Cipher.getInstance(AesGcm.TRANSFORMATION).apply {
+            init(Cipher.ENCRYPT_MODE, key)
+        }
+
+        assertThat(sealed.nonce).hasLength(AesGcm.NONCE_SIZE_BYTES)
+        assertThat(reference.iv).hasLength(AesGcm.NONCE_SIZE_BYTES)
+        assertThat(sealed.nonce).isNotEqualTo(reference.iv)
+        assertThat(AesGcm.decrypt(key, sealed)).isEqualTo(plaintext)
     }
 
     @Test

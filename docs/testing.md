@@ -58,6 +58,12 @@ Being explicit about what is *not* covered is more useful than a coverage percen
   structure rather than by a test. An instrumented end-to-end import test is the highest-value thing
   to add next.
 - **The scanner has no test with a real document tree**, for the same reason.
+- **Android Keystore contract violations cannot be caught on the JVM.** The JVM crypto provider
+  accepts a caller-supplied GCM nonce; Android Keystore keys created with
+  `setRandomizedEncryptionRequired(true)` reject one. A real bug of exactly this shape made every
+  vault operation fail on device while all 114 JVM tests passed. `VaultLockingTest` exercises
+  `createLock` against the real Keystore and does catch it — but only when run on a device or
+  emulator, which is why `connectedDebugAndroidTest` is a release gate and not optional.
 - **Backup export/restore is not covered end to end.** The format's rules — manifest validation,
   version refusal, per-entry hashing, path-traversal refusal — are implemented in one place and are
   the right target for the next round of tests.

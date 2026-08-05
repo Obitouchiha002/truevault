@@ -43,12 +43,18 @@ object AesGcm {
         plaintext: ByteArray,
         associatedData: ByteArray? = null,
     ): SealedData {
-        val nonce = randomNonce()
+        // The nonce is produced by the Cipher, never supplied by us.
+        //
+        // This is not a style choice. Android Keystore keys are created with
+        // setRandomizedEncryptionRequired(true), and such a key rejects a caller-provided IV with
+        // InvalidAlgorithmParameterException — so passing one here fails every Keystore operation.
+        // Letting the provider generate it is also strictly safer: there is now no code path in this
+        // codebase where an encryption nonce comes from anywhere but the crypto provider itself.
         val cipher = Cipher.getInstance(TRANSFORMATION).apply {
-            init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(TAG_SIZE_BITS, nonce))
+            init(Cipher.ENCRYPT_MODE, key)
             associatedData?.let(::updateAAD)
         }
-        return SealedData(nonce = nonce, ciphertext = cipher.doFinal(plaintext))
+        return SealedData(nonce = cipher.iv.copyOf(), ciphertext = cipher.doFinal(plaintext))
     }
 
     /**

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Privacy status labels. Each one states something TrueVault can actually prove. -->
+    <string name="tv_status_secured">Secured</string>
+    <string name="tv_status_original_remains">Original remains</string>
+    <string name="tv_status_delete_pending">Removal pending</string>
+    <string name="tv_status_duplicate_found">Copy found</string>
+    <string name="tv_status_import_failed">Import failed</string>
+    <string name="tv_status_verifying">Verifying</string>
+    <string name="tv_status_corrupted">Unreadable</string>
+
+    <!-- Shared component copy -->
+    <string name="tv_back">Back</string>
+</resources>

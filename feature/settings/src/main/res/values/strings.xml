@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Settings</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme_system">Follow system</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_dynamic_color">Wallpaper colours</string>
+    <string name="settings_dynamic_color_summary">TrueVault\'s own colours mean something: green is verified, amber needs attention, red is a failure. Wallpaper colours replace that mapping.</string>
+    <string name="settings_dynamic_color_toggle">Use wallpaper colours</string>
+    <string name="settings_security">Security</string>
+    <string name="settings_security_options">Lock, biometrics and screenshots</string>
+    <string name="settings_about">About</string>
+    <string name="settings_how_protection_works">How TrueVault protects your files</string>
+</resources>

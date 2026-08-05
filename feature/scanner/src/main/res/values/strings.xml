@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scanner_title">Privacy scan</string>
+    <string name="scanner_limits_title">What a scan can see</string>
+    <string name="scanner_limits_body">TrueVault can scan only files and folders you allow it to access. It cannot inspect private data inside other apps, encrypted chats, or your cloud accounts.</string>
+    <string name="scanner_idle_title">No scan run yet</string>
+    <string name="scanner_idle_body">A scan compares your secured files against copies that are still visible on this device, then lets you review every match before anything is removed.</string>
+</resources>

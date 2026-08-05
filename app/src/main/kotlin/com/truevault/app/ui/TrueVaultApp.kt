@@ -1,0 +1,162 @@
+package com.truevault.app.ui
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.truevault.app.R
+import com.truevault.app.navigation.TopLevelDestination
+import com.truevault.app.navigation.TrueVaultNavHost
+import com.truevault.core.designsystem.theme.TvMotion
+import com.truevault.feature.home.navigation.navigateToHome
+import com.truevault.feature.importfiles.navigation.navigateToImport
+import com.truevault.feature.scanner.navigation.navigateToScanner
+import com.truevault.feature.settings.navigation.navigateToSettings
+import com.truevault.feature.vault.navigation.navigateToVault
+
+/**
+ * App shell: bottom navigation, the single "Add to Vault" action, and the navigation host.
+ *
+ * The bar and the action only appear on the four top-level destinations. Deeper screens — import,
+ * viewer, backup — take the full window, because those flows need the user's whole attention.
+ */
+@Composable
+fun TrueVaultApp(modifier: Modifier = Modifier) {
+    val navController = rememberNavController()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = backStackEntry?.destination
+
+    val currentTopLevel = remember(currentDestination) {
+        TopLevelDestination.entries.firstOrNull { destination ->
+            currentDestination?.hasRouteOf(destination) == true
+        }
+    }
+
+    val showsChrome = currentTopLevel != null
+
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onBackground,
+        bottomBar = {
+            AnimatedVisibility(
+                visible = showsChrome,
+                enter = fadeIn(TvMotion.standardSpec()),
+                exit = fadeOut(TvMotion.exitSpec()),
+            ) {
+                TrueVaultBottomBar(
+                    currentTopLevel = currentTopLevel,
+                    onSelect = { destination ->
+                        navController.navigateToTopLevel(destination)
+                    },
+                )
+            }
+        },
+        floatingActionButton = {
+            AnimatedVisibility(
+                visible = showsChrome,
+                enter = scaleIn(TvMotion.standardSpec()) + fadeIn(TvMotion.standardSpec()),
+                exit = scaleOut(TvMotion.exitSpec()) + fadeOut(TvMotion.exitSpec()),
+            ) {
+                ExtendedFloatingActionButton(
+                    onClick = { navController.navigateToImport() },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                    text = { Text(stringResource(R.string.action_add_to_vault)) },
+                )
+            }
+        },
+    ) { innerPadding ->
+        TrueVaultNavHost(
+            navController = navController,
+            modifier = Modifier.padding(innerPadding),
+        )
+    }
+}
+
+@Composable
+private fun TrueVaultBottomBar(
+    currentTopLevel: TopLevelDestination?,
+    onSelect: (TopLevelDestination) -> Unit,
+) {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    ) {
+        TopLevelDestination.entries.forEach { destination ->
+            val selected = destination == currentTopLevel
+            NavigationBarItem(
+                selected = selected,
+                onClick = { onSelect(destination) },
+                icon = {
+                    Icon(
+                        imageVector = if (selected) destination.selectedIcon else destination.unselectedIcon,
+                        contentDescription = stringResource(destination.contentDescriptionRes),
+                    )
+                },
+                label = { Text(stringResource(destination.labelRes)) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
+            )
+        }
+    }
+}
+
+private fun NavDestination.hasRouteOf(destination: TopLevelDestination): Boolean =
+    hierarchyContains(destination)
+
+private fun NavDestination.hierarchyContains(destination: TopLevelDestination): Boolean =
+    hierarchy.any { it.hasRoute(destination.route) }
+
+private val NavDestination.hierarchy: Sequence<NavDestination>
+    get() = generateSequence(this) { it.parent }
+
+/**
+ * Top-level navigation semantics: single-top, restore the destination's own back stack, and pop
+ * back to the graph's start so the bar never builds an ever-growing stack.
+ */
+private fun androidx.navigation.NavHostController.navigateToTopLevel(
+    destination: TopLevelDestination,
+) {
+    val options = androidx.navigation.navOptions {
+        popUpTo(graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+
+    when (destination) {
+        TopLevelDestination.HOME -> navigateToHome(options)
+        TopLevelDestination.VAULT -> navigateToVault(options)
+        TopLevelDestination.SCAN -> navigateToScanner(options)
+        TopLevelDestination.SETTINGS -> navigateToSettings(options)
+    }
+}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Backup is disabled at the application level. These rules exist so that if Android's backup
+  framework is ever consulted, the answer for every TrueVault file is still "do not copy".
+
+  An encrypted export the user performs deliberately is the supported way to move a vault; letting
+  the platform copy the vault directory would move ciphertext without moving the Keystore key that
+  can open it, which produces a backup that looks valid and can never be restored.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </device-transfer>
+</data-extraction-rules>

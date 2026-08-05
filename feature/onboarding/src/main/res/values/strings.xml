@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_title">Welcome to TrueVault</string>
+    <string name="onboarding_pending">The guided introduction is added in the next build step.</string>
+</resources>

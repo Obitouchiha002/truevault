@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="private_apps_title">Private apps</string>
+    <string name="private_apps_pending">TrueVault will detect what this device actually supports and guide you through the system setup. It never clones or hides apps by itself.</string>
+</resources>

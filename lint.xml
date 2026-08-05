@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!--
+      The only suppression in this project, and it is a version-pinning decision rather than a
+      quality one.
+
+      Android Gradle Plugin 9 ships Kotlin support built in. The Kotlin compiler plugins this build
+      applies (Compose, serialization) must be the *same* Kotlin version as the one bundled inside
+      AGP — currently 2.3.21. Lint sees that Kotlin 2.4.x exists and reports the pin as outdated;
+      taking that advice would put two Kotlin versions on the compiler classpath.
+
+      Re-evaluate whenever the AGP version in libs.versions.toml changes.
+    -->
+    <issue id="NewerVersionAvailable" severity="ignore" />
+</lint>

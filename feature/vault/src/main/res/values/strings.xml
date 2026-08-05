@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vault_title">Vault</string>
+    <string name="vault_empty_title">Your vault is empty</string>
+    <string name="vault_empty_body">Files you secure are encrypted on this device. TrueVault will always tell you whether the original is still visible somewhere else.</string>
+    <string name="vault_empty_action">Add files</string>
+</resources>

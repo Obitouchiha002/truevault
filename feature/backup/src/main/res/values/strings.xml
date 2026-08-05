@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="backup_title">Backup and recovery</string>
+    <string name="backup_pending">Encrypted local backup and restore are added after the vault engine is complete.</string>
+</resources>

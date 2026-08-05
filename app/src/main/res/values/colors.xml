@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches the Compose dark background so the splash hands over without a flash. -->
+    <color name="splash_background">#0A0E13</color>
+    <color name="launcher_background">#0A0E13</color>
+</resources>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="import_source_title">Add to vault</string>
+    <string name="import_source_pending">Secure import is added once the encryption and storage layers are in place.</string>
+</resources>

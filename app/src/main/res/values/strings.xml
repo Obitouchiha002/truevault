@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TrueVault</string>
+
+    <string name="nav_home">Home</string>
+    <string name="nav_home_description">Home, your privacy status</string>
+    <string name="nav_vault">Vault</string>
+    <string name="nav_vault_description">Vault, your secured files</string>
+    <string name="nav_scan">Scan</string>
+    <string name="nav_scan_description">Privacy scan</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_settings_description">Settings</string>
+
+    <string name="action_add_to_vault">Add to Vault</string>
+</resources>

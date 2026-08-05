@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="create_lock_title">Create your vault lock</string>
+    <string name="create_lock_pending">Vault password creation is added in the next build step.</string>
+    <string name="unlock_title">Unlock TrueVault</string>
+    <string name="unlock_pending">Vault unlocking is added in the next build step.</string>
+</resources>

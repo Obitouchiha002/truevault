@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_greeting_morning">Good morning</string>
+    <string name="home_greeting_afternoon">Good afternoon</string>
+    <string name="home_greeting_evening">Good evening</string>
+    <string name="home_subtitle">Your private data status</string>
+
+    <string name="home_setup_title">Your vault is ready to use</string>
+    <string name="home_setup_body">Nothing has been secured yet. Add files to see your privacy status, and TrueVault will tell you exactly what is protected and what is still visible elsewhere.</string>
+
+    <string name="home_quick_actions">Quick actions</string>
+    <string name="home_action_add_files">Add files</string>
+    <string name="home_action_run_scan">Run scan</string>
+    <string name="home_action_private_apps">Private apps</string>
+    <string name="home_action_backup">Backup</string>
+
+    <string name="home_categories">Categories</string>
+    <string name="home_category_photos">Photos</string>
+    <string name="home_category_videos">Videos</string>
+    <string name="home_category_documents">Documents</string>
+    <string name="home_category_audio">Audio</string>
+    <string name="home_category_other">Other files</string>
+
+    <string name="home_recent_activity">Recent activity</string>
+    <string name="home_no_activity">Nothing yet. Activity will appear here as you secure files.</string>
+
+    <plurals name="home_items_secured">
+        <item quantity="one">%1$d item secured</item>
+        <item quantity="other">%1$d items secured</item>
+    </plurals>
+
+    <plurals name="home_items_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+</resources>

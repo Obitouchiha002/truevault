@@ -1,0 +1,197 @@
+package com.truevault.feature.settings.presentation
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.truevault.core.designsystem.component.TvCard
+import com.truevault.core.designsystem.component.TvPreviewSurface
+import com.truevault.core.designsystem.component.TvSectionHeader
+import com.truevault.core.designsystem.component.TvTopAppBar
+import com.truevault.core.designsystem.theme.TvSpacing
+import com.truevault.core.model.ThemePreference
+import com.truevault.feature.settings.R
+
+@Composable
+fun SettingsScreen(
+    onOpenSecuritySettings: () -> Unit,
+    onOpenAboutSecurity: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: SettingsViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                SettingsEffect.NavigateToSecuritySettings -> onOpenSecuritySettings()
+                SettingsEffect.NavigateToAboutSecurity -> onOpenAboutSecurity()
+            }
+        }
+    }
+
+    SettingsContent(uiState = uiState, onAction = viewModel::onAction, modifier = modifier)
+}
+
+@Composable
+internal fun SettingsContent(
+    uiState: SettingsUiState,
+    onAction: (SettingsAction) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxSize()) {
+    TvTopAppBar(title = stringResource(R.string.settings_title))
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(
+                start = TvSpacing.screenHorizontal,
+                end = TvSpacing.screenHorizontal,
+                top = TvSpacing.standard,
+                bottom = TvSpacing.contentBottom,
+            ),
+        verticalArrangement = Arrangement.spacedBy(TvSpacing.section),
+    ) {
+        Column {
+            TvSectionHeader(title = stringResource(R.string.settings_appearance))
+            TvCard {
+                Column(modifier = Modifier.selectableGroup()) {
+                    ThemePreference.entries.forEach { theme ->
+                        ThemeOptionRow(
+                            theme = theme,
+                            selected = uiState.theme == theme,
+                            onSelected = { onAction(SettingsAction.ThemeSelected(theme)) },
+                        )
+                    }
+                }
+            }
+        }
+
+        Column {
+            TvSectionHeader(
+                title = stringResource(R.string.settings_dynamic_color),
+                subtitle = stringResource(R.string.settings_dynamic_color_summary),
+            )
+            TvCard {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_dynamic_color_toggle),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Switch(
+                        checked = uiState.useDynamicColor,
+                        onCheckedChange = { onAction(SettingsAction.DynamicColorToggled(it)) },
+                    )
+                }
+            }
+        }
+
+        Column {
+            TvSectionHeader(title = stringResource(R.string.settings_security))
+            TvCard(onClick = { onAction(SettingsAction.SecuritySettingsClicked) }) {
+                NavigationRow(title = stringResource(R.string.settings_security_options))
+            }
+        }
+
+        Column {
+            TvSectionHeader(title = stringResource(R.string.settings_about))
+            TvCard(onClick = { onAction(SettingsAction.AboutSecurityClicked) }) {
+                NavigationRow(title = stringResource(R.string.settings_how_protection_works))
+            }
+        }
+    }
+    }
+}
+
+@Composable
+private fun ThemeOptionRow(
+    theme: ThemePreference,
+    selected: Boolean,
+    onSelected: () -> Unit,
+) {
+    val labelRes = when (theme) {
+        ThemePreference.SYSTEM -> R.string.settings_theme_system
+        ThemePreference.LIGHT -> R.string.settings_theme_light
+        ThemePreference.DARK -> R.string.settings_theme_dark
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = TvSpacing.minTouchTarget)
+            .selectable(
+                selected = selected,
+                onClick = onSelected,
+                role = Role.RadioButton,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TvSpacing.small),
+    ) {
+        // Click handling lives on the row so the whole row is one 48dp target; the radio itself
+        // must not also be clickable or the row would be announced twice.
+        RadioButton(selected = selected, onClick = null)
+        Text(
+            text = stringResource(labelRes),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+@Composable
+private fun NavigationRow(title: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Preview(name = "Settings", showBackground = true, heightDp = 900)
+@Composable
+private fun SettingsPreview() {
+    TvPreviewSurface {
+        SettingsContent(uiState = SettingsUiState(isLoading = false), onAction = {})
+    }
+}

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Only the splash theme is defined in XML. Everything after the first frame is themed by
+      Compose, so there is no second source of truth for colours.
+    -->
+    <style name="Theme.TrueVault.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_shield</item>
+        <item name="postSplashScreenTheme">@style/Theme.TrueVault</item>
+    </style>
+
+    <style name="Theme.TrueVault" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+</resources>

@@ -10,6 +10,7 @@ android {
 
 dependencies {
     api(projects.core.model)
+    implementation(projects.core.capabilities)
     implementation(projects.core.common)
     implementation(libs.bouncycastle.provider)
     // The backup manifest is JSON so a future version can still read an older archive.

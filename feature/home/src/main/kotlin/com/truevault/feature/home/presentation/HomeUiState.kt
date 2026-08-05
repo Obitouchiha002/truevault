@@ -1,6 +1,8 @@
 package com.truevault.feature.home.presentation
 
 import androidx.compose.runtime.Immutable
+import com.truevault.core.capabilities.model.DeviceCapabilities
+import com.truevault.core.capabilities.model.PrivateSpaceState
 import com.truevault.core.model.MimeCategory
 import com.truevault.core.model.PrivacyScore
 
@@ -20,7 +22,16 @@ data class HomeUiState(
     /** Null until there is enough vault data for a score to mean anything. */
     val privacyScore: PrivacyScore? = null,
     val recentActivity: List<HomeActivityItem> = emptyList(),
+    val capabilities: DeviceCapabilities = DeviceCapabilities.Unknown,
+    val privateSpaceState: PrivateSpaceState = PrivateSpaceState.Unsupported,
 ) {
+    /**
+     * Modern devices get a Private Apps quick action; Core devices get Security Settings in its
+     * place. An unavailable button is never shown greyed out in the main flow — the specification
+     * calls for it not to be there at all.
+     */
+    val showsPrivateAppsAction: Boolean get() = capabilities.showsPrivateAppsDestination
+
     fun countFor(category: MimeCategory): Int = categoryCounts[category] ?: 0
 }
 
@@ -53,6 +64,7 @@ sealed interface HomeAction {
     data object RunScanClicked : HomeAction
     data object PrivateAppsClicked : HomeAction
     data object BackupClicked : HomeAction
+    data object SecuritySettingsClicked : HomeAction
     data object OpenVaultClicked : HomeAction
     data class CategoryClicked(val category: MimeCategory) : HomeAction
 }
@@ -62,6 +74,7 @@ sealed interface HomeEffect {
     data object NavigateToScanner : HomeEffect
     data object NavigateToPrivateApps : HomeEffect
     data object NavigateToBackup : HomeEffect
+    data object NavigateToSecuritySettings : HomeEffect
     data object NavigateToVault : HomeEffect
     data class NavigateToCategory(val category: MimeCategory) : HomeEffect
 }

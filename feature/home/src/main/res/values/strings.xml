@@ -13,6 +13,17 @@
     <string name="home_action_run_scan">Run scan</string>
     <string name="home_action_private_apps">Private apps</string>
     <string name="home_action_backup">Backup</string>
+    <string name="home_action_security">Security</string>
+
+    <string name="home_private_apps_title">Private apps</string>
+    <string name="home_private_ready">Private Space: Ready</string>
+    <string name="home_private_locked">Private Space: Locked</string>
+    <string name="home_private_setup_required">Private Space: Setup required</string>
+    <string name="home_private_restricted">Blocked by device policy</string>
+    <string name="home_private_unknown">Checking this device</string>
+
+    <string name="home_core_privacy_title">App privacy options</string>
+    <string name="home_core_privacy_body">Your Android version does not support standard Private Space. Check whether your device provides an additional privacy feature — your file vault works fully either way.</string>
 
     <string name="home_categories">Categories</string>
     <string name="home_category_photos">Photos</string>

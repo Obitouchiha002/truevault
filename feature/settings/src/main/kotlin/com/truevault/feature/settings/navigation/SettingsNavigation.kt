@@ -4,6 +4,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import com.truevault.feature.settings.presentation.DeviceCapabilitiesScreen
 import com.truevault.feature.settings.presentation.SettingsScreen
 import kotlinx.serialization.Serializable
 
@@ -11,19 +12,30 @@ import kotlinx.serialization.Serializable
 data object SettingsRoute
 
 @Serializable
-data object AboutSecurityRoute
+data object DeviceCapabilitiesRoute
 
 fun NavController.navigateToSettings(navOptions: NavOptions? = null) =
     navigate(SettingsRoute, navOptions)
 
+fun NavController.navigateToDeviceCapabilities(navOptions: NavOptions? = null) =
+    navigate(DeviceCapabilitiesRoute, navOptions)
+
 fun NavGraphBuilder.settingsScreen(
     onOpenSecuritySettings: () -> Unit,
-    onOpenAboutSecurity: () -> Unit,
+    onOpenDeviceCapabilities: () -> Unit,
+    onOpenAdvancedPrivacy: () -> Unit,
+    onOpenPrivateApps: () -> Unit,
+    onNavigateBack: () -> Unit,
 ) {
     composable<SettingsRoute> {
         SettingsScreen(
             onOpenSecuritySettings = onOpenSecuritySettings,
-            onOpenAboutSecurity = onOpenAboutSecurity,
+            onOpenDeviceCapabilities = onOpenDeviceCapabilities,
+            onOpenAdvancedPrivacy = onOpenAdvancedPrivacy,
+            onOpenPrivateApps = onOpenPrivateApps,
         )
+    }
+    composable<DeviceCapabilitiesRoute> {
+        DeviceCapabilitiesScreen(onNavigateBack = onNavigateBack)
     }
 }

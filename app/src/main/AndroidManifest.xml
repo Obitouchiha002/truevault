@@ -46,6 +46,27 @@
         </activity>
 
         <!--
+          Secure Launcher Mode's Home activity.
+
+          Declaring it is what lets a user choose TrueVault as their launcher at all; the app never
+          requests the Home role on its own, and the feature stays off until it is enabled from
+          Settings -> Advanced Privacy. It shows app icons only and never vault content.
+        -->
+        <activity
+            android:name=".SecureLauncherActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:stateNotNeeded="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|smallestScreenSize|density"
+            android:theme="@style/Theme.TrueVault">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!--
           Not exported, permission-gated, and limited to one cache subdirectory (see file_paths.xml).
           It exists only so a share can hand one temporary decrypted file to an app the user picked.
         -->

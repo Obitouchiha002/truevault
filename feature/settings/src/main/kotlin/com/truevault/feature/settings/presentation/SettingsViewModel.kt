@@ -2,6 +2,7 @@ package com.truevault.feature.settings.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.truevault.core.capabilities.DeviceCapabilityDetector
 import com.truevault.core.datastore.UserPreferencesDataSource
 import com.truevault.core.model.ThemePreference
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,17 +26,21 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val preferences: UserPreferencesDataSource,
+    private val capabilityDetector: DeviceCapabilityDetector,
 ) : ViewModel() {
 
-    val uiState: StateFlow<SettingsUiState> = preferences.userPreferences
-        .map { prefs ->
-            SettingsUiState(
-                isLoading = false,
-                theme = prefs.theme,
-                useDynamicColor = prefs.useDynamicColor,
-                blockScreenshots = prefs.blockScreenshots,
-            )
-        }
+    val uiState: StateFlow<SettingsUiState> = kotlinx.coroutines.flow.combine(
+        preferences.userPreferences,
+        capabilityDetector.observeCapabilities(),
+    ) { prefs, capabilities ->
+        SettingsUiState(
+            isLoading = false,
+            theme = prefs.theme,
+            useDynamicColor = prefs.useDynamicColor,
+            blockScreenshots = prefs.blockScreenshots,
+            capabilities = capabilities,
+        )
+    }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
@@ -55,8 +60,12 @@ class SettingsViewModel @Inject constructor(
             is SettingsAction.DynamicColorToggled -> setDynamicColor(action.enabled)
             SettingsAction.SecuritySettingsClicked ->
                 viewModelScope.launch { _effects.emit(SettingsEffect.NavigateToSecuritySettings) }
-            SettingsAction.AboutSecurityClicked ->
-                viewModelScope.launch { _effects.emit(SettingsEffect.NavigateToAboutSecurity) }
+            SettingsAction.DeviceCapabilitiesClicked ->
+                viewModelScope.launch { _effects.emit(SettingsEffect.NavigateToDeviceCapabilities) }
+            SettingsAction.AdvancedPrivacyClicked ->
+                viewModelScope.launch { _effects.emit(SettingsEffect.NavigateToAdvancedPrivacy) }
+            SettingsAction.PrivateAppsClicked ->
+                viewModelScope.launch { _effects.emit(SettingsEffect.NavigateToPrivateApps) }
         }
     }
 

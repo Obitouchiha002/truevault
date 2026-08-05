@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="advanced_privacy_title">Advanced privacy</string>
+    <string name="advanced_privacy_action_note">TrueVault will re-check what changed when you come back.</string>
+
+    <!-- Secure Launcher Mode -->
+    <string name="secure_launcher_title">Secure Launcher Mode</string>
+    <string name="secure_launcher_subtitle">Optional. Off by default.</string>
+    <string name="secure_launcher_role_explanation">To display and launch apps from supported private profiles, TrueVault must become your Home app.\n\nThis changes your phone\'s main launcher. You can switch back at any time from Android settings.</string>
+    <string name="secure_launcher_set_home">Set as Home app</string>
+    <string name="secure_launcher_not_now">Not now</string>
+    <string name="secure_launcher_enable">Enable Secure Launcher Mode</string>
+    <string name="secure_launcher_active">TrueVault is currently your Home app.</string>
+    <string name="secure_launcher_inactive">TrueVault is not your Home app. Private profile apps cannot be listed or launched from here without it.</string>
+
+    <!-- Launcher Visibility -->
+    <string name="launcher_visibility_title">Launcher Visibility</string>
+    <string name="launcher_visibility_subtitle">Hide icons from TrueVault\'s own launcher screen.</string>
+    <string name="launcher_visibility_not_security">This is not app security. It removes icons from one launcher, nothing more.</string>
+    <string name="launcher_visibility_warning">Launcher Visibility only removes selected icons from TrueVault\'s launcher screen.\n\nThe apps remain installed and may still appear in Android Settings, system search, notifications, sharing menus or another launcher.\n\nUninstalling an app removes it completely.</string>
+    <string name="launcher_visibility_enable">Enable</string>
+    <string name="launcher_visibility_toggle">Hide icons in TrueVault\'s launcher</string>
+    <string name="launcher_visibility_needs_home">Available only while TrueVault is your Home app.</string>
+    <string name="launcher_visibility_restore_all">Restore all hidden icons</string>
+
+    <!-- Launcher home surface -->
+    <string name="launcher_search_hint">Search apps</string>
+    <string name="launcher_edit_visibility">Edit which icons are hidden</string>
+    <string name="launcher_editing_title">Choosing which icons to hide</string>
+    <string name="launcher_editing_body">Tap an app to hide or show its icon here. Every app stays installed either way.</string>
+    <string name="launcher_not_home_app">TrueVault is not your Home app, so this is a preview. Private profile apps cannot be listed until you enable Secure Launcher Mode.</string>
+    <string name="launcher_all_apps">All apps</string>
+    <string name="launcher_private_apps">Private apps</string>
+    <string name="launcher_work_apps">Work apps</string>
+    <string name="launcher_work_subtitle">Managed by your organisation, not by TrueVault.</string>
+    <string name="launcher_private_locked_title">Private Space is locked</string>
+    <string name="launcher_private_locked_body">Unlock it through Android to view or open private apps.</string>
+    <string name="launcher_private_not_configured">Private Space has not been set up on this device yet.</string>
+    <string name="launcher_private_restricted">A device policy blocks private profiles here.</string>
+    <string name="launcher_private_role_required">Enable Secure Launcher Mode to list private profile apps.</string>
+    <string name="launcher_hidden">Hidden</string>
+
+    <plurals name="launcher_app_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
+    <plurals name="launcher_visibility_hidden_count">
+        <item quantity="one">%1$d icon hidden</item>
+        <item quantity="other">%1$d icons hidden</item>
+    </plurals>
+</resources>

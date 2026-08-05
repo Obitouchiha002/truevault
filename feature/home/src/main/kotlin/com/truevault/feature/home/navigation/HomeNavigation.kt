@@ -24,6 +24,7 @@ fun NavGraphBuilder.homeScreen(
     onRunScan: () -> Unit,
     onOpenPrivateApps: () -> Unit,
     onOpenBackup: () -> Unit,
+    onOpenSecuritySettings: () -> Unit,
     onOpenVault: () -> Unit,
 ) {
     composable<HomeRoute> {
@@ -32,6 +33,7 @@ fun NavGraphBuilder.homeScreen(
             onRunScan = onRunScan,
             onOpenPrivateApps = onOpenPrivateApps,
             onOpenBackup = onOpenBackup,
+            onOpenSecuritySettings = onOpenSecuritySettings,
             onOpenVault = onOpenVault,
         )
     }

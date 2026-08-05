@@ -51,6 +51,7 @@ and never replays on rotation.
    :core:crypto       ──▶ :core:common, :core:model      (Phase 1–2)
    :core:storage      ──▶ :core:common, :core:model      (Phase 2)
    :core:data         ──▶ :core:database, :core:crypto, :core:storage, :core:datastore
+   :core:capabilities ──▶ :core:common, :core:model
    :core:testing      ──▶ :core:common, :core:model, :core:crypto
 ```
 

@@ -39,7 +39,9 @@ import com.truevault.feature.settings.R
 @Composable
 fun SettingsScreen(
     onOpenSecuritySettings: () -> Unit,
-    onOpenAboutSecurity: () -> Unit,
+    onOpenDeviceCapabilities: () -> Unit,
+    onOpenAdvancedPrivacy: () -> Unit,
+    onOpenPrivateApps: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -49,7 +51,9 @@ fun SettingsScreen(
         viewModel.effects.collect { effect ->
             when (effect) {
                 SettingsEffect.NavigateToSecuritySettings -> onOpenSecuritySettings()
-                SettingsEffect.NavigateToAboutSecurity -> onOpenAboutSecurity()
+                SettingsEffect.NavigateToDeviceCapabilities -> onOpenDeviceCapabilities()
+                SettingsEffect.NavigateToAdvancedPrivacy -> onOpenAdvancedPrivacy()
+                SettingsEffect.NavigateToPrivateApps -> onOpenPrivateApps()
             }
         }
     }
@@ -124,9 +128,37 @@ internal fun SettingsContent(
         }
 
         Column {
-            TvSectionHeader(title = stringResource(R.string.settings_about))
-            TvCard(onClick = { onAction(SettingsAction.AboutSecurityClicked) }) {
-                NavigationRow(title = stringResource(R.string.settings_how_protection_works))
+            TvSectionHeader(title = stringResource(R.string.settings_device))
+            TvCard(onClick = { onAction(SettingsAction.DeviceCapabilitiesClicked) }) {
+                NavigationRow(title = stringResource(R.string.settings_device_capabilities))
+            }
+        }
+
+        // Private Apps appears in Settings on every version, but only as a destination that tells
+        // the truth about this device. It is in the main navigation bar on neither.
+        Column {
+            TvSectionHeader(
+                title = stringResource(R.string.settings_private_apps),
+                subtitle = stringResource(
+                    if (uiState.capabilities.showsPrivateAppsDestination) {
+                        R.string.settings_private_apps_modern
+                    } else {
+                        R.string.settings_private_apps_core
+                    },
+                ),
+            )
+            TvCard(onClick = { onAction(SettingsAction.PrivateAppsClicked) }) {
+                NavigationRow(title = stringResource(R.string.settings_private_apps_open))
+            }
+        }
+
+        Column {
+            TvSectionHeader(
+                title = stringResource(R.string.settings_advanced),
+                subtitle = stringResource(R.string.settings_advanced_summary),
+            )
+            TvCard(onClick = { onAction(SettingsAction.AdvancedPrivacyClicked) }) {
+                NavigationRow(title = stringResource(R.string.settings_advanced_privacy))
             }
         }
     }

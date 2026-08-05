@@ -2,6 +2,10 @@ package com.truevault.feature.home.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.truevault.core.capabilities.DeviceCapabilityDetector
+import com.truevault.core.capabilities.model.DeviceCapabilities
+import com.truevault.core.capabilities.model.PrivateSpaceState
+import com.truevault.core.capabilities.privateapps.PrivateAppsController
 import com.truevault.core.common.time.TimeProvider
 import com.truevault.core.data.ActivityEvent
 import com.truevault.core.data.ActivityKind
@@ -36,7 +40,14 @@ class HomeViewModel @Inject constructor(
     vaultRepository: VaultRepository,
     activityRepository: ActivityRepository,
     preferences: UserPreferencesDataSource,
+    capabilityDetector: DeviceCapabilityDetector,
+    privateAppsController: PrivateAppsController,
 ) : ViewModel() {
+
+    private val deviceState = combine(
+        capabilityDetector.observeCapabilities(),
+        privateAppsController.observeState(),
+    ) { capabilities, privateSpaceState -> capabilities to privateSpaceState }
 
     val uiState: StateFlow<HomeUiState> = combine(
         vaultRepository.observeItemCount(),
@@ -44,7 +55,19 @@ class HomeViewModel @Inject constructor(
         vaultRepository.observeCountWithOriginalRemaining(),
         activityRepository.observeRecent(limit = 5),
         preferences.userPreferences,
-    ) { totalItems, categoryCounts, originalsRemaining, activity, prefs ->
+        deviceState,
+    ) { values ->
+        @Suppress("UNCHECKED_CAST")
+        val totalItems = values[0] as Int
+        @Suppress("UNCHECKED_CAST")
+        val categoryCounts = values[1] as Map<com.truevault.core.model.MimeCategory, Int>
+        val originalsRemaining = values[2] as Int
+        @Suppress("UNCHECKED_CAST")
+        val activity = values[3] as List<ActivityEvent>
+        val prefs = values[4] as com.truevault.core.datastore.UserPreferences
+        @Suppress("UNCHECKED_CAST")
+        val device = values[5] as Pair<DeviceCapabilities, PrivateSpaceState>
+
         HomeUiState(
             isLoading = false,
             greeting = greetingFor(timeProvider.currentTimeMillis()),
@@ -63,6 +86,8 @@ class HomeViewModel @Inject constructor(
                 )
             },
             recentActivity = activity.map(ActivityEvent::toHomeItem),
+            capabilities = device.first,
+            privateSpaceState = device.second,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -84,6 +109,7 @@ class HomeViewModel @Inject constructor(
             HomeAction.RunScanClicked -> emit(HomeEffect.NavigateToScanner)
             HomeAction.PrivateAppsClicked -> emit(HomeEffect.NavigateToPrivateApps)
             HomeAction.BackupClicked -> emit(HomeEffect.NavigateToBackup)
+            HomeAction.SecuritySettingsClicked -> emit(HomeEffect.NavigateToSecuritySettings)
             HomeAction.OpenVaultClicked -> emit(HomeEffect.NavigateToVault)
             is HomeAction.CategoryClicked -> emit(HomeEffect.NavigateToCategory(action.category))
         }

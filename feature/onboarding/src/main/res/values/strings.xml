@@ -16,4 +16,12 @@
 
     <string name="onboarding_page4_title">Only you can open it</string>
     <string name="onboarding_page4_body">There is no account and no reset link. Without your password or recovery key, your vault cannot be recovered.</string>
+
+    <string name="onboarding_open_core">Open TrueVault</string>
+
+    <string name="onboarding_modern_title">Your device supports advanced private-app options</string>
+    <string name="onboarding_modern_body">You can configure Private Space later from TrueVault settings. Nothing about it is required to use the vault.</string>
+
+    <string name="onboarding_core_title">TrueVault Core is ready</string>
+    <string name="onboarding_core_body">All file-security features are available. Private app isolation depends on your Android version and device manufacturer.</string>
 </resources>

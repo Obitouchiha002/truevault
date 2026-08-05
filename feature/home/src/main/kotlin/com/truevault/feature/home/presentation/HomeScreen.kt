@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Radar
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.VideoFile
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -41,6 +42,7 @@ import com.truevault.core.designsystem.component.TvQuickAction
 import com.truevault.core.designsystem.component.TvScoreRing
 import com.truevault.core.designsystem.component.TvSectionHeader
 import com.truevault.core.designsystem.theme.TvSpacing
+import com.truevault.core.capabilities.model.PrivateSpaceState
 import com.truevault.core.model.MimeCategory
 import com.truevault.feature.home.R
 
@@ -50,6 +52,7 @@ fun HomeScreen(
     onRunScan: () -> Unit,
     onOpenPrivateApps: () -> Unit,
     onOpenBackup: () -> Unit,
+    onOpenSecuritySettings: () -> Unit,
     onOpenVault: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
@@ -63,6 +66,7 @@ fun HomeScreen(
                 HomeEffect.NavigateToScanner -> onRunScan()
                 HomeEffect.NavigateToPrivateApps -> onOpenPrivateApps()
                 HomeEffect.NavigateToBackup -> onOpenBackup()
+                HomeEffect.NavigateToSecuritySettings -> onOpenSecuritySettings()
                 HomeEffect.NavigateToVault -> onOpenVault()
                 is HomeEffect.NavigateToCategory -> onOpenVault()
             }
@@ -114,8 +118,12 @@ internal fun HomeContent(
         item(key = "quick_actions") {
             Column {
                 TvSectionHeader(title = stringResource(R.string.home_quick_actions))
-                QuickActionRow(onAction = onAction)
+                QuickActionRow(uiState = uiState, onAction = onAction)
             }
+        }
+
+        item(key = "private_apps_card") {
+            PrivateAppsCard(uiState = uiState, onAction = onAction)
         }
 
         item(key = "categories_header") {
@@ -289,8 +297,14 @@ private fun HomeGreeting(greeting: Greeting) {
     }
 }
 
+/**
+ * Quick actions, chosen by what the device can actually do.
+ *
+ * Modern devices get Private Apps here. Core devices get Security Settings in that slot instead —
+ * an unavailable button is not shown greyed out in the main flow, it is simply not there.
+ */
 @Composable
-private fun QuickActionRow(onAction: (HomeAction) -> Unit) {
+private fun QuickActionRow(uiState: HomeUiState, onAction: (HomeAction) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(TvSpacing.small),
@@ -307,17 +321,61 @@ private fun QuickActionRow(onAction: (HomeAction) -> Unit) {
             onClick = { onAction(HomeAction.RunScanClicked) },
             modifier = Modifier.weight(1f),
         )
-        TvQuickAction(
-            icon = Icons.Filled.Apps,
-            label = stringResource(R.string.home_action_private_apps),
-            onClick = { onAction(HomeAction.PrivateAppsClicked) },
-            modifier = Modifier.weight(1f),
-        )
+
+        if (uiState.showsPrivateAppsAction) {
+            TvQuickAction(
+                icon = Icons.Filled.Apps,
+                label = stringResource(R.string.home_action_private_apps),
+                onClick = { onAction(HomeAction.PrivateAppsClicked) },
+                modifier = Modifier.weight(1f),
+            )
+        } else {
+            TvQuickAction(
+                icon = Icons.Filled.Shield,
+                label = stringResource(R.string.home_action_security),
+                onClick = { onAction(HomeAction.SecuritySettingsClicked) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+
         TvQuickAction(
             icon = Icons.Filled.CloudUpload,
             label = stringResource(R.string.home_action_backup),
             onClick = { onAction(HomeAction.BackupClicked) },
             modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+/**
+ * The Private Apps card.
+ *
+ * On Modern devices it reports the live Private Space state. On Core devices it is an informational
+ * card that says the platform does not provide this and points at the manufacturer — never a button
+ * that leads nowhere.
+ */
+@Composable
+private fun PrivateAppsCard(uiState: HomeUiState, onAction: (HomeAction) -> Unit) {
+    if (uiState.showsPrivateAppsAction) {
+        TvCategoryRow(
+            icon = Icons.Filled.Apps,
+            title = stringResource(R.string.home_private_apps_title),
+            supporting = stringResource(
+                when (uiState.privateSpaceState) {
+                    PrivateSpaceState.ConfiguredUnlocked -> R.string.home_private_ready
+                    PrivateSpaceState.ConfiguredLocked -> R.string.home_private_locked
+                    PrivateSpaceState.NotConfigured -> R.string.home_private_setup_required
+                    PrivateSpaceState.RestrictedByPolicy -> R.string.home_private_restricted
+                    else -> R.string.home_private_unknown
+                },
+            ),
+            onClick = { onAction(HomeAction.PrivateAppsClicked) },
+        )
+    } else {
+        TvBanner(
+            title = stringResource(R.string.home_core_privacy_title),
+            text = stringResource(R.string.home_core_privacy_body),
+            tone = TvBannerTone.Info,
         )
     }
 }

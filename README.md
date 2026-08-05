@@ -24,6 +24,7 @@ All six phases are built. Every gate below was run from a clean tree.
 | 4 | Encrypted local backup and restore, recovery key | **Complete** |
 | 5 | Private Apps capability detection and guided setup | **Complete** |
 | 6 | Hardening, threat model, documentation, release checklist | **Complete** |
+| 7 | Version-based product modes: capability engine, Modern/Core experiences, Secure Launcher Mode | **Complete** |
 
 | Gate | Result |
 |------|--------|
@@ -82,6 +83,19 @@ adb shell am start -n com.truevault.app.debug/com.truevault.app.MainActivity
 
 - **Minimum:** API 26 (Android 8.0)
 - **Target / compile:** API 37
+
+## Product modes
+
+One app, one application id, one encryption format. What differs is which capabilities a device
+actually offers, decided at runtime:
+
+| Mode | Android | Adds |
+|------|---------|------|
+| **TrueVault Modern** | 15+ | Private Space guidance, optional Secure Launcher Mode |
+| **TrueVault Core** | 8–14 | Nothing missing from the file-security product |
+
+Full detail, including the capability matrix and what is never done on any version, is in
+[Product modes](docs/version-modes.md).
 
 ## Feature support matrix
 
@@ -225,6 +239,7 @@ alongside the screen that needs it.
 ## Documentation
 
 - [Architecture](docs/architecture.md) — data flow, module graph, build logic, security boundaries
+- [Product modes](docs/version-modes.md) — capability matrix, Private Space handling, Secure Launcher Mode
 - [Threat model](docs/threat-model.md) — 20 threats, each with what remains true after mitigation
 - [Encrypted file format](docs/encrypted-file-format.md) — container layout, AAD design, parser rules
 - [Database schema and migrations](docs/database.md) — what is sealed, what is not, and why

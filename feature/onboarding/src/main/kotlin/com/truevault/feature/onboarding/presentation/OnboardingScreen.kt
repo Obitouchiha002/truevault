@@ -18,6 +18,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.LockReset
 import androidx.compose.material.icons.filled.Radar
@@ -38,6 +39,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.truevault.core.capabilities.model.TrueVaultProductMode
 import com.truevault.core.designsystem.component.TvPreviewSurface
 import com.truevault.core.designsystem.component.TvPrimaryButton
 import com.truevault.core.designsystem.component.TvTextButton
@@ -60,7 +63,10 @@ fun OnboardingScreen(
     modifier: Modifier = Modifier,
     viewModel: OnboardingViewModel = hiltViewModel(),
 ) {
+    val productMode by viewModel.productMode.collectAsStateWithLifecycle()
+
     OnboardingContent(
+        productMode = productMode,
         onFinished = { viewModel.onFinished(onFinished) },
         modifier = modifier,
     )
@@ -68,10 +74,12 @@ fun OnboardingScreen(
 
 @Composable
 internal fun OnboardingContent(
+    productMode: TrueVaultProductMode,
     onFinished: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val pages = OnboardingPages
+    // One shared introduction, plus a final screen that reflects what this device actually offers.
+    val pages = OnboardingPages + finalPageFor(productMode)
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
     val isLastPage = pagerState.currentPage == pages.lastIndex
@@ -112,7 +120,12 @@ internal fun OnboardingContent(
 
         TvPrimaryButton(
             text = if (isLastPage) {
-                stringResource(R.string.onboarding_create_vault)
+                stringResource(
+                    when (productMode) {
+                        TrueVaultProductMode.MODERN -> R.string.onboarding_create_vault
+                        TrueVaultProductMode.CORE -> R.string.onboarding_open_core
+                    },
+                )
             } else {
                 stringResource(R.string.onboarding_next)
             },
@@ -218,6 +231,20 @@ private data class OnboardingPageContent(
     val bodyRes: Int,
 )
 
+private fun finalPageFor(mode: TrueVaultProductMode) = when (mode) {
+    TrueVaultProductMode.MODERN -> OnboardingPageContent(
+        icon = Icons.Filled.Apps,
+        titleRes = R.string.onboarding_modern_title,
+        bodyRes = R.string.onboarding_modern_body,
+    )
+
+    TrueVaultProductMode.CORE -> OnboardingPageContent(
+        icon = Icons.Filled.Shield,
+        titleRes = R.string.onboarding_core_title,
+        bodyRes = R.string.onboarding_core_body,
+    )
+}
+
 private val OnboardingPages = listOf(
     OnboardingPageContent(
         icon = Icons.Filled.Shield,
@@ -245,6 +272,6 @@ private val OnboardingPages = listOf(
 @Composable
 private fun OnboardingPreview() {
     TvPreviewSurface {
-        OnboardingContent(onFinished = {})
+        OnboardingContent(productMode = TrueVaultProductMode.CORE, onFinished = {})
     }
 }

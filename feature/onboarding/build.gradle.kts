@@ -7,5 +7,6 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.capabilities)
     implementation(projects.core.datastore)
 }

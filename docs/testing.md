@@ -62,6 +62,50 @@ Being explicit about what is *not* covered is more useful than a coverage percen
   version refusal, per-entry hashing, path-traversal refusal — are implemented in one place and are
   the right target for the next round of tests.
 
+## Version testing matrices
+
+Both modes share one binary, so the matrix is about *devices*, not build variants.
+
+### Android 15+ (Modern)
+
+| Scenario | What must hold |
+|----------|----------------|
+| Private Space not configured | Guided setup offered; warnings shown before the settings intent |
+| Private Space configured and unlocked | Ready state; installation guidance shown |
+| Private Space configured and **locked** | No app names, no icons, no counts, no search results for it |
+| Private Space restricted by policy | `DEVICE_POLICY_BLOCKED`; no setup button offered |
+| Managed device | Same, and the work-profile banner appears |
+| TrueVault **not** the default launcher | Private listing unavailable; Secure Launcher Mode offered from Advanced Privacy only |
+| TrueVault **is** the default launcher | Listing and launching work; profile badges are distinct |
+| Home role removed while running | Detected on resume; listing stops without a crash |
+| Private profile removed while running | State updates without a restart |
+| App installed in both profiles | Removal dialog reports a verified private copy |
+| App installed only in the private profile | Main copy is absent; nothing to remove |
+| Android 16+ device or emulator | No regression; capability detection still runs |
+| 16 KB memory-page device | Native libraries load; no page-size crash |
+
+Also verify: locked private apps vanish from the UI, private labels never leak, profile changes need
+no restart, main-app uninstall uses the system confirmation, no screen claims app data was
+transferred, the file vault keeps working when Private Apps fails, and the background/notification
+warnings appear before setup.
+
+### Android 8–14 (Core)
+
+| Axis | Values |
+|------|--------|
+| API level | 26, 27, 28, 29, 30, 31, 32, 33, 34 |
+| Vendor | Pixel, Samsung, and at least one of OnePlus / Oppo / Vivo / Xiaomi |
+| Work profile | Present and absent |
+| Document provider | Normal, and one that refuses deletion |
+| Biometrics | None, weak only, strong enrolled |
+| Keystore | Hardware-backed and software-only |
+
+Also verify: Private Space is **never** shown as supported, the full file vault remains available, no
+API 35 class-loading crash occurs anywhere, an OEM settings screen that is missing does not crash the
+app, work-profile URIs never mix with personal ones, Secure Copy and Move work on each API level, the
+deletion result is accurate, cancelling preserves the original, and backups remain cross-version
+compatible.
+
 ## Build gates
 
 Every phase of this project ran, and passed:

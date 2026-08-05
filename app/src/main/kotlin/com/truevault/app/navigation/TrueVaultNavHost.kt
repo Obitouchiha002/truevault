@@ -24,12 +24,15 @@ import com.truevault.feature.home.navigation.homeScreen
 import com.truevault.feature.home.navigation.navigateToHome
 import com.truevault.feature.importfiles.navigation.importScreens
 import com.truevault.feature.importfiles.navigation.navigateToImport
+import com.truevault.feature.launcher.navigation.launcherScreens
+import com.truevault.feature.launcher.navigation.navigateToAdvancedPrivacy
 import com.truevault.feature.onboarding.navigation.OnboardingRoute
 import com.truevault.feature.onboarding.navigation.onboardingScreen
 import com.truevault.feature.privateapps.navigation.navigateToPrivateApps
 import com.truevault.feature.privateapps.navigation.privateAppsScreen
 import com.truevault.feature.scanner.navigation.navigateToScanner
 import com.truevault.feature.scanner.navigation.scannerScreen
+import com.truevault.feature.settings.navigation.navigateToDeviceCapabilities
 import com.truevault.feature.settings.navigation.settingsScreen
 import com.truevault.feature.vault.navigation.navigateToVault
 import com.truevault.feature.vault.navigation.navigateToVaultItem
@@ -115,6 +118,7 @@ fun TrueVaultNavHost(
             onRunScan = { navController.navigateToScanner() },
             onOpenPrivateApps = { navController.navigateToPrivateApps() },
             onOpenBackup = { navController.navigateToBackup() },
+            onOpenSecuritySettings = { navController.navigateToSecuritySettings() },
             onOpenVault = { navController.navigateToVault() },
         )
 
@@ -128,8 +132,13 @@ fun TrueVaultNavHost(
 
         settingsScreen(
             onOpenSecuritySettings = { navController.navigateToSecuritySettings() },
-            onOpenAboutSecurity = { /* Security explainer arrives with Phase 6 documentation. */ },
+            onOpenDeviceCapabilities = { navController.navigateToDeviceCapabilities() },
+            onOpenAdvancedPrivacy = { navController.navigateToAdvancedPrivacy() },
+            onOpenPrivateApps = { navController.navigateToPrivateApps() },
+            onNavigateBack = { navController.popBackStack() },
         )
+
+        launcherScreens(onNavigateBack = { navController.popBackStack() })
 
         importScreens(
             onClose = { navController.popBackStack() },

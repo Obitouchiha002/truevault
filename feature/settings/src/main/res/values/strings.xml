@@ -10,6 +10,66 @@
     <string name="settings_dynamic_color_toggle">Use wallpaper colours</string>
     <string name="settings_security">Security</string>
     <string name="settings_security_options">Lock, biometrics and screenshots</string>
-    <string name="settings_about">About</string>
-    <string name="settings_how_protection_works">How TrueVault protects your files</string>
+    <string name="settings_device">Device</string>
+    <string name="settings_device_capabilities">Device capabilities</string>
+
+    <string name="settings_private_apps">Private apps</string>
+    <string name="settings_private_apps_modern">Your device supports Android Private Space.</string>
+    <string name="settings_private_apps_core">Depends on your Android version and manufacturer.</string>
+    <string name="settings_private_apps_open">Open private apps</string>
+
+    <string name="settings_advanced">Advanced</string>
+    <string name="settings_advanced_summary">Optional features, off by default.</string>
+    <string name="settings_advanced_privacy">Advanced privacy</string>
+
+    <!-- Device capabilities -->
+    <string name="capabilities_title">Device capabilities</string>
+    <string name="capabilities_explainer">Everything below was detected on this device. Anything TrueVault could not confirm is shown as unavailable rather than guessed.</string>
+    <string name="capabilities_platform">Platform</string>
+    <string name="capabilities_android_version">Android version</string>
+    <string name="capabilities_api_level">API %1$d</string>
+    <string name="capabilities_mode">TrueVault mode</string>
+    <string name="capabilities_mode_modern">Modern</string>
+    <string name="capabilities_mode_core">Core</string>
+
+    <string name="capabilities_vault">File vault</string>
+    <string name="capabilities_file_vault">Encrypted vault</string>
+    <string name="capabilities_backup">Encrypted backup</string>
+    <string name="capabilities_fully_supported">Fully supported</string>
+    <string name="capabilities_secure_hardware">Hardware-backed keys</string>
+    <string name="capabilities_hardware_strongbox">Secure element</string>
+    <string name="capabilities_hardware_tee">Trusted environment</string>
+    <string name="capabilities_hardware_software">Software keystore only</string>
+    <string name="capabilities_unknown">Unknown</string>
+    <string name="capabilities_biometric">Biometric unlock</string>
+    <string name="capabilities_biometric_available">Available</string>
+    <string name="capabilities_biometric_not_enrolled">Nothing enrolled</string>
+    <string name="capabilities_biometric_unavailable">Temporarily unavailable</string>
+    <string name="capabilities_biometric_unsupported">No strong biometric hardware</string>
+    <string name="capabilities_photo_picker">Photo picker</string>
+    <string name="capabilities_picker_platform">Android photo picker</string>
+    <string name="capabilities_picker_backport">Backported photo picker</string>
+    <string name="capabilities_picker_saf">System file picker</string>
+    <string name="capabilities_deletion">Original deletion</string>
+    <string name="capabilities_delete_system">System confirmation, batched</string>
+    <string name="capabilities_delete_per_file">System confirmation, one file at a time</string>
+    <string name="capabilities_delete_provider_only">Only where the provider allows it</string>
+
+    <string name="capabilities_private_apps">Private apps</string>
+    <string name="capabilities_private_space">Private Space</string>
+    <string name="capabilities_private_space_needs_15">Requires Android 15 or later</string>
+    <string name="capabilities_private_space_supported">Supported</string>
+    <string name="capabilities_private_space_configured">Configured</string>
+    <string name="capabilities_private_space_policy">Blocked by device policy</string>
+    <string name="capabilities_private_space_unsupported">Not available on this device</string>
+    <string name="capabilities_secure_launcher">Secure Launcher</string>
+    <string name="capabilities_enabled">Enabled</string>
+    <string name="capabilities_not_enabled">Not enabled</string>
+    <string name="capabilities_work_profile">Work profile</string>
+    <string name="capabilities_present">Present</string>
+    <string name="capabilities_absent">None</string>
+    <string name="capabilities_oem_tools">Manufacturer privacy tools</string>
+    <string name="capabilities_check_device_settings">Check device settings</string>
+    <string name="capabilities_none_detected">None detected</string>
+    <string name="capabilities_footer">Your file vault, scanner and backup work identically in both modes. Only private-app features depend on what your device provides.</string>
 </resources>

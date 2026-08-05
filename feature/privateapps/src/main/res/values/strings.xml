@@ -1,22 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="private_apps_title">Private apps</string>
+    <string name="private_apps_dismiss">Dismiss</string>
 
     <string name="private_apps_honesty_title">What TrueVault will not do</string>
-    <string name="private_apps_honesty_body">TrueVault does not clone apps, hide them behind a fake icon, or run them from inside itself. Apps that claim to do that either need root or stop working on the next Android update. Hiding an app is something Android itself has to provide.</string>
+    <string name="private_apps_honesty_body">TrueVault does not clone apps, run them from inside itself, or hide them behind a fake icon. Apps that claim to do that need root or break on the next Android update. Isolating an app is something Android itself has to provide.</string>
 
     <string name="private_apps_supported_title">This device supports Private Space</string>
-    <string name="private_apps_step_1">Open your system privacy settings.</string>
-    <string name="private_apps_step_2">Choose Private Space and set its own lock.</string>
-    <string name="private_apps_step_3">Install the apps you want hidden inside it.</string>
-    <string name="private_apps_separate_data">Apps in Private Space use separate app data, so you will be signed out and will need to log in again inside it. That separation is the point — it is also what TrueVault cannot do for you.</string>
+    <string name="private_apps_step_1">Read what a separate installation means.</string>
+    <string name="private_apps_step_2">Open your system privacy settings and set up Private Space with its own lock.</string>
+    <string name="private_apps_step_3">Come back here — TrueVault will re-check automatically.</string>
+    <string name="private_apps_read_first">Read this first</string>
     <string name="private_apps_open_settings">Open system settings</string>
+
+    <string name="private_space_ready_title">Private Space is ready</string>
+    <string name="private_space_ready_body">Your private profile is set up and unlocked.</string>
+    <string name="private_apps_install_step_1">Open Private Space from your launcher or settings.</string>
+    <string name="private_apps_install_step_2">Install the app again from inside Private Space.</string>
+    <string name="private_apps_install_step_3">Sign in there — its data is separate and does not move across.</string>
+
+    <string name="private_space_locked_title">Private Space is locked</string>
+    <string name="private_space_locked_body">Unlock it through Android to view or open private apps. While it is locked, its apps are not running and TrueVault will not list them.</string>
 
     <string name="private_apps_managed_title">Your device policy blocks this</string>
     <string name="private_apps_managed_body">This device is managed, and its policy does not allow additional profiles. Private Space cannot be set up here, by TrueVault or by anything else.</string>
 
-    <string name="private_apps_unsupported_title">Not supported on this device</string>
-    <string name="private_apps_unsupported_body">Private Space arrived in Android 15, and this device does not offer it. TrueVault will not pretend to hide apps in its place.</string>
+    <string name="private_apps_role_title">Listing private apps needs the Home role</string>
+    <string name="private_apps_role_body">Android only lets the default Home app see other profiles. You can enable Secure Launcher Mode in Settings → Advanced Privacy, or keep using Private Space directly from Android.</string>
 
-    <string name="private_apps_vault_independent">Your file vault works fully whether or not Private Space is available.</string>
+    <string name="private_apps_permission_body">Android did not grant TrueVault permission to read profile state on this device.</string>
+
+    <string name="private_apps_core_title">Not available on this Android version</string>
+    <string name="private_apps_core_body">Private app isolation is not built into this Android version. TrueVault can still fully protect your files — the vault, scanner and backup all work exactly the same.</string>
+
+    <string name="private_apps_work_profile_title">A work profile is present</string>
+    <string name="private_apps_work_profile_body">A work profile is managed by your organisation, not by you, and it is not a private space. Its administrator can control data inside it. TrueVault keeps personal and work vaults completely separate.</string>
+
+    <string name="private_apps_vault_independent">Your file vault works fully whether or not any of this is available.</string>
+
+    <string name="oem_guidance_title">Your phone may include additional app privacy tools</string>
+    <string name="oem_guidance_body">Availability and behaviour depend on your phone manufacturer. TrueVault cannot manage files or apps inside those external spaces, and it never reads what is in them.</string>
+    <string name="oem_manual_instructions">TrueVault could not find a settings screen to open on this device. Look in your system settings for Secure Folder, Private Safe, Second Space or App Lock.</string>
+    <string name="private_apps_check_device_options">Check device privacy options</string>
+
+    <!-- Separate-installation warnings -->
+    <string name="private_apps_warning_title">Before continuing</string>
+    <string name="private_apps_warning_1">This will be a separate installation.</string>
+    <string name="private_apps_warning_2">Existing app data will not automatically move.</string>
+    <string name="private_apps_warning_3">You may need to sign in again.</string>
+    <string name="private_apps_warning_4">When Private Space is locked, its apps stop running.</string>
+    <string name="private_apps_warning_5">Notifications may not appear while it is locked.</string>
+    <string name="private_apps_warning_6">Some banking, medical, alarm or background-service apps may not work as expected.</string>
+    <string name="private_apps_not_recommended">Not recommended for apps you rely on for emergency alerts, medical monitoring, continuous location, alarms, a persistent VPN, immediate notifications, device administration, accessibility or always-running automation.</string>
+    <string name="private_apps_acknowledge">I understand that this is a separate app installation.</string>
+    <string name="private_apps_continue">Continue</string>
+    <string name="private_apps_not_now">Not now</string>
+
+    <!-- Removal -->
+    <string name="removal_title">Verify your private copy first</string>
+    <string name="removal_body">The app inside Private Space has separate data. You may need to sign in again. Open and verify the private copy before removing the app from your main space.</string>
+    <string name="removal_verified">TrueVault found a copy of this app in your private profile.</string>
+    <string name="removal_manually_confirmed">You confirmed you checked the private copy yourself. TrueVault did not verify this.</string>
+    <string name="removal_unverified">TrueVault cannot see inside your private profile from here, so it has not verified anything.</string>
+    <string name="removal_confirm_manually">I checked it myself</string>
+    <string name="removal_open_private">Open private copy</string>
+    <string name="removal_keep_both">Keep both</string>
+    <string name="removal_remove_main">Remove main copy</string>
+
+    <!-- Capability action results -->
+    <string name="capability_success">Done.</string>
+    <string name="capability_cancelled">You cancelled that.</string>
+    <string name="capability_unsupported">This device does not support that.</string>
+    <string name="capability_role_required">TrueVault needs to be your Home app for that.</string>
+    <string name="capability_permission_required">Android did not grant the permission that needs.</string>
+    <string name="capability_restricted">A device policy blocks that.</string>
+    <string name="capability_settings_unavailable">TrueVault could not find that settings screen on this device.</string>
+    <string name="capability_failure">That could not be completed.</string>
 </resources>

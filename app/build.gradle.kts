@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.core.common)
     implementation(projects.core.designsystem)
     implementation(projects.core.datastore)
+    implementation(projects.core.capabilities)
     implementation(projects.core.crypto)
     implementation(projects.core.data)
 
@@ -46,6 +47,7 @@ dependencies {
     implementation(projects.feature.onboarding)
     implementation(projects.feature.authentication)
     implementation(projects.feature.home)
+    implementation(projects.feature.launcher)
     implementation(projects.feature.vault)
     implementation(projects.feature.importfiles)
     implementation(projects.feature.scanner)

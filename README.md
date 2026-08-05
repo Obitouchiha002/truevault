@@ -16,17 +16,18 @@ the app says so in the place the limitation matters.
 | Phase | Scope | State |
 |-------|-------|-------|
 | 0 | Build foundation, modules, DI, navigation, design system, error model | **Complete** |
-| 1 | Onboarding, vault password, Keystore master key, biometrics, session and auto-lock | Not started |
+| 1 | Onboarding, vault password, Keystore master key, biometrics, session and auto-lock | **Complete** |
 | 2 | Secure file vault: pickers, streaming AES-256-GCM, Room, transaction engine, viewer, original deletion | Not started |
 | 3 | Privacy leak scanner and explainable privacy score | Not started |
 | 4 | Encrypted local backup and restore, recovery key | Not started |
 | 5 | Private Apps capability detection and guided setup | Not started |
 | 6 | Hardening, threat model, release checklist | Not started |
 
-What runs today: the app launches, applies its theme from DataStore, blocks screenshots, and
-navigates between Home, Vault, Privacy Scan and Settings. The theme setting is functional. No file
-handling, encryption or scanning exists yet — the screens for those state that plainly rather than
-showing controls that do nothing.
+What runs today: first-run onboarding, vault password creation with an Argon2id-derived key sealed
+inside the Android Keystore, biometric unlock, an in-memory session with auto-lock and screen-off
+locking, screenshot blocking, and the four main destinations. File import, encryption of files,
+scanning and backup are not built yet — those screens say so rather than showing controls that do
+nothing.
 
 ---
 
@@ -91,15 +92,26 @@ assumed.
 
 ## How encryption works, at a high level
 
-Planned for Phase 2, and stated here so the design is reviewable before it is written:
+The key hierarchy below is implemented as of Phase 1; per-file encryption arrives in Phase 2.
 
 ```
-Android Keystore master key (generated in Keystore, non-exportable, AES-256-GCM)
-        │
-        ├── wraps → vault metadata key ──→ encrypts sensitive metadata columns
-        │
-        └── wraps → a fresh random key per file ──→ encrypts that one file
+password ──Argon2id(random salt, versioned params)──▶ password key
+                                                          │ seals
+                                     vault master key ◀────┘
+                                            │
+        Android Keystore device key ──seals──┘  → this is what is stored on disk
+        (generated in Keystore, non-exportable, AES-256-GCM)
+
+        Android Keystore biometric key ──seals──▶ vault master key   (optional second path,
+        (per-use auth, invalidated on new enrolment)                  only if the user opts in)
+
+        vault master key ──wraps──▶ a fresh random key per file  (Phase 2)
 ```
+
+Two layers, not one, and for different reasons. The password layer means the stored blob is useless
+without what the user knows. The device layer means it is useless off this device, because the
+Keystore key cannot be exported — so the password cannot be attacked on hardware of the attacker's
+choosing. Both must be satisfied to reach the master key.
 
 - Every vault item gets its own random file key and every encryption operation gets its own random
   nonce. A nonce is never reused with a key.

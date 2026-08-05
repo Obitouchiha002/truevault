@@ -2,12 +2,12 @@ package com.truevault.app
 
 import android.os.Bundle
 import android.view.WindowManager
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -20,6 +20,9 @@ import kotlinx.coroutines.launch
 /**
  * The single activity.
  *
+ * It extends [FragmentActivity] because `BiometricPrompt` requires one — the prompt is hosted as a
+ * fragment, and no Compose-only alternative can bind a biometric result to a Keystore key.
+ *
  * Two things happen here that cannot be done from Compose:
  *  - [WindowManager.LayoutParams.FLAG_SECURE] is applied to the window itself. Hiding content at
  *    the Compose level would not stop a screenshot or a screen recording; the window flag does,
@@ -28,7 +31,7 @@ import kotlinx.coroutines.launch
  *    first frame in the wrong theme.
  */
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     private val viewModel: MainActivityViewModel by viewModels()
 
@@ -58,7 +61,10 @@ class MainActivity : ComponentActivity() {
                 themePreference = preferences.theme,
                 useDynamicColor = preferences.useDynamicColor,
             ) {
-                TrueVaultApp()
+                TrueVaultApp(
+                    startDestination = state.startDestination(),
+                    lockState = state.lockState(),
+                )
             }
         }
     }

@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.core.common)
     implementation(libs.bouncycastle.provider)
 
+    testImplementation(projects.core.testing)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
 }

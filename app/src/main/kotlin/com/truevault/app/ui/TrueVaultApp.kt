@@ -18,6 +18,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -28,8 +29,11 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.truevault.app.R
+import com.truevault.app.StartDestination
 import com.truevault.app.navigation.TopLevelDestination
 import com.truevault.app.navigation.TrueVaultNavHost
+import com.truevault.core.crypto.session.VaultLockState
+import com.truevault.feature.authentication.navigation.UnlockRoute
 import com.truevault.core.designsystem.theme.TvMotion
 import com.truevault.feature.home.navigation.navigateToHome
 import com.truevault.feature.importfiles.navigation.navigateToImport
@@ -44,7 +48,11 @@ import com.truevault.feature.vault.navigation.navigateToVault
  * viewer, backup — take the full window, because those flows need the user's whole attention.
  */
 @Composable
-fun TrueVaultApp(modifier: Modifier = Modifier) {
+fun TrueVaultApp(
+    startDestination: StartDestination,
+    lockState: VaultLockState,
+    modifier: Modifier = Modifier,
+) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
@@ -56,6 +64,22 @@ fun TrueVaultApp(modifier: Modifier = Modifier) {
     }
 
     val showsChrome = currentTopLevel != null
+
+    // The vault can lock at any moment — the app going to the background, the screen turning off, a
+    // grace period expiring. Whenever that happens the whole back stack is replaced by the unlock
+    // screen, so no already-rendered vault content can be reached with the back gesture.
+    LaunchedEffect(lockState) {
+        if (lockState == VaultLockState.Locked &&
+            navController.currentDestination?.hasRoute(UnlockRoute::class) != true &&
+            startDestination != StartDestination.ONBOARDING &&
+            startDestination != StartDestination.CREATE_LOCK
+        ) {
+            navController.navigate(UnlockRoute) {
+                popUpTo(navController.graph.id) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -93,6 +117,7 @@ fun TrueVaultApp(modifier: Modifier = Modifier) {
     ) { innerPadding ->
         TrueVaultNavHost(
             navController = navController,
+            startDestination = startDestination,
             modifier = Modifier.padding(innerPadding),
         )
     }

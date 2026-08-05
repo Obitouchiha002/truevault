@@ -38,6 +38,9 @@ dependencies {
     implementation(projects.core.common)
     implementation(projects.core.designsystem)
     implementation(projects.core.datastore)
+    implementation(projects.core.crypto)
+
+    implementation(libs.androidx.biometric)
 
     implementation(projects.feature.onboarding)
     implementation(projects.feature.authentication)

@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="onboarding_title">Welcome to TrueVault</string>
-    <string name="onboarding_pending">The guided introduction is added in the next build step.</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_create_vault">Create My Vault</string>
+    <string name="onboarding_progress">Step %1$d of %2$d</string>
+
+    <string name="onboarding_page1_title">Protect your private files</string>
+    <string name="onboarding_page1_body">Photos, videos and documents are encrypted on this device. Nothing is uploaded anywhere.</string>
+
+    <string name="onboarding_page2_title">Copy, or move safely</string>
+    <string name="onboarding_page2_body">Keep the original where it is, or let TrueVault verify the encrypted copy first and then ask to remove it.</string>
+
+    <string name="onboarding_page3_title">Find the copies left behind</string>
+    <string name="onboarding_page3_body">A scan checks the folders you allow, and shows you every duplicate before anything is deleted.</string>
+
+    <string name="onboarding_page4_title">Only you can open it</string>
+    <string name="onboarding_page4_body">There is no account and no reset link. Without your password or recovery key, your vault cannot be recovered.</string>
 </resources>

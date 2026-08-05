@@ -1,7 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Create vault lock -->
     <string name="create_lock_title">Create your vault lock</string>
-    <string name="create_lock_pending">Vault password creation is added in the next build step.</string>
+    <string name="create_lock_subtitle">This password encrypts everything you put in TrueVault. Choose something you will still remember in a year.</string>
+    <string name="create_lock_password_label">Vault password</string>
+    <string name="create_lock_password_hint">At least 8 characters. A few ordinary words work better than one clever one.</string>
+    <string name="create_lock_confirm_label">Confirm password</string>
+    <string name="create_lock_mismatch">The two passwords do not match.</string>
+    <string name="create_lock_action">Create vault</string>
+    <string name="create_lock_failed">The vault could not be created on this device. Nothing was saved.</string>
+
+    <string name="create_lock_warning_title">There is no way to reset this</string>
+    <string name="create_lock_warning_body">TrueVault cannot recover your local vault without your password or recovery key. There is no account, no email reset, and no support route back in.</string>
+
+    <string name="create_lock_biometric_title">Unlock with biometrics</string>
+    <string name="create_lock_biometric_prompt_title">Confirm it is you</string>
+    <string name="create_lock_biometric_prompt_subtitle">TrueVault will store a second, biometric-protected copy of your vault key.</string>
+    <string name="create_lock_biometric_prompt_negative">Not now</string>
+
+    <string name="biometric_available">Your fingerprint or face unlocks a key held in this device\'s secure hardware. Your password still works, and still decides.</string>
+    <string name="biometric_not_enrolled">No fingerprint or face is set up on this device yet. You can add one in system settings and turn this on later.</string>
+    <string name="biometric_temporarily_unavailable">Biometric hardware is not responding right now. You can turn this on later from Settings.</string>
+    <string name="biometric_unsupported">This device has no strong biometric hardware, so TrueVault will use your password only.</string>
+    <string name="biometric_unavailable">Biometric unlock is not available right now.</string>
+
+    <!-- Password strength -->
+    <string name="strength_too_short">Too short</string>
+    <string name="strength_weak">Weak</string>
+    <string name="strength_fair">Fair</string>
+    <string name="strength_good">Good</string>
+    <string name="strength_strong">Strong</string>
+    <plurals name="strength_bits">
+        <item quantity="one">about %1$d bit</item>
+        <item quantity="other">about %1$d bits</item>
+    </plurals>
+
+    <string name="suggestion_longer">Use at least 8 characters.</string>
+    <string name="suggestion_passphrase">Three or four unrelated words are stronger and easier to remember.</string>
+    <string name="suggestion_repetition">Avoid repeating the same characters.</string>
+    <string name="suggestion_common">This is one of the most commonly guessed passwords.</string>
+    <string name="suggestion_mix">Mixing letters, numbers or symbols would help at this length.</string>
+
+    <!-- Unlock -->
     <string name="unlock_title">Unlock TrueVault</string>
-    <string name="unlock_pending">Vault unlocking is added in the next build step.</string>
+    <string name="unlock_subtitle">Enter your vault password to continue.</string>
+    <string name="unlock_password_label">Vault password</string>
+    <string name="unlock_action">Unlock</string>
+    <string name="unlock_use_biometrics">Use biometrics</string>
+    <string name="unlock_incorrect">That password did not open the vault.</string>
+    <string name="unlock_biometric_prompt_title">Unlock TrueVault</string>
+    <string name="unlock_biometric_prompt_subtitle">Use your fingerprint or face to open your vault.</string>
+    <string name="unlock_biometric_prompt_negative">Use password</string>
+    <string name="unlock_biometric_reset">Your biometrics changed on this device, so the shortcut was switched off. Unlock with your password to set it up again.</string>
+    <string name="unlock_unsupported_version">This vault was created by a newer version of TrueVault and cannot be opened by this build.</string>
+    <string name="unlock_corrupted">The stored vault key could not be read. Restore from an encrypted backup to continue.</string>
+
+    <!-- Security settings -->
+    <string name="security_settings_title">Security</string>
+    <string name="security_auto_lock">Auto-lock</string>
+    <string name="security_auto_lock_summary">When TrueVault should lock after you leave it.</string>
+    <string name="auto_lock_immediate">Immediately</string>
+    <string name="auto_lock_30s">After 30 seconds</string>
+    <string name="auto_lock_1m">After 1 minute</string>
+    <string name="auto_lock_5m">After 5 minutes</string>
+    <string name="auto_lock_15m">After 15 minutes</string>
+
+    <string name="security_protection">Protection</string>
+    <string name="security_lock_on_screen_off">Lock when the screen turns off</string>
+    <string name="security_lock_on_screen_off_summary">Locks straight away when your screen goes dark, even if TrueVault is still open.</string>
+    <string name="security_block_screenshots">Block screenshots</string>
+    <string name="security_block_screenshots_summary">Stops screenshots and screen recording inside TrueVault, and blanks the app in the recent-apps switcher.</string>
+    <string name="security_biometric_unlock">Unlock with biometrics</string>
+    <string name="security_biometric_available">Your fingerprint or face opens a key held in secure hardware. Your password always still works.</string>
+    <string name="security_lock_now">Lock now</string>
+
+    <string name="security_keystore_hardware_title">Keys are held in secure hardware</string>
+    <string name="security_keystore_hardware_body">This device stores your vault key inside hardware that TrueVault cannot read or copy out. Even a full copy of the app\'s files cannot be attacked on another machine.</string>
+    <string name="security_keystore_software_title">Keys are protected in software on this device</string>
+    <string name="security_keystore_software_body">This device has no secure element available to TrueVault, so your vault key is protected by Android\'s software keystore. Your files are still encrypted, but the protection is weaker than on hardware-backed devices.</string>
 </resources>

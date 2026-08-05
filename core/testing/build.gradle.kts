@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.truevault.android.library)
-    alias(libs.plugins.truevault.android.library.compose)
     alias(libs.plugins.truevault.android.hilt)
 }
 
@@ -11,6 +10,8 @@ android {
 dependencies {
     api(projects.core.model)
     api(projects.core.common)
+    // The crypto fakes stand in for the Android Keystore, which does not exist on the JVM.
+    api(projects.core.crypto)
 
     api(libs.junit4)
     api(libs.truth)
@@ -21,5 +22,4 @@ dependencies {
     api(libs.androidx.test.core)
     api(libs.androidx.test.runner)
     api(libs.androidx.test.rules)
-    api(libs.androidx.compose.ui.test.junit4)
 }

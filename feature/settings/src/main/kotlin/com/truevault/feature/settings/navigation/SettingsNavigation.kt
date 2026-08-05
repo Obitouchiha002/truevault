@@ -11,9 +11,6 @@ import kotlinx.serialization.Serializable
 data object SettingsRoute
 
 @Serializable
-data object SecuritySettingsRoute
-
-@Serializable
 data object AboutSecurityRoute
 
 fun NavController.navigateToSettings(navOptions: NavOptions? = null) =

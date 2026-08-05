@@ -1,40 +1,217 @@
 package com.truevault.feature.authentication.presentation
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedSecureTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.truevault.core.designsystem.component.TvBanner
 import com.truevault.core.designsystem.component.TvBannerTone
-import com.truevault.core.designsystem.component.TvSectionHeader
+import com.truevault.core.designsystem.component.TvPreviewSurface
+import com.truevault.core.designsystem.component.TvPrimaryButton
+import com.truevault.core.designsystem.component.TvSecondaryButton
+import com.truevault.core.designsystem.theme.TvRadius
 import com.truevault.core.designsystem.theme.TvSpacing
+import com.truevault.core.model.VaultError
 import com.truevault.feature.authentication.R
 
-/**
- * UnlockScreen.
- *
- * Phase 0 delivers this destination as a navigable, themed shell. Its behaviour is implemented in
- * Phase 1; until then the screen states plainly that the step is not available rather than
- * showing controls that do nothing.
- */
 @Composable
 fun UnlockScreen(
     onUnlocked: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: UnlockViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val passwordState = rememberTextFieldState()
+    val runBiometricPrompt = rememberBiometricPromptRunner()
+
+    val promptTitle = stringResource(R.string.unlock_biometric_prompt_title)
+    val promptSubtitle = stringResource(R.string.unlock_biometric_prompt_subtitle)
+    val promptNegative = stringResource(R.string.unlock_biometric_prompt_negative)
+    val promptUnavailable = stringResource(R.string.biometric_unavailable)
+
+    LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                is UnlockEffect.LaunchBiometricPrompt -> runBiometricPrompt(
+                    BiometricPromptRequest(
+                        cipher = effect.cipher,
+                        title = promptTitle,
+                        subtitle = promptSubtitle,
+                        negativeButton = promptNegative,
+                        unavailableMessage = promptUnavailable,
+                        onResult = { result ->
+                            when (result) {
+                                is BiometricPromptResult.Succeeded -> viewModel.onAction(
+                                    UnlockAction.BiometricAuthenticated(result.cipher),
+                                )
+                                is BiometricPromptResult.Cancelled,
+                                is BiometricPromptResult.Error,
+                                -> viewModel.onAction(UnlockAction.BiometricDismissed)
+
+                                BiometricPromptResult.Failed -> Unit
+                            }
+                        },
+                    ),
+                )
+
+                UnlockEffect.Unlocked -> {
+                    passwordState.clearText()
+                    onUnlocked()
+                }
+            }
+        }
+    }
+
+    UnlockContent(
+        uiState = uiState,
+        passwordState = passwordState,
+        onSubmit = {
+            viewModel.onAction(UnlockAction.Submit(passwordState.text.toString().toCharArray()))
+        },
+        onBiometricRequested = { viewModel.onAction(UnlockAction.BiometricRequested) },
+        modifier = modifier,
+    )
+}
+
+@Composable
+internal fun UnlockContent(
+    uiState: UnlockUiState,
+    passwordState: TextFieldState,
+    onSubmit: () -> Unit,
+    onBiometricRequested: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = TvSpacing.screenHorizontal, vertical = TvSpacing.standard),
-        verticalArrangement = Arrangement.spacedBy(TvSpacing.standard),
+            .padding(horizontal = TvSpacing.screenHorizontal),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
-        TvSectionHeader(title = stringResource(R.string.unlock_title))
-        TvBanner(
-            text = stringResource(R.string.unlock_pending),
-            tone = TvBannerTone.Info,
+        Box(
+            modifier = Modifier
+                .size(88.dp)
+                .background(
+                    MaterialTheme.colorScheme.primaryContainer,
+                    RoundedCornerShape(TvRadius.card),
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Shield,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(40.dp),
+            )
+        }
+
+        Text(
+            text = stringResource(R.string.unlock_title),
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = TvSpacing.section),
+        )
+        Text(
+            text = stringResource(R.string.unlock_subtitle),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = TvSpacing.small),
+        )
+
+        OutlinedSecureTextField(
+            state = passwordState,
+            label = { Text(stringResource(R.string.unlock_password_label)) },
+            isError = uiState.error != null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = TvSpacing.section),
+        )
+
+        if (uiState.error != null) {
+            TvBanner(
+                text = stringResource(uiState.error.unlockMessageRes()),
+                tone = TvBannerTone.Error,
+                modifier = Modifier.padding(top = TvSpacing.standard),
+            )
+        }
+
+        if (uiState.biometricWasReset) {
+            TvBanner(
+                text = stringResource(R.string.unlock_biometric_reset),
+                tone = TvBannerTone.Info,
+                modifier = Modifier.padding(top = TvSpacing.standard),
+            )
+        }
+
+        TvPrimaryButton(
+            text = stringResource(R.string.unlock_action),
+            onClick = onSubmit,
+            enabled = !uiState.isCheckingPassword,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = TvSpacing.section),
+        )
+
+        if (uiState.biometricAvailable) {
+            TvSecondaryButton(
+                text = stringResource(R.string.unlock_use_biometrics),
+                onClick = onBiometricRequested,
+                icon = Icons.Filled.Fingerprint,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TvSpacing.small),
+            )
+        }
+    }
+}
+
+/**
+ * Wrong password and tampered blob deliberately map to the same message: telling them apart for the
+ * user would also tell them apart for anyone testing guesses.
+ */
+private fun VaultError.unlockMessageRes(): Int = when (this) {
+    is VaultError.UnsupportedFormatVersion -> R.string.unlock_unsupported_version
+    VaultError.IntegrityCheckFailed -> R.string.unlock_corrupted
+    else -> R.string.unlock_incorrect
+}
+
+@Preview(name = "Unlock", showBackground = true, heightDp = 780)
+@Composable
+private fun UnlockPreview() {
+    TvPreviewSurface {
+        UnlockContent(
+            uiState = UnlockUiState(biometricAvailable = true),
+            passwordState = TextFieldState(),
+            onSubmit = {},
+            onBiometricRequested = {},
         )
     }
 }

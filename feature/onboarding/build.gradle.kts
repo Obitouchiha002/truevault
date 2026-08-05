@@ -5,3 +5,7 @@ plugins {
 android {
     namespace = "com.truevault.feature.onboarding"
 }
+
+dependencies {
+    implementation(projects.core.datastore)
+}

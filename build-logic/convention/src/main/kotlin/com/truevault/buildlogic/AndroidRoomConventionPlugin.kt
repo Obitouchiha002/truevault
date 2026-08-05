@@ -12,12 +12,18 @@ import org.gradle.kotlin.dsl.dependencies
  * `room.schemaLocation` is set through KSP arguments rather than the separate Room Gradle plugin so
  * the schema JSONs are checked into the repository. Those schemas are what the migration tests read,
  * so they are a required build output, not a convenience.
+ *
+ * They land in `src/androidTest/assets/schemas` because that is where `MigrationTestHelper` looks,
+ * and because AGP 9's Kotlin DSL no longer allows re-typing the androidTest source set to add an
+ * extra assets directory.
  */
 class AndroidRoomConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
         pluginManager.apply(libs.pluginId("ksp"))
 
-        val schemaDir = layout.projectDirectory.dir("schemas")
+        // Exported into the androidTest assets tree so MigrationTestHelper can read them at runtime
+        // without any source-set surgery, and so they are checked in next to the tests that use them.
+        val schemaDir = layout.projectDirectory.dir("src/androidTest/assets/schemas")
 
         extensions.configure<KspExtension> {
             arg("room.schemaLocation", schemaDir.asFile.absolutePath)

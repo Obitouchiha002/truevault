@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedSecureTextField
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +36,7 @@ import com.truevault.core.designsystem.component.TvBannerTone
 import com.truevault.core.designsystem.component.TvPreviewSurface
 import com.truevault.core.designsystem.component.TvPrimaryButton
 import com.truevault.core.designsystem.component.TvSecondaryButton
+import com.truevault.core.designsystem.component.TvTextButton
 import com.truevault.core.designsystem.theme.TvRadius
 import com.truevault.core.designsystem.theme.TvSpacing
 import com.truevault.core.model.VaultError
@@ -48,6 +50,7 @@ fun UnlockScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val passwordState = rememberTextFieldState()
+    val recoveryState = rememberTextFieldState()
     val runBiometricPrompt = rememberBiometricPromptRunner()
 
     val promptTitle = stringResource(R.string.unlock_biometric_prompt_title)
@@ -91,10 +94,16 @@ fun UnlockScreen(
     UnlockContent(
         uiState = uiState,
         passwordState = passwordState,
+        recoveryState = recoveryState,
         onSubmit = {
             viewModel.onAction(UnlockAction.Submit(passwordState.text.toString().toCharArray()))
         },
         onBiometricRequested = { viewModel.onAction(UnlockAction.BiometricRequested) },
+        onRecoveryRequested = { viewModel.onAction(UnlockAction.RecoveryRequested) },
+        onSubmitRecovery = {
+            viewModel.onAction(UnlockAction.SubmitRecoveryKey(recoveryState.text.toString()))
+            recoveryState.clearText()
+        },
         modifier = modifier,
     )
 }
@@ -103,8 +112,11 @@ fun UnlockScreen(
 internal fun UnlockContent(
     uiState: UnlockUiState,
     passwordState: TextFieldState,
+    recoveryState: TextFieldState,
     onSubmit: () -> Unit,
     onBiometricRequested: () -> Unit,
+    onRecoveryRequested: () -> Unit,
+    onSubmitRecovery: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -180,6 +192,32 @@ internal fun UnlockContent(
                 .padding(top = TvSpacing.section),
         )
 
+        if (uiState.recoveryKeyAvailable && !uiState.showingRecoveryEntry) {
+            TvTextButton(
+                text = stringResource(R.string.unlock_use_recovery_key),
+                onClick = { onRecoveryRequested() },
+            )
+        }
+
+        if (uiState.showingRecoveryEntry) {
+            OutlinedTextField(
+                state = recoveryState,
+                label = { Text(stringResource(R.string.unlock_recovery_label)) },
+                supportingText = { Text(stringResource(R.string.unlock_recovery_hint)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TvSpacing.standard),
+            )
+            TvPrimaryButton(
+                text = stringResource(R.string.unlock_recovery_action),
+                onClick = onSubmitRecovery,
+                enabled = recoveryState.text.isNotEmpty(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TvSpacing.small),
+            )
+        }
+
         if (uiState.biometricAvailable) {
             TvSecondaryButton(
                 text = stringResource(R.string.unlock_use_biometrics),
@@ -208,10 +246,13 @@ private fun VaultError.unlockMessageRes(): Int = when (this) {
 private fun UnlockPreview() {
     TvPreviewSurface {
         UnlockContent(
-            uiState = UnlockUiState(biometricAvailable = true),
+            uiState = UnlockUiState(biometricAvailable = true, recoveryKeyAvailable = true),
             passwordState = TextFieldState(),
+            recoveryState = TextFieldState(),
             onSubmit = {},
             onBiometricRequested = {},
+            onRecoveryRequested = {},
+            onSubmitRecovery = {},
         )
     }
 }

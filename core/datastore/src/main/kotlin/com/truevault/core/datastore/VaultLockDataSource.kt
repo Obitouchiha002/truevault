@@ -57,6 +57,15 @@ class VaultLockDataSource @Inject constructor(
             record.biometricSealedMasterKey
                 ?.let { prefs[Keys.BIOMETRIC_SEALED_MASTER_KEY] = it.encode() }
                 ?: prefs.remove(Keys.BIOMETRIC_SEALED_MASTER_KEY)
+            record.recoverySealedMasterKey
+                ?.let { prefs[Keys.RECOVERY_SEALED_MASTER_KEY] = it.encode() }
+                ?: prefs.remove(Keys.RECOVERY_SEALED_MASTER_KEY)
+            record.recoverySalt
+                ?.let { prefs[Keys.RECOVERY_SALT] = it.encode() }
+                ?: prefs.remove(Keys.RECOVERY_SALT)
+            record.recoveryCheckValue
+                ?.let { prefs[Keys.RECOVERY_CHECK] = it.encode() }
+                ?: prefs.remove(Keys.RECOVERY_CHECK)
             prefs[Keys.CREATED_AT] = record.createdAtMillis
             prefs[Keys.UPDATED_AT] = record.updatedAtMillis
         }
@@ -76,6 +85,9 @@ class VaultLockDataSource @Inject constructor(
             salt = salt,
             sealedMasterKey = sealed,
             biometricSealedMasterKey = this[Keys.BIOMETRIC_SEALED_MASTER_KEY]?.decode(),
+            recoverySealedMasterKey = this[Keys.RECOVERY_SEALED_MASTER_KEY]?.decode(),
+            recoverySalt = this[Keys.RECOVERY_SALT]?.decode(),
+            recoveryCheckValue = this[Keys.RECOVERY_CHECK]?.decode(),
             createdAtMillis = this[Keys.CREATED_AT] ?: 0L,
             updatedAtMillis = this[Keys.UPDATED_AT] ?: 0L,
         )
@@ -86,6 +98,9 @@ class VaultLockDataSource @Inject constructor(
         val SALT = stringPreferencesKey("kdf_salt")
         val SEALED_MASTER_KEY = stringPreferencesKey("sealed_master_key")
         val BIOMETRIC_SEALED_MASTER_KEY = stringPreferencesKey("biometric_sealed_master_key")
+        val RECOVERY_SEALED_MASTER_KEY = stringPreferencesKey("recovery_sealed_master_key")
+        val RECOVERY_SALT = stringPreferencesKey("recovery_salt")
+        val RECOVERY_CHECK = stringPreferencesKey("recovery_check_value")
         val CREATED_AT = longPreferencesKey("created_at")
         val UPDATED_AT = longPreferencesKey("updated_at")
     }

@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="private_apps_title">Private apps</string>
-    <string name="private_apps_pending">TrueVault will detect what this device actually supports and guide you through the system setup. It never clones or hides apps by itself.</string>
+
+    <string name="private_apps_honesty_title">What TrueVault will not do</string>
+    <string name="private_apps_honesty_body">TrueVault does not clone apps, hide them behind a fake icon, or run them from inside itself. Apps that claim to do that either need root or stop working on the next Android update. Hiding an app is something Android itself has to provide.</string>
+
+    <string name="private_apps_supported_title">This device supports Private Space</string>
+    <string name="private_apps_step_1">Open your system privacy settings.</string>
+    <string name="private_apps_step_2">Choose Private Space and set its own lock.</string>
+    <string name="private_apps_step_3">Install the apps you want hidden inside it.</string>
+    <string name="private_apps_separate_data">Apps in Private Space use separate app data, so you will be signed out and will need to log in again inside it. That separation is the point — it is also what TrueVault cannot do for you.</string>
+    <string name="private_apps_open_settings">Open system settings</string>
+
+    <string name="private_apps_managed_title">Your device policy blocks this</string>
+    <string name="private_apps_managed_body">This device is managed, and its policy does not allow additional profiles. Private Space cannot be set up here, by TrueVault or by anything else.</string>
+
+    <string name="private_apps_unsupported_title">Not supported on this device</string>
+    <string name="private_apps_unsupported_body">Private Space arrived in Android 15, and this device does not offer it. TrueVault will not pretend to hide apps in its place.</string>
+
+    <string name="private_apps_vault_independent">Your file vault works fully whether or not Private Space is available.</string>
 </resources>

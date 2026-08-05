@@ -1,5 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="backup_title">Backup and recovery</string>
-    <string name="backup_pending">Encrypted local backup and restore are added after the vault engine is complete.</string>
+    <string name="backup_done">Done</string>
+    <string name="backup_cancel">Cancel</string>
+    <string name="backup_generic_error">That could not be completed. Your vault was not changed.</string>
+
+    <string name="backup_recovery_title">Recovery key</string>
+    <string name="backup_recovery_subtitle">The only way back in if you forget your password.</string>
+    <string name="backup_recovery_configured">A recovery key has been generated for this vault.</string>
+    <string name="backup_recovery_missing">No recovery key yet. If you forget your password, your vault cannot be opened by anyone, including us.</string>
+    <string name="backup_recovery_generate">Generate a recovery key</string>
+    <string name="backup_recovery_regenerate">Generate a new recovery key</string>
+
+    <string name="backup_recovery_shown_title">Write this down now</string>
+    <string name="backup_recovery_once_title">You will not see this again</string>
+    <string name="backup_recovery_once_body">TrueVault does not store this key. If you lose it and forget your password, your vault cannot be recovered by anyone.</string>
+    <string name="backup_recovery_screenshot">A screenshot goes into your gallery, which is exactly the place you are trying to keep things out of. Paper is safer.</string>
+    <string name="backup_recovery_written_down">I have written it down</string>
+
+    <string name="backup_recovery_confirm_title">Check your copy</string>
+    <string name="backup_recovery_confirm_subtitle">Type group number %1$d so we know it was recorded correctly.</string>
+    <string name="backup_recovery_group">Group %1$d</string>
+    <string name="backup_recovery_confirm_action">Confirm</string>
+
+    <string name="backup_export_title">Encrypted backup</string>
+    <string name="backup_warning_title">A backup is only as safe as where you put it</string>
+    <string name="backup_warning_body">The archive is encrypted before it leaves TrueVault, so the folder you save it to cannot read it. But anyone who has both the file and this passphrase has your whole vault — choose a passphrase you use nowhere else.</string>
+    <string name="backup_passphrase">Backup passphrase</string>
+    <string name="backup_passphrase_hint">At least 8 characters. This is separate from your vault password.</string>
+    <string name="backup_export_action">Create encrypted backup</string>
+    <string name="backup_exporting">Writing the backup</string>
+    <string name="backup_export_done_title">Backup created</string>
+
+    <string name="backup_restore_title">Restore</string>
+    <string name="backup_restore_subtitle">Bring an encrypted backup into this vault.</string>
+    <string name="backup_restore_action">Restore from a backup</string>
+    <string name="backup_restore_preview_title">This backup</string>
+    <string name="backup_restore_no_overwrite">Anything already in your vault is left exactly as it is. Items that already exist here are skipped, never replaced.</string>
+    <string name="backup_restoring">Restoring</string>
+    <string name="backup_restore_done_title">Restore complete</string>
+    <string name="backup_restored">Restored</string>
+    <string name="backup_skipped">Skipped</string>
+    <string name="backup_failed">Failed</string>
+    <string name="backup_skipped_explanation">Skipped items were already in your vault, so they were left untouched.</string>
+
+    <plurals name="backup_export_done_body">
+        <item quantity="one">%1$d item was written to the encrypted archive.</item>
+        <item quantity="other">%1$d items were written to the encrypted archive.</item>
+    </plurals>
+    <plurals name="backup_restore_preview">
+        <item quantity="one">This archive contains %1$d item.</item>
+        <item quantity="other">This archive contains %1$d items.</item>
+    </plurals>
 </resources>

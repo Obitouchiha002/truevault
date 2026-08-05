@@ -46,7 +46,12 @@ class UnlockViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val cipher = keyManager.biometricUnlockCipher()
-            _uiState.update { it.copy(biometricAvailable = cipher != null) }
+            _uiState.update {
+                it.copy(
+                    biometricAvailable = cipher != null,
+                    recoveryKeyAvailable = keyManager.hasRecoveryKey(),
+                )
+            }
         }
     }
 
@@ -56,6 +61,11 @@ class UnlockViewModel @Inject constructor(
             UnlockAction.BiometricRequested -> requestBiometric()
             is UnlockAction.BiometricAuthenticated -> unlockWithBiometric(action.cipher)
             UnlockAction.BiometricDismissed -> Unit
+            UnlockAction.RecoveryRequested ->
+                _uiState.update { it.copy(showingRecoveryEntry = true, error = null) }
+            UnlockAction.RecoveryDismissed ->
+                _uiState.update { it.copy(showingRecoveryEntry = false) }
+            is UnlockAction.SubmitRecoveryKey -> unlockWithRecoveryKey(action.key)
             UnlockAction.ErrorDismissed -> _uiState.update { it.copy(error = null) }
         }
     }
@@ -82,6 +92,22 @@ class UnlockViewModel @Inject constructor(
                 }
             } finally {
                 password.wipe()
+            }
+        }
+    }
+
+    private fun unlockWithRecoveryKey(key: String) {
+        _uiState.update { it.copy(isCheckingPassword = true, error = null) }
+        viewModelScope.launch {
+            when (val result = keyManager.unlockWithRecoveryKey(key)) {
+                is Outcome.Success -> {
+                    _uiState.update { it.copy(isCheckingPassword = false) }
+                    _effects.emit(UnlockEffect.Unlocked)
+                }
+
+                is Outcome.Failure -> _uiState.update {
+                    it.copy(isCheckingPassword = false, error = result.error)
+                }
             }
         }
     }

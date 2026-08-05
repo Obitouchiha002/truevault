@@ -45,4 +45,15 @@
         <item quantity="one">This permanently removes %1$d encrypted file from TrueVault. It cannot be undone, and files outside TrueVault are not affected.</item>
         <item quantity="other">This permanently removes %1$d encrypted files from TrueVault. It cannot be undone, and files outside TrueVault are not affected.</item>
     </plurals>
+
+    <string name="viewer_share">Share</string>
+    <string name="viewer_share_chooser">Share secured file</string>
+    <string name="viewer_share_continue">Share anyway</string>
+    <string name="viewer_share_warning_title">TrueVault cannot follow this file</string>
+    <string name="viewer_share_warning_body">Once another app receives this file, TrueVault cannot control its copies. There is no expiry and no way to take it back.</string>
+    <string name="viewer_pdf_page">Page %1$d</string>
+    <plurals name="viewer_pdf_pages">
+        <item quantity="one">%1$d page</item>
+        <item quantity="other">%1$d pages</item>
+    </plurals>
 </resources>

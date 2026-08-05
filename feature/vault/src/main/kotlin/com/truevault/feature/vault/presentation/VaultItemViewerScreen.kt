@@ -1,5 +1,7 @@
 package com.truevault.feature.vault.presentation
 
+import android.content.Intent
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,14 +13,23 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,16 +64,55 @@ fun VaultItemViewerScreen(
     viewModel: VaultItemViewerViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val shareChooserTitle = stringResource(R.string.viewer_share_chooser)
+    var showShareWarning by rememberSaveable { mutableStateOf(false) }
 
     DisposableEffect(vaultItemId) {
         viewModel.open(vaultItemId)
         onDispose { viewModel.close() }
     }
 
+    if (showShareWarning) {
+        AlertDialog(
+            onDismissRequest = { showShareWarning = false },
+            title = { Text(stringResource(R.string.viewer_share_warning_title)) },
+            text = { Text(stringResource(R.string.viewer_share_warning_body)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showShareWarning = false
+                        viewModel.share { share ->
+                            context.startActivity(
+                                Intent.createChooser(share.intent, shareChooserTitle),
+                            )
+                        }
+                    },
+                ) { Text(stringResource(R.string.viewer_share_continue)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showShareWarning = false }) {
+                    Text(stringResource(R.string.vault_delete_cancel))
+                }
+            },
+        )
+    }
+
     Column(modifier = modifier.fillMaxSize()) {
         TvTopAppBar(
             title = uiState.item?.displayName ?: stringResource(R.string.viewer_title),
             onNavigateBack = onNavigateBack,
+            actions = {
+                IconButton(
+                    onClick = { showShareWarning = true },
+                    enabled = uiState.item != null && uiState.error == null,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Share,
+                        contentDescription = stringResource(R.string.viewer_share),
+                    )
+                }
+            },
         )
 
         when {
@@ -103,6 +153,15 @@ private fun ViewerBody(uiState: VaultItemViewerUiState) {
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxWidth(),
             )
+
+            is ViewerContent.Video -> VideoViewer(file = content.file)
+
+            is ViewerContent.Pdf -> Column(
+                verticalArrangement = Arrangement.spacedBy(TvSpacing.small),
+            ) {
+                PdfPageCount(pageCount = content.pageCount)
+                PdfViewer(file = content.file, pageCount = content.pageCount)
+            }
 
             is ViewerContent.Text -> TvCard {
                 Text(

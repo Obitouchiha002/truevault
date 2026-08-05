@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The FileProvider is deliberately narrow: it exposes exactly one directory, the internal cache
+  folder that holds temporary decrypted plaintext, and nothing else. The vault itself, the database
+  and the Keystore-protected material are all outside any path listed here.
+-->
+<paths>
+    <cache-path
+        name="truevault_shared_plaintext"
+        path="tv_plaintext/" />
+</paths>

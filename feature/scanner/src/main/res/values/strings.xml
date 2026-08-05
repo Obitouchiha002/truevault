@@ -4,5 +4,44 @@
     <string name="scanner_limits_title">What a scan can see</string>
     <string name="scanner_limits_body">TrueVault can scan only files and folders you allow it to access. It cannot inspect private data inside other apps, encrypted chats, or your cloud accounts.</string>
     <string name="scanner_idle_title">No scan run yet</string>
-    <string name="scanner_idle_body">A scan compares your secured files against copies that are still visible on this device, then lets you review every match before anything is removed.</string>
+    <string name="scanner_idle_body">Pick a folder and TrueVault will compare what is in it against your vault, then show you every match before anything is removed.</string>
+    <string name="scanner_choose_folder">Choose a folder to scan</string>
+    <string name="scanner_scan_another">Scan another folder</string>
+
+    <string name="scanner_reading_folder">Reading the folder</string>
+    <string name="scanner_comparing">Comparing with your vault</string>
+    <string name="scanner_comparing_progress">Checked %1$d of %2$d</string>
+    <string name="scanner_truncated">This folder was larger than one scan can cover. Scan its subfolders separately to check the rest.</string>
+    <string name="scanner_clean_title">Nothing left behind</string>
+    <string name="scanner_clean_body">No copies of your secured files were found in the folder you allowed TrueVault to check.</string>
+    <string name="scanner_deletion_cancelled">You cancelled the removal, so that copy is still there.</string>
+    <string name="scanner_confidence">Confidence: %1$d%%</string>
+    <string name="scanner_remove_copy">Remove this copy</string>
+    <string name="scanner_keep">Keep it</string>
+
+    <string name="match_exact_duplicate">Identical copy found</string>
+    <string name="match_exact_duplicate_body">This file is byte-for-byte the same as one already secured in your vault. Removing it leaves the vault copy untouched.</string>
+    <string name="match_possible_duplicate">Possible copy</string>
+    <string name="match_possible_duplicate_body">Same size and type as a secured file, but the contents were not fully compared.</string>
+    <string name="match_original_remains">Original still readable</string>
+    <string name="match_original_remains_body">You chose Secure Move for this file, but the original is still there — the removal was declined, or it did not go through.</string>
+    <string name="match_trash_unknown">Trash status unknown</string>
+    <string name="match_trash_unknown_body">A deleted file may still be recoverable from the system trash. TrueVault cannot see inside it.</string>
+    <string name="match_cloud_copy">Cloud copy possible</string>
+    <string name="match_cloud_copy_body">This file lives on a cloud-backed provider, so copies may exist off this device. TrueVault cannot check those.</string>
+    <string name="match_unsupported_location">Outside what TrueVault can check</string>
+    <string name="match_unsupported_location_body">This location is not covered by anything you granted access to.</string>
+
+    <plurals name="scanner_files_found">
+        <item quantity="one">Found %1$d file so far</item>
+        <item quantity="other">Found %1$d files so far</item>
+    </plurals>
+    <plurals name="scanner_found_title">
+        <item quantity="one">%1$d copy needs your decision</item>
+        <item quantity="other">%1$d copies need your decision</item>
+    </plurals>
+    <plurals name="scanner_examined">
+        <item quantity="one">Examined %1$d file in the folder you allowed</item>
+        <item quantity="other">Examined %1$d files in the folder you allowed</item>
+    </plurals>
 </resources>

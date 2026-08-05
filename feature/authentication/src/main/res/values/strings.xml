@@ -78,4 +78,9 @@
     <string name="security_keystore_hardware_body">This device stores your vault key inside hardware that TrueVault cannot read or copy out. Even a full copy of the app\'s files cannot be attacked on another machine.</string>
     <string name="security_keystore_software_title">Keys are protected in software on this device</string>
     <string name="security_keystore_software_body">This device has no secure element available to TrueVault, so your vault key is protected by Android\'s software keystore. Your files are still encrypted, but the protection is weaker than on hardware-backed devices.</string>
+
+    <string name="unlock_use_recovery_key">Use my recovery key instead</string>
+    <string name="unlock_recovery_label">Recovery key</string>
+    <string name="unlock_recovery_hint">Six groups of four characters. Dashes, spaces and letter case do not matter.</string>
+    <string name="unlock_recovery_action">Unlock with recovery key</string>
 </resources>

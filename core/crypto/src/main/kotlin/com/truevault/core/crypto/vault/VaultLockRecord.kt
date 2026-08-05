@@ -32,17 +32,37 @@ data class VaultLockRecord(
     /** The same master key sealed by the biometric-bound key. Null unless biometrics are enabled. */
     val biometricSealedMasterKey: ByteArray?,
 
+    /**
+     * The master key sealed by a key derived from the recovery key.
+     *
+     * Deliberately *not* wrapped by the Keystore device key, unlike [sealedMasterKey]: a recovery
+     * key exists precisely for the case where this device is gone. Binding it to this device's
+     * hardware would make it useless exactly when it is needed.
+     */
+    val recoverySealedMasterKey: ByteArray?,
+
+    /** KDF salt for the recovery key. Null when no recovery key has been generated. */
+    val recoverySalt: ByteArray?,
+
+    /** Lets the app say "wrong recovery key" instead of a generic failure. */
+    val recoveryCheckValue: ByteArray?,
+
     val createdAtMillis: Long,
 
     val updatedAtMillis: Long,
 ) {
     val biometricUnlockEnabled: Boolean get() = biometricSealedMasterKey != null
 
+    val recoveryKeyConfigured: Boolean get() = recoverySealedMasterKey != null
+
     override fun equals(other: Any?): Boolean = other is VaultLockRecord &&
         kdfVersion == other.kdfVersion &&
         salt.contentEquals(other.salt) &&
         sealedMasterKey.contentEquals(other.sealedMasterKey) &&
         biometricSealedMasterKey.contentEqualsNullable(other.biometricSealedMasterKey) &&
+        recoverySealedMasterKey.contentEqualsNullable(other.recoverySealedMasterKey) &&
+        recoverySalt.contentEqualsNullable(other.recoverySalt) &&
+        recoveryCheckValue.contentEqualsNullable(other.recoveryCheckValue) &&
         createdAtMillis == other.createdAtMillis &&
         updatedAtMillis == other.updatedAtMillis
 
@@ -57,8 +77,8 @@ data class VaultLockRecord(
     }
 
     /** Never print the blobs. */
-    override fun toString(): String =
-        "VaultLockRecord(kdfVersion=$kdfVersion, biometric=$biometricUnlockEnabled)"
+    override fun toString(): String = "VaultLockRecord(kdfVersion=$kdfVersion, " +
+        "biometric=$biometricUnlockEnabled, recovery=$recoveryKeyConfigured)"
 }
 
 private fun ByteArray?.contentEqualsNullable(other: ByteArray?): Boolean = when {

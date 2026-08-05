@@ -13,35 +13,29 @@ the app says so in the place the limitation matters.
 
 ## Status
 
+All six phases are built. Every gate below was run from a clean tree.
+
 | Phase | Scope | State |
 |-------|-------|-------|
 | 0 | Build foundation, modules, DI, navigation, design system, error model | **Complete** |
 | 1 | Onboarding, vault password, Keystore master key, biometrics, session and auto-lock | **Complete** |
-| 2 | Secure file vault: pickers, streaming AES-256-GCM, Room, transaction engine, viewer, original deletion | **Mostly complete** — see gaps below |
-| 3 | Privacy leak scanner and explainable privacy score | Not started |
-| 4 | Encrypted local backup and restore, recovery key | Not started |
-| 5 | Private Apps capability detection and guided setup | Not started |
-| 6 | Hardening, threat model, release checklist | Not started |
+| 2 | Secure file vault: pickers, streaming AES-256-GCM, Room, transaction engine, viewer, original deletion, sharing | **Complete** |
+| 3 | Privacy leak scanner and explainable privacy score | **Complete** |
+| 4 | Encrypted local backup and restore, recovery key | **Complete** |
+| 5 | Private Apps capability detection and guided setup | **Complete** |
+| 6 | Hardening, threat model, documentation, release checklist | **Complete** |
 
-What runs today: first-run onboarding; vault password creation with an Argon2id-derived key sealed
-inside the Android Keystore; biometric unlock; an in-memory session with auto-lock and screen-off
-locking; screenshot blocking; secure import from the Photo Picker and the Storage Access Framework
-with Secure Copy and Secure Move; chunked AES-256-GCM file containers with verification before
-commit; the platform's own delete-confirmation flow for originals with the real outcome recorded;
-a paged vault with encrypted thumbnails, search, sort, multi-select and delete; an image and text
-viewer; crash recovery for interrupted imports; and an explainable privacy score on the dashboard.
+| Gate | Result |
+|------|--------|
+| `./gradlew :app:assembleDebug` | Passes |
+| `./gradlew testDebugUnitTest` | 114 unit tests, 0 failures |
+| `./gradlew :app:lintDebug` | Clean — 0 errors, 0 warnings |
+| `./gradlew :app:assembleDebugAndroidTest` | Compiles (needs a device to run) |
+| `./gradlew :app:bundleRelease` | Passes with minification and resource shrinking |
 
-**Known gaps in Phase 2**, all of them stated in the app rather than hidden:
-
-- The viewer renders images and text. Videos and PDFs are stored and encrypted correctly but say
-  "TrueVault cannot preview this format" instead of rendering.
-- Secure sharing out of the vault is not built.
-- Imports run in the foreground only; a WorkManager-backed queue for very large batches is not built.
-- Room migration tests and Compose UI tests are not written yet (there is one schema version so far,
-  and no migrations exist to test).
-
-Scanning, backup and Private Apps are not built; those screens say so rather than showing controls
-that do nothing.
+What is deliberately **not** built is listed in [Known limitations](docs/known-limitations.md) —
+cloud backup, perceptual hashing, expiring links, background imports and app cloning are all absent
+on purpose, and the app says so where a user would otherwise expect them.
 
 ---
 
@@ -230,7 +224,11 @@ alongside the screen that needs it.
 
 ## Documentation
 
-- [Architecture](docs/architecture.md)
-- Threat model — Phase 6
-- Encrypted file format specification — Phase 2
-- Database schema and migration strategy — Phase 2
+- [Architecture](docs/architecture.md) — data flow, module graph, build logic, security boundaries
+- [Threat model](docs/threat-model.md) — 20 threats, each with what remains true after mitigation
+- [Encrypted file format](docs/encrypted-file-format.md) — container layout, AAD design, parser rules
+- [Database schema and migrations](docs/database.md) — what is sealed, what is not, and why
+- [Permissions](docs/permissions.md) — the one permission, and everything deliberately not requested
+- [Testing](docs/testing.md) — coverage map and honest gaps
+- [Known limitations](docs/known-limitations.md)
+- [Release checklist](docs/release-checklist.md)

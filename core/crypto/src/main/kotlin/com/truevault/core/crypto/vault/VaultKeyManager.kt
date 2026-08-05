@@ -15,6 +15,7 @@ import com.truevault.core.crypto.kdf.wipe
 import com.truevault.core.crypto.keystore.BiometricKeyInvalidatedException
 import com.truevault.core.crypto.keystore.HardwareKeyStore
 import com.truevault.core.crypto.keystore.KeyStoreUnavailableException
+import com.truevault.core.crypto.recovery.RecoveryKey
 import com.truevault.core.crypto.session.VaultSession
 import com.truevault.core.model.VaultError
 import java.security.GeneralSecurityException
@@ -31,6 +32,7 @@ private const val TAG = "VaultKeys"
 /** Associated data binds a sealed blob to its purpose, so blobs cannot be swapped between slots. */
 private val AAD_PASSWORD_LAYER = "truevault.master.password.v1".toByteArray()
 private val AAD_DEVICE_LAYER = "truevault.master.device.v1".toByteArray()
+private val AAD_RECOVERY_LAYER = "truevault.master.recovery.v1".toByteArray()
 
 /**
  * Owns the vault master key: creating it, opening it, and re-sealing it.
@@ -93,6 +95,9 @@ class VaultKeyManager @Inject constructor(
                     salt = salt,
                     sealedMasterKey = outer.toByteArray(),
                     biometricSealedMasterKey = null,
+                    recoverySealedMasterKey = null,
+                    recoverySalt = null,
+                    recoveryCheckValue = null,
                     createdAtMillis = now,
                     updatedAtMillis = now,
                 ),
@@ -301,6 +306,96 @@ class VaultKeyManager @Inject constructor(
             VaultError.EncryptionFailed.asFailure()
         }
     }
+
+    /**
+     * Generates a recovery key and seals the master key under it.
+     *
+     * Requires an unlocked session: generating a way back in must never be possible without first
+     * having proved a way in. The returned characters are the caller's to display once and wipe —
+     * they are not stored anywhere, which is exactly why losing them is unrecoverable.
+     */
+    suspend fun generateRecoveryKey(): Outcome<CharArray> = withContext(defaultDispatcher) {
+        val record = lockStore.read()
+            ?: return@withContext VaultError.Unknown("No vault has been created yet.").asFailure()
+        val masterKey = session.masterKeyOrNull()
+            ?: return@withContext VaultError.AuthenticationRequired.asFailure()
+
+        val recoveryKey = RecoveryKey.generate()
+
+        try {
+            val params = KdfParams.CURRENT
+            val salt = PasswordKeyDerivation.randomSalt()
+            val derived = PasswordKeyDerivation.deriveKey(recoveryKey, salt, params)
+            val sealed = AesGcm.encrypt(derived, masterKey.encoded, AAD_RECOVERY_LAYER)
+
+            lockStore.write(
+                record.copy(
+                    recoverySealedMasterKey = sealed.toByteArray(),
+                    recoverySalt = salt,
+                    recoveryCheckValue = RecoveryKey.checkValue(recoveryKey),
+                    updatedAtMillis = timeProvider.currentTimeMillis(),
+                ),
+            )
+            SecureLog.i(TAG, "Recovery key generated")
+            recoveryKey.asSuccess()
+        } catch (e: GeneralSecurityException) {
+            recoveryKey.wipe()
+            SecureLog.e(TAG, "Recovery key generation failed", e)
+            VaultError.EncryptionFailed.asFailure()
+        }
+    }
+
+    /**
+     * Opens the vault with a recovery key.
+     *
+     * The check value distinguishes a mistyped key from a damaged record, so the user gets an
+     * actionable message rather than a generic failure at the worst possible moment.
+     */
+    suspend fun unlockWithRecoveryKey(input: String): Outcome<Unit> =
+        withContext(defaultDispatcher) {
+            val record = lockStore.read()
+                ?: return@withContext VaultError.Unknown("No vault has been created yet.").asFailure()
+
+            val sealed = record.recoverySealedMasterKey
+            val salt = record.recoverySalt
+            if (sealed == null || salt == null) {
+                return@withContext VaultError.Unknown(
+                    "No recovery key was ever generated for this vault.",
+                ).asFailure()
+            }
+
+            val normalised = RecoveryKey.normalise(input)
+                ?: return@withContext VaultError.AuthenticationRequired.asFailure()
+
+            record.recoveryCheckValue?.let { expected ->
+                if (!RecoveryKey.checkValue(normalised).contentEquals(expected)) {
+                    normalised.wipe()
+                    return@withContext VaultError.AuthenticationRequired.asFailure()
+                }
+            }
+
+            var masterKeyBytes: ByteArray? = null
+            try {
+                val params = KdfParams.forVersion(record.kdfVersion) ?: KdfParams.CURRENT
+                val derived = PasswordKeyDerivation.deriveKey(normalised, salt, params)
+                masterKeyBytes = AesGcm.decrypt(
+                    derived,
+                    SealedData.fromByteArray(sealed),
+                    AAD_RECOVERY_LAYER,
+                )
+                session.open(SecretKeySpec(masterKeyBytes, "AES"))
+                Unit.asSuccess()
+            } catch (e: GeneralSecurityException) {
+                VaultError.AuthenticationRequired.asFailure()
+            } catch (e: IllegalArgumentException) {
+                VaultError.IntegrityCheckFailed.asFailure()
+            } finally {
+                normalised.wipe()
+                masterKeyBytes?.wipe()
+            }
+        }
+
+    suspend fun hasRecoveryKey(): Boolean = lockStore.read()?.recoveryKeyConfigured == true
 
     /** The master key, for modules that legitimately need to wrap per-file keys. Null when locked. */
     internal fun masterKeyOrNull(): SecretKey? = session.masterKeyOrNull()

@@ -23,18 +23,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.truevault.core.designsystem.component.TvBanner
 import com.truevault.core.designsystem.component.TvBannerTone
+import com.truevault.core.designsystem.component.TvAccentCard
 import com.truevault.core.designsystem.component.TvCategoryRow
 import com.truevault.core.designsystem.component.TvPreviewSurface
 import com.truevault.core.designsystem.component.TvQuickAction
+import com.truevault.core.designsystem.component.TvScoreRing
 import com.truevault.core.designsystem.component.TvSectionHeader
 import com.truevault.core.designsystem.theme.TvSpacing
 import com.truevault.core.model.MimeCategory
@@ -93,13 +97,18 @@ internal fun HomeContent(
         }
 
         item(key = "status") {
-            // Phase 0 shows the honest state of a fresh install. The privacy score appears once
-            // there is vault data to score (Phase 3), rather than displaying a flattering number.
-            TvBanner(
-                title = stringResource(R.string.home_setup_title),
-                text = stringResource(R.string.home_setup_body),
-                tone = TvBannerTone.Info,
-            )
+            val score = uiState.privacyScore
+            if (score == null) {
+                // A fresh vault has nothing to score. A flattering "100%" here would be a number
+                // with no meaning behind it.
+                TvBanner(
+                    title = stringResource(R.string.home_setup_title),
+                    text = stringResource(R.string.home_setup_body),
+                    tone = TvBannerTone.Info,
+                )
+            } else {
+                PrivacyScoreCard(score = score, onAction = onAction)
+            }
         }
 
         item(key = "quick_actions") {
@@ -146,10 +155,116 @@ internal fun HomeContent(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(TvSpacing.small)) {
+                        uiState.recentActivity.forEach { entry ->
+                            Text(
+                                text = pluralStringResource(
+                                    entry.kind.pluralRes(),
+                                    entry.itemCount,
+                                    entry.itemCount,
+                                ),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+/**
+ * The score, with the reasons underneath it.
+ *
+ * The breakdown is not optional detail: a number without its reasons is decoration, and the user
+ * cannot act on it.
+ */
+@Composable
+private fun PrivacyScoreCard(
+    score: com.truevault.core.model.PrivacyScore,
+    onAction: (HomeAction) -> Unit,
+) {
+    TvAccentCard(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TvSpacing.standard),
+        ) {
+            TvScoreRing(
+                score = score.score,
+                label = stringResource(R.string.home_score_label),
+                contentDescription = stringResource(R.string.home_score_a11y, score.score),
+                diameter = 116.dp,
+            )
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.home_score_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                if (score.hasIssues) {
+                    Text(
+                        text = pluralStringResource(
+                            R.plurals.home_score_issues,
+                            score.itemsNeedingAttention,
+                            score.itemsNeedingAttention,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = TvSpacing.xs),
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.home_score_clean),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = TvSpacing.xs),
+                    )
+                }
+            }
+        }
+
+        score.deductions.forEach { deduction ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TvSpacing.small),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = stringResource(deduction.reason.labelRes()),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = stringResource(R.string.home_score_deduction, deduction.points),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+private fun com.truevault.core.model.PrivacyDeductionReason.labelRes(): Int = when (this) {
+    com.truevault.core.model.PrivacyDeductionReason.ORIGINAL_REMAINS -> R.string.deduction_original_remains
+    com.truevault.core.model.PrivacyDeductionReason.EXACT_DUPLICATE_EXISTS -> R.string.deduction_duplicate
+    com.truevault.core.model.PrivacyDeductionReason.BACKUP_NOT_CONFIGURED -> R.string.deduction_backup
+    com.truevault.core.model.PrivacyDeductionReason.RECOVERY_KEY_NOT_CONFIGURED -> R.string.deduction_recovery
+    com.truevault.core.model.PrivacyDeductionReason.FAILED_IMPORT_UNRESOLVED -> R.string.deduction_failed_import
+    com.truevault.core.model.PrivacyDeductionReason.INTEGRITY_FAILURE -> R.string.deduction_integrity
+}
+
+private fun HomeActivityItem.Kind.pluralRes(): Int = when (this) {
+    HomeActivityItem.Kind.FILES_SECURED -> R.plurals.activity_files_secured
+    HomeActivityItem.Kind.ORIGINAL_DELETED -> R.plurals.activity_original_deleted
+    HomeActivityItem.Kind.DUPLICATE_DETECTED -> R.plurals.activity_duplicate_detected
+    HomeActivityItem.Kind.BACKUP_COMPLETED -> R.plurals.activity_backup_completed
+    HomeActivityItem.Kind.IMPORT_FAILED -> R.plurals.activity_import_failed
 }
 
 @Composable

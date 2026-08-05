@@ -50,8 +50,18 @@ and never replays on rotation.
    :core:database     ──▶ :core:common, :core:model      (Phase 2)
    :core:crypto       ──▶ :core:common, :core:model      (Phase 1–2)
    :core:storage      ──▶ :core:common, :core:model      (Phase 2)
-   :core:testing      ──▶ :core:common, :core:model
+   :core:data         ──▶ :core:database, :core:crypto, :core:storage, :core:datastore
+   :core:testing      ──▶ :core:common, :core:model, :core:crypto
 ```
+
+### Why `:core:data` exists
+
+It is the one module beyond the original recommended list. Four features — home, vault, import and
+scanner — need the same repositories, and those repositories have to combine the database, the
+crypto engine and the storage layer in one place. The alternatives were worse: duplicating the
+logic per feature, or letting features depend on each other. `:core:data` is the seam that keeps
+`:core:crypto` and `:core:storage` invisible to the UI while still having exactly one implementation
+of "import this file" in the codebase.
 
 Feature modules deliberately do **not** depend on `:core:database`, `:core:crypto` or
 `:core:storage`. A screen reaches those only through a repository, which is what keeps encryption

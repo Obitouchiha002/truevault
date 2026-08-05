@@ -32,6 +32,7 @@ import com.truevault.feature.scanner.navigation.navigateToScanner
 import com.truevault.feature.scanner.navigation.scannerScreen
 import com.truevault.feature.settings.navigation.settingsScreen
 import com.truevault.feature.vault.navigation.navigateToVault
+import com.truevault.feature.vault.navigation.navigateToVaultItem
 import com.truevault.feature.vault.navigation.vaultScreen
 
 /**
@@ -119,6 +120,8 @@ fun TrueVaultNavHost(
 
         vaultScreen(
             onAddFiles = { navController.navigateToImport() },
+            onOpenItem = { itemId -> navController.navigateToVaultItem(itemId) },
+            onNavigateBack = { navController.popBackStack() },
         )
 
         scannerScreen()

@@ -4,4 +4,45 @@
     <string name="vault_empty_title">Your vault is empty</string>
     <string name="vault_empty_body">Files you secure are encrypted on this device. TrueVault will always tell you whether the original is still visible somewhere else.</string>
     <string name="vault_empty_action">Add files</string>
+    <string name="vault_search_hint">Search your vault</string>
+    <string name="vault_no_results_title">Nothing matched</string>
+    <string name="vault_no_results_body">Try a shorter search. TrueVault searches file names only, and only inside your vault.</string>
+
+    <string name="vault_toggle_layout">Switch between grid and list</string>
+    <string name="vault_sort">Sort</string>
+    <string name="vault_sort_newest">Newest first</string>
+    <string name="vault_sort_oldest">Oldest first</string>
+    <string name="vault_sort_name_az">Name A–Z</string>
+    <string name="vault_sort_name_za">Name Z–A</string>
+    <string name="vault_sort_largest">Largest first</string>
+    <string name="vault_sort_smallest">Smallest first</string>
+    <string name="vault_sort_type">By type</string>
+
+    <string name="vault_clear_selection">Clear selection</string>
+    <string name="vault_select_all">Select all</string>
+    <string name="vault_delete_selected">Delete selected</string>
+    <string name="vault_delete_title">Delete from vault?</string>
+    <string name="vault_delete_confirm">Delete</string>
+    <string name="vault_delete_cancel">Cancel</string>
+
+    <string name="viewer_title">Secured file</string>
+    <string name="viewer_unsupported">This file is secured, but TrueVault cannot preview this format.</string>
+    <string name="viewer_unsupported_body">Your file is stored and encrypted exactly as it was. Preview for videos and PDFs is not part of this build.</string>
+    <string name="viewer_text_truncated">Preview shortened. The stored file is complete.</string>
+    <string name="viewer_locked">The vault locked while this file was open.</string>
+    <string name="viewer_corrupted">This file could not be opened. Its encrypted contents failed verification, so nothing was shown.</string>
+    <string name="viewer_loading">Decrypting…</string>
+    <string name="viewer_size">Size</string>
+    <string name="viewer_type">Type</string>
+    <string name="viewer_status">Status</string>
+    <string name="viewer_unknown_type">Unknown</string>
+
+    <plurals name="vault_selected">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+    <plurals name="vault_delete_body">
+        <item quantity="one">This permanently removes %1$d encrypted file from TrueVault. It cannot be undone, and files outside TrueVault are not affected.</item>
+        <item quantity="other">This permanently removes %1$d encrypted files from TrueVault. It cannot be undone, and files outside TrueVault are not affected.</item>
+    </plurals>
 </resources>

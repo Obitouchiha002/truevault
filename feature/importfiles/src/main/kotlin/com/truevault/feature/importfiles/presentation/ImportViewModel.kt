@@ -1,0 +1,273 @@
+package com.truevault.feature.importfiles.presentation
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.truevault.core.data.ActivityKind
+import com.truevault.core.data.ActivityRepository
+import com.truevault.core.data.ImportCoordinator
+import com.truevault.core.data.ImportReviewBuilder
+import com.truevault.core.data.ImportSessionStore
+import com.truevault.core.data.ImportStep
+import com.truevault.core.data.OriginalDeletionRequest
+import com.truevault.core.data.SecureImportEngine
+import com.truevault.core.data.model.ImportOutcome
+import com.truevault.core.datastore.UserPreferencesDataSource
+import com.truevault.core.model.DeletionOutcome
+import com.truevault.core.model.ImportMode
+import com.truevault.core.model.ImportModePreference
+import com.truevault.core.model.MimeCategory
+import com.truevault.core.model.SelectedSource
+import com.truevault.core.model.VaultError
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+/**
+ * Drives the whole import flow.
+ *
+ * The sequence it enforces is the product requirement, not an implementation detail: pick, review,
+ * choose Copy or Move, encrypt and verify, and only then ask about the original. There is no path
+ * through this class where a deletion is requested before a container has been verified and
+ * committed.
+ */
+@HiltViewModel
+class ImportViewModel @Inject constructor(
+    private val sessionStore: ImportSessionStore,
+    private val coordinator: ImportCoordinator,
+    private val reviewBuilder: ImportReviewBuilder,
+    private val importEngine: SecureImportEngine,
+    private val preferences: UserPreferencesDataSource,
+    private val activityRepository: ActivityRepository,
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(ImportUiState())
+    val uiState: StateFlow<ImportUiState> = _uiState.asStateFlow()
+
+    private val _effects = MutableSharedFlow<ImportEffect>(
+        replay = 0,
+        extraBufferCapacity = 2,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+    val effects: SharedFlow<ImportEffect> = _effects.asSharedFlow()
+
+    private var importJob: Job? = null
+    private var pendingDeletionItemIds: List<String> = emptyList()
+    private var pendingDeletionTokens: List<String> = emptyList()
+
+    init {
+        viewModelScope.launch {
+            val prefs = preferences.userPreferences.first()
+            _uiState.update { it.copy(modePreference = prefs.importModePreference) }
+        }
+    }
+
+    fun onAction(action: ImportAction) {
+        when (action) {
+            is ImportAction.SourcesPicked -> onSourcesPicked(action.uriTokens, action.fromPhotoPicker)
+            ImportAction.PickCancelled -> emit(ImportEffect.Close)
+            ImportAction.ReviewConfirmed -> onReviewConfirmed()
+            is ImportAction.ModeChosen -> onModeChosen(action.mode, action.remember)
+            is ImportAction.RememberToggled -> onRememberToggled(action.remember)
+            ImportAction.CancelImport -> cancelImport()
+            is ImportAction.DeletionResultReceived -> onDeletionResult(action.approved)
+            ImportAction.SkipDeletion -> onDeletionResult(approved = false)
+            ImportAction.Done -> {
+                (uiState.value.stage as? ImportStage.Finished)?.result?.sessionId
+                    ?.let(sessionStore::discard)
+                emit(ImportEffect.Close)
+            }
+
+            ImportAction.ErrorDismissed -> _uiState.update { it.copy(error = null) }
+        }
+    }
+
+    private fun onSourcesPicked(uriTokens: List<String>, fromPhotoPicker: Boolean) {
+        if (uriTokens.isEmpty()) {
+            emit(ImportEffect.Close)
+            return
+        }
+
+        _uiState.update { it.copy(isBusy = true, error = null) }
+
+        viewModelScope.launch {
+            val sources = coordinator.describeSources(uriTokens, fromPhotoPicker)
+
+            if (sources.isEmpty()) {
+                _uiState.update { it.copy(isBusy = false, error = VaultError.SourceNotFound) }
+                return@launch
+            }
+
+            val session = sessionStore.create(sources)
+            val review = reviewBuilder.build(sources)
+
+            _uiState.update {
+                it.copy(
+                    isBusy = false,
+                    dominantCategory = dominantCategory(sources),
+                    stage = ImportStage.Reviewing(session.sessionId, review),
+                )
+            }
+        }
+    }
+
+    private fun onReviewConfirmed() {
+        val reviewing = uiState.value.stage as? ImportStage.Reviewing ?: return
+
+        // Refuse before encryption begins. Starting and failing halfway would leave the user with a
+        // partly full disk and nothing secured.
+        if (!reviewing.review.hasEnoughSpace) {
+            _uiState.update {
+                it.copy(
+                    error = VaultError.InsufficientStorage(
+                        requiredBytes = reviewing.review.requiredBytes,
+                        availableBytes = reviewing.review.availableBytes,
+                    ),
+                )
+            }
+            return
+        }
+
+        val remembered = when (uiState.value.modePreference) {
+            ImportModePreference.ALWAYS_COPY -> ImportMode.SECURE_COPY
+            ImportModePreference.ALWAYS_MOVE -> ImportMode.SECURE_MOVE
+            ImportModePreference.ALWAYS_ASK -> null
+        }
+
+        if (remembered != null) {
+            startImport(reviewing.sessionId, remembered)
+        } else {
+            _uiState.update {
+                it.copy(
+                    stage = ImportStage.ChoosingMode(
+                        sessionId = reviewing.sessionId,
+                        review = reviewing.review,
+                        defaultMode = null,
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun onRememberToggled(remember: Boolean) {
+        val stage = uiState.value.stage as? ImportStage.ChoosingMode ?: return
+        _uiState.update { it.copy(stage = stage.copy(rememberChoice = remember)) }
+    }
+
+    private fun onModeChosen(mode: ImportMode, remember: Boolean) {
+        val stage = uiState.value.stage as? ImportStage.ChoosingMode ?: return
+
+        if (remember) {
+            viewModelScope.launch {
+                preferences.setImportModePreference(
+                    when (mode) {
+                        ImportMode.SECURE_COPY -> ImportModePreference.ALWAYS_COPY
+                        ImportMode.SECURE_MOVE -> ImportModePreference.ALWAYS_MOVE
+                    },
+                )
+            }
+        }
+
+        startImport(stage.sessionId, mode)
+    }
+
+    private fun startImport(sessionId: String, mode: ImportMode) {
+        val session = sessionStore.setMode(sessionId, mode) ?: return
+
+        importJob?.cancel()
+        importJob = viewModelScope.launch {
+            importEngine.import(sessionId, session.sources, mode).collect { step ->
+                when (step) {
+                    is ImportStep.Progress ->
+                        _uiState.update { it.copy(stage = ImportStage.Running(step.progress)) }
+
+                    is ImportStep.Finished -> onImportFinished(step)
+                }
+            }
+        }
+    }
+
+    private suspend fun onImportFinished(step: ImportStep.Finished) {
+        val result = step.result
+        val secured = result.outcomes.filterIsInstance<ImportOutcome.Secured>()
+        val pending = secured.filter { it.deletionPending }
+
+        if (pending.isEmpty()) {
+            _uiState.update { it.copy(stage = ImportStage.Finished(result)) }
+            return
+        }
+
+        pendingDeletionItemIds = pending.map { it.vaultItemId }
+        pendingDeletionTokens = pending.map { it.source.uriToken }
+
+        // Step 10: only now, with every container verified and committed, is the original discussed.
+        when (val request = coordinator.planOriginalDeletion(pendingDeletionTokens)) {
+            is OriginalDeletionRequest.NeedsUserConfirmation -> {
+                _uiState.update {
+                    it.copy(
+                        stage = ImportStage.Finished(result, awaitingDeletionConfirmation = true),
+                    )
+                }
+                _effects.emit(ImportEffect.RequestOriginalDeletion(request.intentSender))
+            }
+
+            is OriginalDeletionRequest.Resolved -> {
+                // The vault copy is safe either way. The result screen says what really happened
+                // rather than implying the original is gone.
+                importEngine.recordDeletionOutcome(pendingDeletionItemIds, request.outcome)
+                _uiState.update {
+                    it.copy(stage = ImportStage.Finished(result, deletionOutcome = request.outcome))
+                }
+            }
+        }
+    }
+
+    private fun onDeletionResult(approved: Boolean) {
+        val stage = uiState.value.stage as? ImportStage.Finished ?: return
+
+        viewModelScope.launch {
+            // "Approved" only means the dialog was accepted. What actually happened is confirmed
+            // by re-checking the URIs.
+            val outcome = coordinator.confirmDeletion(pendingDeletionTokens, approved)
+
+            importEngine.recordDeletionOutcome(pendingDeletionItemIds, outcome)
+
+            _uiState.update {
+                it.copy(
+                    stage = stage.copy(
+                        deletionOutcome = outcome,
+                        awaitingDeletionConfirmation = false,
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun cancelImport() {
+        importJob?.cancel()
+        importJob = null
+        viewModelScope.launch { activityRepository.record(ActivityKind.IMPORT_FAILED, 0) }
+        emit(ImportEffect.Close)
+    }
+
+    private fun emit(effect: ImportEffect) {
+        viewModelScope.launch { _effects.emit(effect) }
+    }
+
+    private fun dominantCategory(sources: List<SelectedSource>): MimeCategory =
+        sources.groupingBy { it.category }.eachCount().maxByOrNull { it.value }?.key
+            ?: MimeCategory.OTHER
+
+    override fun onCleared() {
+        importJob?.cancel()
+    }
+}

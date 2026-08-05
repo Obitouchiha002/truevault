@@ -1,5 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="import_source_title">Add to vault</string>
-    <string name="import_source_pending">Secure import is added once the encryption and storage layers are in place.</string>
+    <string name="import_title">Add to vault</string>
+
+    <string name="import_choose_source">What would you like to secure?</string>
+    <string name="import_choose_source_summary">TrueVault only ever sees the files you pick.</string>
+    <string name="import_photos_videos">Photos and videos</string>
+    <string name="import_documents">Documents and other files</string>
+    <string name="import_permissions_title">No storage permission needed</string>
+    <string name="import_permissions_body">Photos come from the Android photo picker and documents from the system file picker, so TrueVault never asks for access to all your files. If you decline a picker, nothing happens and nothing is imported.</string>
+
+    <string name="import_review_title">Before we start</string>
+    <string name="import_review_files">Files selected</string>
+    <string name="import_review_size">Total size</string>
+    <string name="import_review_required">Space needed</string>
+    <string name="import_review_available">Space available</string>
+    <string name="import_not_enough_space_title">Not enough space</string>
+    <string name="import_not_enough_space_body">TrueVault needs %1$s more free space. Nothing has been encrypted, and nothing has been changed.</string>
+    <string name="import_continue">Continue</string>
+    <string name="import_cancel">Cancel</string>
+
+    <string name="import_mode_question">How would you like to secure these files?</string>
+    <string name="import_mode_copy_title">Secure Copy</string>
+    <string name="import_mode_copy_body">An encrypted copy will be saved in TrueVault. The original file will remain in its current location.</string>
+    <string name="import_mode_move_title">Secure Move</string>
+    <string name="import_mode_move_body">An encrypted and verified copy will be saved first. TrueVault will then ask permission to remove the original.</string>
+    <string name="import_remember_choice">Remember my choice for this file type</string>
+    <string name="import_secure_copy">Secure Copy</string>
+    <string name="import_secure_move">Secure Move</string>
+
+    <string name="import_running_title">Securing your files</string>
+    <string name="import_running_files">File %1$d of %2$d</string>
+    <string name="import_running_bytes">%1$s of %2$s</string>
+    <string name="import_running_a11y">Import progress: %1$d%%</string>
+    <string name="import_running_safe">You can cancel at any time. Your original files are untouched until an encrypted copy has been verified.</string>
+
+    <string name="import_result_success_title">File secured successfully</string>
+    <string name="import_result_partial_title">Secured: %1$d / %2$d</string>
+    <string name="import_result_encrypted">Encrypted copy</string>
+    <string name="import_result_verified">Verified</string>
+    <string name="import_result_original">Original file</string>
+    <string name="import_done">Done</string>
+
+    <string name="import_awaiting_deletion">Waiting for your answer about the original files.</string>
+    <string name="import_vault_copy_safe_title">Your vault copy is safe</string>
+    <string name="import_vault_copy_safe_body">You cancelled removal of the original, so it may still be visible.</string>
+    <string name="import_original_may_remain">Your file is secured in TrueVault, but the original may still be visible.</string>
+    <string name="import_copy_original_remains">Encrypted copy created. The original file is still available outside TrueVault.</string>
+    <string name="import_move_complete">Encrypted copy verified and the original was removed.</string>
+    <string name="import_generic_error">That step could not be completed. Nothing outside TrueVault was changed.</string>
+
+    <string name="deletion_removed">Removed</string>
+    <string name="deletion_cancelled">Still there — you cancelled</string>
+    <string name="deletion_not_supported">Cannot be removed by TrueVault</string>
+    <string name="deletion_permission_lost">Access was lost before removal</string>
+    <string name="deletion_failed">Removal failed</string>
+    <string name="deletion_kept">Kept where it was</string>
+    <string name="deletion_pending">Awaiting your confirmation</string>
+
+    <plurals name="import_file_count">
+        <item quantity="one">%1$d file</item>
+        <item quantity="other">%1$d files</item>
+    </plurals>
+    <plurals name="import_unknown_size">
+        <item quantity="one">%1$d file did not report its size. TrueVault will measure it before encrypting.</item>
+        <item quantity="other">%1$d files did not report their size. TrueVault will measure them before encrypting.</item>
+    </plurals>
+    <plurals name="import_unreadable">
+        <item quantity="one">%1$d file cannot be read right now and will be skipped.</item>
+        <item quantity="other">%1$d files cannot be read right now and will be skipped.</item>
+    </plurals>
+    <plurals name="import_failed_count">
+        <item quantity="one">%1$d file could not be imported. Review the details before trying again.</item>
+        <item quantity="other">%1$d files could not be imported. Review the details before trying again.</item>
+    </plurals>
 </resources>

@@ -3,34 +3,72 @@ package com.truevault.feature.home.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.truevault.core.common.time.TimeProvider
+import com.truevault.core.data.ActivityEvent
+import com.truevault.core.data.ActivityKind
+import com.truevault.core.data.ActivityRepository
+import com.truevault.core.data.VaultRepository
+import com.truevault.core.datastore.UserPreferencesDataSource
+import com.truevault.core.model.PrivacyScoreInputs
+import com.truevault.core.model.calculatePrivacyScore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Calendar
 import javax.inject.Inject
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * Dashboard view model.
+ * Dashboard state.
  *
- * Phase 0 scope: the screen contract, the greeting, and the genuinely-empty initial state of a
- * fresh install. Vault counts, the privacy score and recent activity are wired to their
- * repositories in Phase 2 and Phase 3 — until then this reports an empty vault, which is exactly
- * what a fresh install has. No sample data and no placeholder score is ever shown.
+ * The privacy score appears only once there is something to score. Showing "100%" for an empty
+ * vault would be a reassuring number that means nothing, which is the failure mode this app exists
+ * to avoid.
  */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val timeProvider: TimeProvider,
+    vaultRepository: VaultRepository,
+    activityRepository: ActivityRepository,
+    preferences: UserPreferencesDataSource,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<HomeUiState> = combine(
+        vaultRepository.observeItemCount(),
+        vaultRepository.observeCategoryCounts(),
+        vaultRepository.observeCountWithOriginalRemaining(),
+        activityRepository.observeRecent(limit = 5),
+        preferences.userPreferences,
+    ) { totalItems, categoryCounts, originalsRemaining, activity, prefs ->
+        HomeUiState(
+            isLoading = false,
+            greeting = greetingFor(timeProvider.currentTimeMillis()),
+            vaultIsEmpty = totalItems == 0,
+            totalItems = totalItems,
+            categoryCounts = categoryCounts,
+            privacyScore = if (totalItems == 0) {
+                null
+            } else {
+                calculatePrivacyScore(
+                    PrivacyScoreInputs(
+                        itemsWithOriginalRemaining = originalsRemaining,
+                        backupConfigured = prefs.lastBackupAtMillis != null,
+                        recoveryKeyConfigured = prefs.recoveryKeyConfigured,
+                    ),
+                )
+            },
+            recentActivity = activity.map(ActivityEvent::toHomeItem),
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = HomeUiState(),
+    )
 
     private val _effects = MutableSharedFlow<HomeEffect>(
         replay = 0,
@@ -39,28 +77,15 @@ class HomeViewModel @Inject constructor(
     )
     val effects: SharedFlow<HomeEffect> = _effects.asSharedFlow()
 
-    init {
-        refresh()
-    }
-
     fun onAction(action: HomeAction) {
         when (action) {
-            HomeAction.Refresh -> refresh()
+            HomeAction.Refresh -> Unit
             HomeAction.AddFilesClicked -> emit(HomeEffect.NavigateToImport)
             HomeAction.RunScanClicked -> emit(HomeEffect.NavigateToScanner)
             HomeAction.PrivateAppsClicked -> emit(HomeEffect.NavigateToPrivateApps)
             HomeAction.BackupClicked -> emit(HomeEffect.NavigateToBackup)
             HomeAction.OpenVaultClicked -> emit(HomeEffect.NavigateToVault)
             is HomeAction.CategoryClicked -> emit(HomeEffect.NavigateToCategory(action.category))
-        }
-    }
-
-    private fun refresh() {
-        _uiState.update { state ->
-            state.copy(
-                isLoading = false,
-                greeting = greetingFor(timeProvider.currentTimeMillis()),
-            )
         }
     }
 
@@ -77,3 +102,16 @@ class HomeViewModel @Inject constructor(
         }
     }
 }
+
+private fun ActivityEvent.toHomeItem() = HomeActivityItem(
+    id = id,
+    kind = when (kind) {
+        ActivityKind.FILES_SECURED -> HomeActivityItem.Kind.FILES_SECURED
+        ActivityKind.ORIGINAL_DELETED -> HomeActivityItem.Kind.ORIGINAL_DELETED
+        ActivityKind.DUPLICATE_DETECTED -> HomeActivityItem.Kind.DUPLICATE_DETECTED
+        ActivityKind.BACKUP_COMPLETED -> HomeActivityItem.Kind.BACKUP_COMPLETED
+        ActivityKind.IMPORT_FAILED -> HomeActivityItem.Kind.IMPORT_FAILED
+    },
+    itemCount = itemCount,
+    timestampMillis = timestampMillis,
+)

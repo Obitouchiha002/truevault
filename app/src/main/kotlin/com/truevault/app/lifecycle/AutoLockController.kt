@@ -9,16 +9,22 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.truevault.core.common.dispatcher.ApplicationScope
+import com.truevault.core.crypto.session.VaultLockState
 import com.truevault.core.crypto.session.VaultSession
+import com.truevault.core.data.ImportSessionStore
+import com.truevault.core.data.SecureImportEngine
+import com.truevault.core.data.VaultRepository
 import com.truevault.core.datastore.UserPreferencesDataSource
 import com.truevault.core.model.AutoLockDuration
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
+import com.truevault.core.common.log.SecureLog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 /**
  * Locks the vault when TrueVault stops being on screen.
@@ -34,11 +40,16 @@ import kotlinx.coroutines.flow.onEach
  * The receiver is registered for the life of the process. It carries no data, is not exported, and
  * responds only to a system broadcast.
  */
+private const val TAG = "AutoLock"
+
 @Singleton
 class AutoLockController @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val session: VaultSession,
     private val preferences: UserPreferencesDataSource,
+    private val importEngine: SecureImportEngine,
+    private val importSessionStore: ImportSessionStore,
+    private val vaultRepository: VaultRepository,
     @param:ApplicationScope private val applicationScope: CoroutineScope,
 ) : DefaultLifecycleObserver {
 
@@ -57,6 +68,30 @@ class AutoLockController @Inject constructor(
     }
 
     fun start() {
+        // Crash recovery runs once, before any screen can be shown. It only ever removes TrueVault's
+        // own temporary files — no original is touched here, under any circumstances.
+        applicationScope.launch {
+            val report = importEngine.recoverInterruptedImports()
+            if (report.hadWorkToDo) {
+                SecureLog.i(
+                    TAG,
+                    "Recovered ${report.interruptedImports} interrupted import(s) and " +
+                        "${report.orphanedTemporaryFiles} orphaned temporary file(s)",
+                )
+            }
+        }
+
+        // Locking must also drop everything decrypted that outlived the session: picked URIs still
+        // in an import session, and the in-memory index of decrypted file names.
+        session.state
+            .onEach { state ->
+                if (state != VaultLockState.Unlocked) {
+                    importSessionStore.clear()
+                    vaultRepository.invalidateNameIndex()
+                }
+            }
+            .launchIn(applicationScope)
+
         preferences.userPreferences
             .onEach { prefs ->
                 autoLockDuration.value = prefs.autoLockDuration

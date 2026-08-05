@@ -39,6 +39,7 @@ dependencies {
     implementation(projects.core.designsystem)
     implementation(projects.core.datastore)
     implementation(projects.core.crypto)
+    implementation(projects.core.data)
 
     implementation(libs.androidx.biometric)
 

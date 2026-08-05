@@ -17,17 +17,31 @@ the app says so in the place the limitation matters.
 |-------|-------|-------|
 | 0 | Build foundation, modules, DI, navigation, design system, error model | **Complete** |
 | 1 | Onboarding, vault password, Keystore master key, biometrics, session and auto-lock | **Complete** |
-| 2 | Secure file vault: pickers, streaming AES-256-GCM, Room, transaction engine, viewer, original deletion | Not started |
+| 2 | Secure file vault: pickers, streaming AES-256-GCM, Room, transaction engine, viewer, original deletion | **Mostly complete** — see gaps below |
 | 3 | Privacy leak scanner and explainable privacy score | Not started |
 | 4 | Encrypted local backup and restore, recovery key | Not started |
 | 5 | Private Apps capability detection and guided setup | Not started |
 | 6 | Hardening, threat model, release checklist | Not started |
 
-What runs today: first-run onboarding, vault password creation with an Argon2id-derived key sealed
-inside the Android Keystore, biometric unlock, an in-memory session with auto-lock and screen-off
-locking, screenshot blocking, and the four main destinations. File import, encryption of files,
-scanning and backup are not built yet — those screens say so rather than showing controls that do
-nothing.
+What runs today: first-run onboarding; vault password creation with an Argon2id-derived key sealed
+inside the Android Keystore; biometric unlock; an in-memory session with auto-lock and screen-off
+locking; screenshot blocking; secure import from the Photo Picker and the Storage Access Framework
+with Secure Copy and Secure Move; chunked AES-256-GCM file containers with verification before
+commit; the platform's own delete-confirmation flow for originals with the real outcome recorded;
+a paged vault with encrypted thumbnails, search, sort, multi-select and delete; an image and text
+viewer; crash recovery for interrupted imports; and an explainable privacy score on the dashboard.
+
+**Known gaps in Phase 2**, all of them stated in the app rather than hidden:
+
+- The viewer renders images and text. Videos and PDFs are stored and encrypted correctly but say
+  "TrueVault cannot preview this format" instead of rendering.
+- Secure sharing out of the vault is not built.
+- Imports run in the foreground only; a WorkManager-backed queue for very large batches is not built.
+- Room migration tests and Compose UI tests are not written yet (there is one schema version so far,
+  and no migrations exist to test).
+
+Scanning, backup and Private Apps are not built; those screens say so rather than showing controls
+that do nothing.
 
 ---
 

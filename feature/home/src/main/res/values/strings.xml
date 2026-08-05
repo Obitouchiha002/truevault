@@ -33,4 +33,42 @@
         <item quantity="one">%1$d item</item>
         <item quantity="other">%1$d items</item>
     </plurals>
+
+    <string name="home_score_title">Privacy score</string>
+    <string name="home_score_label">of 100</string>
+    <string name="home_score_a11y">Privacy score: %1$d / 100</string>
+    <string name="home_score_clean">Everything TrueVault can check looks clean.</string>
+    <string name="home_score_deduction">−%1$d</string>
+
+    <string name="deduction_original_remains">Some originals are still visible outside TrueVault</string>
+    <string name="deduction_duplicate">A byte-identical copy was found elsewhere</string>
+    <string name="deduction_backup">No encrypted backup has been exported</string>
+    <string name="deduction_recovery">No recovery key has been generated</string>
+    <string name="deduction_failed_import">An import failed and was never retried</string>
+    <string name="deduction_integrity">A stored file failed its integrity check</string>
+
+    <plurals name="home_score_issues">
+        <item quantity="one">%1$d item needs your attention</item>
+        <item quantity="other">%1$d items need your attention</item>
+    </plurals>
+    <plurals name="activity_files_secured">
+        <item quantity="one">%1$d file secured</item>
+        <item quantity="other">%1$d files secured</item>
+    </plurals>
+    <plurals name="activity_original_deleted">
+        <item quantity="one">%1$d original removed</item>
+        <item quantity="other">%1$d originals removed</item>
+    </plurals>
+    <plurals name="activity_duplicate_detected">
+        <item quantity="one">%1$d duplicate detected</item>
+        <item quantity="other">%1$d duplicates detected</item>
+    </plurals>
+    <plurals name="activity_backup_completed">
+        <item quantity="one">Backup completed with %1$d item</item>
+        <item quantity="other">Backup completed with %1$d items</item>
+    </plurals>
+    <plurals name="activity_import_failed">
+        <item quantity="one">%1$d import did not finish</item>
+        <item quantity="other">%1$d imports did not finish</item>
+    </plurals>
 </resources>

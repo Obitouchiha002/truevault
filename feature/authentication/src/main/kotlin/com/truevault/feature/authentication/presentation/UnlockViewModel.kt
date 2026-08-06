@@ -10,6 +10,7 @@ import com.truevault.core.model.VaultError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.crypto.Cipher
 import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,10 +25,13 @@ import kotlinx.coroutines.launch
 /**
  * Unlocks an existing vault.
  *
- * There is no attempt limit that wipes data, and no lockout timer. Argon2id already makes guessing
- * expensive, the outer Keystore layer makes offline guessing impossible, and a "wipe after N tries"
- * rule mostly destroys the data of users who mistype — it is a feature that punishes the owner more
- * reliably than it punishes an attacker. The attempt count is shown, not enforced.
+ * **Nothing here ever wipes data.** A "wipe after N tries" rule destroys the files of users who
+ * mistype far more reliably than it stops an attacker, who can image the storage first.
+ *
+ * What does exist is a delay between attempts (see `LockThrottle`), because a 4- or 6-digit PIN has
+ * a small enough keyspace that Argon2id alone would not make on-device guessing impractical. The
+ * remaining wait is counted down on screen rather than shown once and left stale — a frozen number
+ * looks like a frozen app.
  */
 @HiltViewModel
 class UnlockViewModel @Inject constructor(
@@ -58,10 +62,22 @@ class UnlockViewModel @Inject constructor(
             }
         }
 
-        // The remaining wait is counted down rather than shown once and left stale, so the user can
-        // see it clearing instead of wondering whether the app has frozen.
-        viewModelScope.launch {
-            while (true) {
+        startThrottleCountdown()
+    }
+
+    /**
+     * Ticks the lockout countdown, and stops the moment it reaches zero.
+     *
+     * A `while (true)` ticker would wake once a second for as long as the unlock screen is open —
+     * which, for the overwhelming majority of unlocks, is a wake per second to re-read a zero. It
+     * would also never let a test using virtual time finish, because the scheduler never runs dry.
+     * The countdown is started when there is something to count, and restarted after a failed
+     * attempt sets a new delay.
+     */
+    private fun startThrottleCountdown() {
+        countdownJob?.cancel()
+        countdownJob = viewModelScope.launch {
+            while (keyManager.throttleRemainingMillis() > 0) {
                 delay(1_000)
                 val remaining = keyManager.throttleRemainingMillis()
                 if (remaining != _uiState.value.throttleRemainingMillis) {
@@ -97,6 +113,9 @@ class UnlockViewModel @Inject constructor(
 
     /** Entered digits. Never part of UI state — only the count is observable. */
     private var pinBuffer = CharArray(0)
+
+    /** The lockout countdown, if one is running. Cancelled and replaced, never stacked. */
+    private var countdownJob: Job? = null
 
     private fun onPinDigit(digit: Char) {
         val length = _uiState.value.lockType?.pinLength ?: return
@@ -135,6 +154,10 @@ class UnlockViewModel @Inject constructor(
                                 ?.waitMillis
                                 ?: keyManager.throttleRemainingMillis(),
                         )
+                    }.also {
+                        // A failed attempt is what creates a wait, so this is where the countdown
+                        // has to start. Doing it in init only would leave the first lockout frozen.
+                        startThrottleCountdown()
                     }
                 }
             } finally {

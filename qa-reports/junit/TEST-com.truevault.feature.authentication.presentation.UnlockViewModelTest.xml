@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.feature.authentication.presentation.UnlockViewModelTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:34:06.854Z" hostname="MacBook-Pro.local" time="2.272">
+  <properties/>
+  <testcase name="repeated wrong passwords never destroy the vault" classname="com.truevault.feature.authentication.presentation.UnlockViewModelTest" time="0.517"/>
+  <testcase name="the correct password emits Unlocked" classname="com.truevault.feature.authentication.presentation.UnlockViewModelTest" time="0.337"/>
+  <testcase name="a wrong password reports an error and counts the attempt" classname="com.truevault.feature.authentication.presentation.UnlockViewModelTest" time="0.316"/>
+  <testcase name="a successful unlock clears the failure count" classname="com.truevault.feature.authentication.presentation.UnlockViewModelTest" time="0.451"/>
+  <testcase name="an invalidated biometric key falls back to the password and says so" classname="com.truevault.feature.authentication.presentation.UnlockViewModelTest" time="0.314"/>
+  <testcase name="the biometric shortcut is offered only when a biometric copy exists" classname="com.truevault.feature.authentication.presentation.UnlockViewModelTest" time="0.337"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

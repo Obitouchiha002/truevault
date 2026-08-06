@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.model.DeletionResolutionTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:11:20.820Z" hostname="MacBook-Pro.local" time="1.079">
+  <properties/>
+  <testcase name="a confirmed system delete is the only ordinary route to SECURED" classname="com.truevault.core.model.DeletionResolutionTest" time="0.328"/>
+  <testcase name="only observed removal ever yields SECURED, for every outcome that exists" classname="com.truevault.core.model.DeletionResolutionTest" time="0.72"/>
+  <testcase name="an unattempted deletion stays not-requested" classname="com.truevault.core.model.DeletionResolutionTest" time="0.0"/>
+  <testcase name="a lost permission is a failure, never a silent success" classname="com.truevault.core.model.DeletionResolutionTest" time="0.001"/>
+  <testcase name="a provider that cannot delete leaves the item as original-remains" classname="com.truevault.core.model.DeletionResolutionTest" time="0.0"/>
+  <testcase name="a user who declines keeps their file and the app says so" classname="com.truevault.core.model.DeletionResolutionTest" time="0.001"/>
+  <testcase name="no outcome resolves to a pending state, because pending is not an answer" classname="com.truevault.core.model.DeletionResolutionTest" time="0.0"/>
+  <testcase name="an already missing original counts as confirmed, because nothing is there to find" classname="com.truevault.core.model.DeletionResolutionTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

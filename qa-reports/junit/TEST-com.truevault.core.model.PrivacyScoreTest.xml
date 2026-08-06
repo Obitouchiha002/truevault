@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.model.PrivacyScoreTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:11:22.351Z" hostname="MacBook-Pro.local" time="0.029">
+  <properties/>
+  <testcase name="remaining originals are capped so the score stays actionable" classname="com.truevault.core.model.PrivacyScoreTest" time="0.025"/>
+  <testcase name="score never drops below zero when every category is at its cap" classname="com.truevault.core.model.PrivacyScoreTest" time="0.001"/>
+  <testcase name="calculation is deterministic for identical inputs" classname="com.truevault.core.model.PrivacyScoreTest" time="0.0"/>
+  <testcase name="missing backup and recovery key cost five points each" classname="com.truevault.core.model.PrivacyScoreTest" time="0.001"/>
+  <testcase name="every deduction reports how many items caused it" classname="com.truevault.core.model.PrivacyScoreTest" time="0.0"/>
+  <testcase name="one remaining original costs twenty points" classname="com.truevault.core.model.PrivacyScoreTest" time="0.001"/>
+  <testcase name="fully configured vault with no leaks scores 100" classname="com.truevault.core.model.PrivacyScoreTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

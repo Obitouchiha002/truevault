@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.capabilities.CapabilityResolutionTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:11:29.322Z" hostname="MacBook-Pro.local" time="0.589">
+  <properties/>
+  <testcase name="a locked private space is reported as locked, not as available" classname="com.truevault.core.capabilities.CapabilityResolutionTest" time="0.52"/>
+  <testcase name="every supported sdk level below 35 gets Core mode" classname="com.truevault.core.capabilities.CapabilityResolutionTest" time="0.018"/>
+  <testcase name="full launcher integration requires the Home role" classname="com.truevault.core.capabilities.CapabilityResolutionTest" time="0.003"/>
+  <testcase name="a device policy block is never softened into a setup prompt" classname="com.truevault.core.capabilities.CapabilityResolutionTest" time="0.001"/>
+  <testcase name="an unconfigured private space is offered as guided setup rather than claimed as working" classname="com.truevault.core.capabilities.CapabilityResolutionTest" time="0.003"/>
+  <testcase name="an unsupported platform falls back to the OEM route only when one actually resolves" classname="com.truevault.core.capabilities.CapabilityResolutionTest" time="0.0"/>
+  <testcase name="sdk 35 and above gets Modern mode" classname="com.truevault.core.capabilities.CapabilityResolutionTest" time="0.002"/>
+  <testcase name="a failed probe reports UNKNOWN and never a working capability" classname="com.truevault.core.capabilities.CapabilityResolutionTest" time="0.007"/>
+  <testcase name="missing role and missing permission stay distinguishable" classname="com.truevault.core.capabilities.CapabilityResolutionTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

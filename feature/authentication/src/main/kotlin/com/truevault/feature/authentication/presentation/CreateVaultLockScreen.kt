@@ -158,6 +158,15 @@ internal fun CreateVaultLockContent(
         verticalArrangement = Arrangement.spacedBy(TvSpacing.standard),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // Above the choice, not after it. A user picking a 4-digit PIN is making a decision they
+        // cannot walk back later, so the "nobody can reset this" warning has to reach them before
+        // the choice rather than on the screen that follows it.
+        TvBanner(
+            title = stringResource(R.string.create_lock_warning_title),
+            text = stringResource(R.string.create_lock_warning_body),
+            tone = TvBannerTone.Warning,
+        )
+
         when (uiState.stage) {
             CreateLockStage.CHOOSE_TYPE -> ChooseLockType(uiState = uiState, onAction = onAction)
 
@@ -180,12 +189,6 @@ internal fun CreateVaultLockContent(
                 capability = uiState.biometricCapability,
                 enabled = uiState.enableBiometrics,
                 onToggled = onBiometricToggled,
-            )
-
-            TvBanner(
-                title = stringResource(R.string.create_lock_warning_title),
-                text = stringResource(R.string.create_lock_warning_body),
-                tone = TvBannerTone.Warning,
             )
 
             TvTextButton(

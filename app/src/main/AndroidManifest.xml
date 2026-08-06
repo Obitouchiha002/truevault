@@ -14,6 +14,30 @@
     -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
+    <!--
+      What libraries merge in, and what is done about it.
+
+      androidx.biometric 1.1.0 adds USE_FINGERPRINT because below API 28 it falls back to
+      FingerprintManager. minSdk is 26, so it is genuinely needed and is kept. Normal permission,
+      no runtime prompt, and it is disclosed in the Privacy Policy.
+
+      The next two are removed rather than tolerated. media3-exoplayer merges ACCESS_NETWORK_STATE
+      and WAKE_LOCK into every app that depends on it, for adaptive streaming and for holding the
+      CPU awake during background playback. TrueVault plays only local decrypted files and never
+      plays in the background, so it uses neither. Leaving them would put "network" in the
+      permission list of an app whose whole claim is that nothing leaves the device — and a user who
+      checks that list would be right to stop believing the claim.
+
+      If streaming or background playback is ever added, these come back, and the Privacy Policy and
+      legal/data-practices-inventory.md are updated in the same commit.
+    -->
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.WAKE_LOCK"
+        tools:node="remove" />
+
     <uses-feature
         android:name="android.hardware.fingerprint"
         android:required="false" />

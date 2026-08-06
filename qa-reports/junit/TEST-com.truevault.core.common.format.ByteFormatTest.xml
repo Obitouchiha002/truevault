@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.common.format.ByteFormatTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:11:22.162Z" hostname="MacBook-Pro.local" time="0.735">
+  <properties/>
+  <testcase name="multi gigabyte video sizes are handled" classname="com.truevault.core.common.format.ByteFormatTest" time="0.714"/>
+  <testcase name="large values drop the decimal to stay compact" classname="com.truevault.core.common.format.ByteFormatTest" time="0.0"/>
+  <testcase name="kilobytes and megabytes use one decimal place" classname="com.truevault.core.common.format.ByteFormatTest" time="0.001"/>
+  <testcase name="bytes below one thousand are shown raw" classname="com.truevault.core.common.format.ByteFormatTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

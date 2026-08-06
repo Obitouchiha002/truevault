@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.data.PrivacyScanReportTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:12:19.050Z" hostname="MacBook-Pro.local" time="0.062">
+  <properties/>
+  <testcase name="a zero byte file matches only when the vault holds a zero byte item" classname="com.truevault.core.data.PrivacyScanReportTest" time="0.009"/>
+  <testcase name="a file whose size the provider did not report is never treated as a match" classname="com.truevault.core.data.PrivacyScanReportTest" time="0.0"/>
+  <testcase name="only files whose size matches something in the vault are examined" classname="com.truevault.core.data.PrivacyScanReportTest" time="0.032"/>
+  <testcase name="a scan that found nothing reports zero rather than an empty-looking failure" classname="com.truevault.core.data.PrivacyScanReportTest" time="0.005"/>
+  <testcase name="a truncated scan keeps its flag so the UI can say the list is incomplete" classname="com.truevault.core.data.PrivacyScanReportTest" time="0.012"/>
+  <testcase name="an empty vault produces no candidates at all" classname="com.truevault.core.data.PrivacyScanReportTest" time="0.002"/>
+  <testcase name="the report counts each match type separately" classname="com.truevault.core.data.PrivacyScanReportTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

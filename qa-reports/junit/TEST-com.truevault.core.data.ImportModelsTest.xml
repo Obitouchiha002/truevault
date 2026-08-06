@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.data.ImportModelsTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:12:18.993Z" hostname="MacBook-Pro.local" time="0.048">
+  <properties/>
+  <testcase name="progress never exceeds one and never runs backwards across a file boundary" classname="com.truevault.core.data.ImportModelsTest" time="0.013"/>
+  <testcase name="a session totals only the sizes it actually knows" classname="com.truevault.core.data.ImportModelsTest" time="0.007"/>
+  <testcase name="a batch where everything failed offers nothing for deletion" classname="com.truevault.core.data.ImportModelsTest" time="0.019"/>
+  <testcase name="a review with enough space reports no shortfall rather than a negative one" classname="com.truevault.core.data.ImportModelsTest" time="0.004"/>
+  <testcase name="progress on an empty batch is zero rather than a divide by zero" classname="com.truevault.core.data.ImportModelsTest" time="0.001"/>
+  <testcase name="a review with less free space than required reports the exact shortfall" classname="com.truevault.core.data.ImportModelsTest" time="0.0"/>
+  <testcase name="only Secure Move outcomes are offered for deletion" classname="com.truevault.core.data.ImportModelsTest" time="0.003"/>
+  <testcase name="a file of unknown size contributes no partial progress instead of jumping" classname="com.truevault.core.data.ImportModelsTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

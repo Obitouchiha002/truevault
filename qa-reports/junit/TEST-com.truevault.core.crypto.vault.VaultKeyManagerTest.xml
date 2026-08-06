@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.crypto.vault.VaultKeyManagerTest" tests="22" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:12:10.567Z" hostname="MacBook-Pro.local" time="9.772">
+  <properties/>
+  <testcase name="changing the password re-seals the same vault without touching file keys" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="2.675"/>
+  <testcase name="backgrounding with the default setting locks immediately" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.329"/>
+  <testcase name="a truncated record is reported as an integrity failure" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.296"/>
+  <testcase name="biometric unlock cannot be enabled while the vault is locked" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.346"/>
+  <testcase name="the correct password unlocks a locked vault" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.598"/>
+  <testcase name="moving the wall clock backwards does not extend a session" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.397"/>
+  <testcase name="screen off locks immediately when the user asked for it" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.296"/>
+  <testcase name="creating a lock stores a record and opens the session" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.363"/>
+  <testcase name="a tampered record is rejected even with the right password" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.312"/>
+  <testcase name="unlocking before a vault exists fails instead of creating one" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.013"/>
+  <testcase name="the old password stops working after a change" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="1.163"/>
+  <testcase name="a wrong current password cannot change the password" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.422"/>
+  <testcase name="a record written by a newer KDF version is refused, not guessed at" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.21"/>
+  <testcase name="disabling biometrics removes the stored biometric copy" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.195"/>
+  <testcase name="a grace period keeps the session until the monotonic clock passes it" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.229"/>
+  <testcase name="biometric enrolment then unlock opens the same vault" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.215"/>
+  <testcase name="a wrong password is rejected and leaves the vault locked" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.412"/>
+  <testcase name="a second vault cannot be created over an existing one" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.19"/>
+  <testcase name="a password that differs only in case is rejected" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.36"/>
+  <testcase name="returning to the foreground within the grace period keeps the session open" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.174"/>
+  <testcase name="a new biometric enrolment invalidates the biometric path and falls back to password" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.388"/>
+  <testcase name="the stored record contains neither the password nor the master key" classname="com.truevault.core.crypto.vault.VaultKeyManagerTest" time="0.188"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

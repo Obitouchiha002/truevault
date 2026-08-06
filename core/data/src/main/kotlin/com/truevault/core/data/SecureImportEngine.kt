@@ -29,6 +29,7 @@ import com.truevault.core.model.PrivacyStatus
 import com.truevault.core.model.SelectedSource
 import com.truevault.core.model.VaultError
 import com.truevault.core.model.VerificationStatus
+import com.truevault.core.model.resolve
 import com.truevault.core.storage.ContentHasher
 import com.truevault.core.storage.SourceResolver
 import com.truevault.core.storage.SourceUnavailableException
@@ -427,22 +428,7 @@ class SecureImportEngine @Inject constructor(
     ): Unit = withContext(defaultDispatcher) {
         val now = timeProvider.currentTimeMillis()
 
-        val (deletionState, privacyStatus) = when (outcome) {
-            DeletionOutcome.DELETED,
-            DeletionOutcome.ALREADY_MISSING,
-            -> OriginalDeletionState.CONFIRMED_DELETED to PrivacyStatus.SECURED
-
-            DeletionOutcome.USER_CANCELLED ->
-                OriginalDeletionState.DECLINED_BY_USER to PrivacyStatus.ORIGINAL_REMAINS
-
-            DeletionOutcome.PROVIDER_NOT_SUPPORTED,
-            DeletionOutcome.PERMISSION_LOST,
-            DeletionOutcome.FAILED,
-            -> OriginalDeletionState.FAILED to PrivacyStatus.ORIGINAL_REMAINS
-
-            DeletionOutcome.NOT_ATTEMPTED ->
-                OriginalDeletionState.NOT_REQUESTED to PrivacyStatus.ORIGINAL_REMAINS
-        }
+        val (deletionState, privacyStatus) = outcome.resolve()
 
         vaultItemIds.forEach { id ->
             vaultItemDao.updateDeletionState(id, deletionState.name, privacyStatus.name, now)

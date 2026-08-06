@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.crypto.recovery.RecoveryKeyTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:12:10.460Z" hostname="MacBook-Pro.local" time="0.07">
+  <properties/>
+  <testcase name="a key of the wrong length is rejected before any work happens" classname="com.truevault.core.crypto.recovery.RecoveryKeyTest" time="0.008"/>
+  <testcase name="a generated key has the documented length and grouping" classname="com.truevault.core.crypto.recovery.RecoveryKeyTest" time="0.053"/>
+  <testcase name="the alphabet excludes every confusable character" classname="com.truevault.core.crypto.recovery.RecoveryKeyTest" time="0.006"/>
+  <testcase name="the check value is stable and differs between keys" classname="com.truevault.core.crypto.recovery.RecoveryKeyTest" time="0.001"/>
+  <testcase name="the check value does not reveal the key" classname="com.truevault.core.crypto.recovery.RecoveryKeyTest" time="0.0"/>
+  <testcase name="dashes, spaces and case are all forgiven on entry" classname="com.truevault.core.crypto.recovery.RecoveryKeyTest" time="0.001"/>
+  <testcase name="two generated keys differ" classname="com.truevault.core.crypto.recovery.RecoveryKeyTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

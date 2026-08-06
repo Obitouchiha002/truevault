@@ -1,0 +1,130 @@
+{
+  "_comment": [
+    "Machine-readable summary of the autonomous verification pass.",
+    "Rules this file obeys: a check is 'passed' only when a command actually ran and returned",
+    "success. Anything that could not run is 'notRun' with a reason, never 'passed'. No value here",
+    "was inferred from reading code."
+  ],
+
+  "generatedAt": "2026-08-06",
+  "branch": "qa/autonomous-release-verification",
+  "verdict": "CONDITIONAL",
+  "readyForPublicRelease": false,
+
+  "gates": {
+    "clean": { "status": "passed" },
+    "assembleDebug": { "status": "passed" },
+    "assembleRelease": { "status": "passed" },
+    "bundleRelease": { "status": "passed" },
+    "unitTests": { "status": "passed", "tests": 147, "failures": 0, "skipped": 0 },
+    "lintDebug": { "status": "passed", "issues": 0 },
+    "lintRelease": { "status": "passed", "issues": 0 },
+    "coverage": { "status": "passed", "linePercent": 9.6, "branchPercent": 11.1, "thresholdEnforced": false },
+    "instrumentedTests": {
+      "status": "passed",
+      "tests": 7,
+      "failures": 0,
+      "device": "sg34 (AVD, API 34, google_apis, x86_64)"
+    },
+    "releaseSigning": { "status": "notRun", "reason": "No release keystore in this environment" },
+    "releaseApkOnDevice": { "status": "notRun", "reason": "R8 output was never installed or exercised" }
+  },
+
+  "artifacts": {
+    "apkBytes": 5112154,
+    "aabBytes": 9483686,
+    "apkSigned": false,
+    "r8Applied": true,
+    "baselineProfileBundled": true,
+    "appSpecificBaselineProfile": false
+  },
+
+  "coverage": {
+    "overallLinePercent": 9.6,
+    "strong": {
+      "core.crypto.kdf": 97.3,
+      "core.crypto.file": 86.8,
+      "core.crypto.aead": 82.4,
+      "core.model": 81.1,
+      "core.crypto.session": 79.6,
+      "core.crypto.vault": 61.5
+    },
+    "gaps": {
+      "core.crypto.keystore": 1.0,
+      "core.data": 2.0,
+      "core.database.dao": 0.0,
+      "feature.*.presentation": 0.0
+    }
+  },
+
+  "defectsFoundAndFixed": [
+    { "severity": "critical", "summary": "Caller-supplied GCM IV rejected by Keystore; vault creation failed on every real device" },
+    { "severity": "critical", "summary": "Backup format v1 produced permanently unrestorable items; fixed by v2 re-keying" },
+    { "severity": "high", "summary": "Backup loaded whole containers into memory" },
+    { "severity": "high", "summary": "HOME component shipped enabled, forcing a launcher chooser on every user" },
+    { "severity": "high", "summary": "Biometric enrolment failed silently (StrongBox on auth-bound key)" },
+    { "severity": "medium", "summary": "Infinite ticker in UnlockViewModel hung the unit suite and woke every second in normal use" },
+    { "severity": "medium", "summary": "ACCESS_NETWORK_STATE and WAKE_LOCK merged in from media3; removed" },
+    { "severity": "medium", "summary": "Instrumented suite depended on test order via persistent DataStore state" },
+    { "severity": "low", "summary": "Modules without instrumented tests built empty test APKs that crashed" }
+  ],
+
+  "blockers": [
+    { "id": "B1", "summary": "core.crypto.keystore at 1% coverage, no instrumented tests" },
+    { "id": "B2", "summary": "SecureImportEngine at 2% coverage; Secure Move ordering untested end to end" },
+    { "id": "B3", "summary": "Modern mode (API 35+) has never executed; no system image installed" },
+    { "id": "B4", "summary": "minSdk 26 has never executed; no system image installed" },
+    { "id": "B5", "summary": "No physical device: StrongBox, biometric invalidation, MediaStore delete untested" },
+    { "id": "B6", "summary": "Release APK never installed or exercised" },
+    { "id": "B7", "summary": "Legal and privacy layer incomplete; placeholders unresolved" }
+  ],
+
+  "notRun": [
+    { "item": "Physical device testing", "reason": "No device attached" },
+    { "item": "API 35+ / Private Space", "reason": "No system image installed" },
+    { "item": "API 26-33", "reason": "No system images installed" },
+    { "item": "Firebase Test Lab", "reason": "No gcloud, project, credentials or billing" },
+    { "item": "Play Console Data Safety submission", "reason": "No access" },
+    { "item": "Dependency CVE scan", "reason": "No scanner installed" },
+    { "item": "MobSF / semgrep / detekt", "reason": "Not installed or not configured" },
+    { "item": "Runtime network capture", "reason": "Not performed; no-network claim is static evidence only" },
+    { "item": "Macrobenchmark / cold start / jank / throughput / battery", "reason": "Requires a device" },
+    { "item": "Independent cryptographic review", "reason": "Not performed" }
+  ],
+
+  "legalAndPrivacy": {
+    "privacyPolicyPresent": true,
+    "termsPresent": true,
+    "inAppAccessPresent": false,
+    "publicUrlsVerified": false,
+    "dataSafetyMapped": true,
+    "optionalConsentVerified": true,
+    "legalPlaceholdersRemaining": [
+      "[LEGAL BUSINESS NAME REQUIRED]",
+      "[BUSINESS TYPE REQUIRED]",
+      "[DEVELOPER DISPLAY NAME REQUIRED]",
+      "[COUNTRY OF OPERATION REQUIRED]",
+      "[BUSINESS ADDRESS REQUIRED WHERE LEGALLY MANDATED]",
+      "[SUPPORT EMAIL REQUIRED]",
+      "[PRIVACY EMAIL REQUIRED]",
+      "[WEBSITE DOMAIN REQUIRED]",
+      "[PUBLIC POLICY URL REQUIRED]",
+      "[PUBLIC TERMS URL REQUIRED]",
+      "[PRIMARY MARKETS REQUIRED]",
+      "[GOVERNING LAW REQUIRED]",
+      "[DISPUTE RESOLUTION REQUIRED]",
+      "[MINIMUM USER AGE REQUIRED]",
+      "[EFFECTIVE DATE REQUIRED]",
+      "[LAST UPDATED DATE REQUIRED]"
+    ],
+    "legalReviewRequired": true,
+    "_note": "optionalConsentVerified is true because the app contains no analytics or crash-reporting SDK, so there is nothing to consent to and the optional-consent screen is deliberately not shown. inAppAccessPresent is false because the acceptance flow is built but not yet wired into app navigation."
+  },
+
+  "honesty": {
+    "simulatedResults": 0,
+    "inventedCommandOutput": 0,
+    "skippedMarkedAsPassed": 0,
+    "statement": "Every result recorded here came from a command that ran. Items that could not run are marked notRun with a reason."
+  }
+}

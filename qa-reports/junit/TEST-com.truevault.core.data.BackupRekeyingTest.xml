@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.data.BackupRekeyingTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:12:14.409Z" hostname="MacBook-Pro.local" time="4.577">
+  <properties/>
+  <testcase name="the row's wrapped key takes precedence over the container header" classname="com.truevault.core.data.BackupRekeyingTest" time="3.423"/>
+  <testcase name="without re-keying the same container is unopenable in another vault" classname="com.truevault.core.data.BackupRekeyingTest" time="0.455"/>
+  <testcase name="the archive-wrapped key is useless without the archive key" classname="com.truevault.core.data.BackupRekeyingTest" time="0.236"/>
+  <testcase name="an item re-keyed through an archive key opens in a different vault" classname="com.truevault.core.data.BackupRekeyingTest" time="0.449"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

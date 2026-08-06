@@ -111,11 +111,7 @@ class DeviceCapabilityDetectorImpl @Inject constructor(
 
     override suspend fun detectCapabilities(): DeviceCapabilities = withContext(defaultDispatcher) {
         val sdkInt = Build.VERSION.SDK_INT
-        val productMode = if (sdkInt >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            TrueVaultProductMode.MODERN
-        } else {
-            TrueVaultProductMode.CORE
-        }
+        val productMode = productModeFor(sdkInt)
 
         val privateSpaceState = privateSpaceProvider.currentState()
         val isDefaultLauncher = launcherRoleProvider.isDefaultLauncher()
@@ -154,28 +150,50 @@ class DeviceCapabilityDetectorImpl @Inject constructor(
         )
     }
 
-    private fun privateAppsSupportFor(
-        state: PrivateSpaceState,
-        isDefaultLauncher: Boolean,
-        oemAvailable: Boolean,
-    ): PrivateAppsSupport = when (state) {
-        PrivateSpaceState.Unsupported ->
-            if (oemAvailable) PrivateAppsSupport.OEM_PRIVATE_SPACE_ONLY else PrivateAppsSupport.NOT_SUPPORTED
+}
 
-        PrivateSpaceState.RestrictedByPolicy -> PrivateAppsSupport.DEVICE_POLICY_BLOCKED
-        PrivateSpaceState.NotConfigured -> PrivateAppsSupport.GUIDED_PRIVATE_SPACE_SETUP
-        PrivateSpaceState.ConfiguredLocked -> PrivateAppsSupport.PRIVATE_SPACE_LOCKED
-
-        PrivateSpaceState.ConfiguredUnlocked -> if (isDefaultLauncher) {
-            PrivateAppsSupport.FULL_LAUNCHER_INTEGRATION
-        } else {
-            PrivateAppsSupport.PRIVATE_SPACE_ALREADY_CONFIGURED
-        }
-
-        PrivateSpaceState.HomeRoleRequired -> PrivateAppsSupport.HOME_ROLE_REQUIRED
-        PrivateSpaceState.PermissionRequired -> PrivateAppsSupport.PERMISSION_REQUIRED
-        is PrivateSpaceState.Error -> PrivateAppsSupport.UNKNOWN
+/**
+ * Android 15 (API 35) is the line, because that is where private profiles exist as a platform
+ * feature. Nothing else in the app branches on the SDK level — everything below this is observed.
+ *
+ * Top-level and `internal` so it can be exercised for every SDK level the app supports without an
+ * emulator per level: a device farm cannot cover API 26 through 37, and this decision is too
+ * important to leave to whichever image happens to be installed.
+ */
+internal fun productModeFor(sdkInt: Int): TrueVaultProductMode =
+    if (sdkInt >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        TrueVaultProductMode.MODERN
+    } else {
+        TrueVaultProductMode.CORE
     }
+
+/**
+ * Turns an observed profile state into the one sentence the UI is allowed to say.
+ *
+ * `Error` maps to `UNKNOWN` rather than to anything encouraging: a failed probe is not evidence that
+ * a feature works.
+ */
+internal fun privateAppsSupportFor(
+    state: PrivateSpaceState,
+    isDefaultLauncher: Boolean,
+    oemAvailable: Boolean,
+): PrivateAppsSupport = when (state) {
+    PrivateSpaceState.Unsupported ->
+        if (oemAvailable) PrivateAppsSupport.OEM_PRIVATE_SPACE_ONLY else PrivateAppsSupport.NOT_SUPPORTED
+
+    PrivateSpaceState.RestrictedByPolicy -> PrivateAppsSupport.DEVICE_POLICY_BLOCKED
+    PrivateSpaceState.NotConfigured -> PrivateAppsSupport.GUIDED_PRIVATE_SPACE_SETUP
+    PrivateSpaceState.ConfiguredLocked -> PrivateAppsSupport.PRIVATE_SPACE_LOCKED
+
+    PrivateSpaceState.ConfiguredUnlocked -> if (isDefaultLauncher) {
+        PrivateAppsSupport.FULL_LAUNCHER_INTEGRATION
+    } else {
+        PrivateAppsSupport.PRIVATE_SPACE_ALREADY_CONFIGURED
+    }
+
+    PrivateSpaceState.HomeRoleRequired -> PrivateAppsSupport.HOME_ROLE_REQUIRED
+    PrivateSpaceState.PermissionRequired -> PrivateAppsSupport.PERMISSION_REQUIRED
+    is PrivateSpaceState.Error -> PrivateAppsSupport.UNKNOWN
 }
 
 /**

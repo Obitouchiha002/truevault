@@ -1,0 +1,66 @@
+{
+  "_comment": [
+    "Legal identity used to generate the Privacy Policy, Terms of Service and public pages.",
+    "Every value marked with a [ ... REQUIRED] placeholder is genuinely unknown and has NOT been",
+    "invented. Inventing a business name, address, jurisdiction or contact address would produce a",
+    "legal document that is wrong in exactly the way a legal document must never be wrong.",
+    "The release build fails its legal-readiness check while any placeholder remains — see",
+    "build-logic .../LegalReadinessPlugin and qa-reports/13-legal-and-privacy-report.md."
+  ],
+
+  "identity": {
+    "legalBusinessName": "[LEGAL BUSINESS NAME REQUIRED]",
+    "businessType": "[BUSINESS TYPE REQUIRED]",
+    "developerDisplayName": "[DEVELOPER DISPLAY NAME REQUIRED]",
+    "countryOfOperation": "[COUNTRY OF OPERATION REQUIRED]",
+    "businessAddress": "[BUSINESS ADDRESS REQUIRED WHERE LEGALLY MANDATED]",
+    "businessAddressRequired": "Required for Google Play distribution and for GDPR Article 13 where the EEA is a target market."
+  },
+
+  "contact": {
+    "supportEmail": "[SUPPORT EMAIL REQUIRED]",
+    "privacyEmail": "[PRIVACY EMAIL REQUIRED]",
+    "websiteDomain": "[WEBSITE DOMAIN REQUIRED]"
+  },
+
+  "publicUrls": {
+    "privacyPolicyUrl": "[PUBLIC POLICY URL REQUIRED]",
+    "termsOfServiceUrl": "[PUBLIC TERMS URL REQUIRED]",
+    "archiveIndexUrl": "[PUBLIC ARCHIVE URL OPTIONAL]"
+  },
+
+  "jurisdiction": {
+    "primaryMarkets": ["[PRIMARY MARKETS REQUIRED]"],
+    "governingLaw": "[GOVERNING LAW REQUIRED]",
+    "disputeResolution": "[DISPUTE RESOLUTION REQUIRED]",
+    "minimumUserAge": "[MINIMUM USER AGE REQUIRED]",
+    "_note": "Minimum age is jurisdiction-dependent: 13 in the US under COPPA, 16 (or 13-16 by member state) in the EEA under GDPR Art. 8, 18 for some contract terms. Do not pick one number for all markets without review."
+  },
+
+  "processors": {
+    "cloudServiceProviders": [],
+    "analyticsProviders": [],
+    "crashReportingProviders": [],
+    "backupProviders": [],
+    "paymentProvider": null,
+    "_note": "All empty by audit, not by assumption. See data-practices-inventory.md sections 13, 16 and 17: the application contains no analytics, crash-reporting, advertising, cloud or payment SDK, and declares no INTERNET permission. Adding any one of these requires updating this file, the inventory, both documents and the Play Data Safety map in the same change."
+  },
+
+  "documents": {
+    "termsVersion": "1.0",
+    "privacyVersion": "1.0",
+    "termsEffectiveDate": "[EFFECTIVE DATE REQUIRED]",
+    "privacyEffectiveDate": "[EFFECTIVE DATE REQUIRED]",
+    "termsLastUpdated": "[LAST UPDATED DATE REQUIRED]",
+    "privacyLastUpdated": "[LAST UPDATED DATE REQUIRED]",
+    "requiresReacceptance": false,
+    "acceptanceFlowVersion": 1
+  },
+
+  "review": {
+    "legalReviewRequired": true,
+    "legalReviewCompletedBy": null,
+    "legalReviewDate": null,
+    "_note": "legalReviewRequired must never be flipped to false by a build script or by an automated process. A qualified human review of the generated documents against the target markets is a precondition of public release."
+  }
+}

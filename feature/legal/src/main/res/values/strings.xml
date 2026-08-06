@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- First-launch gate -->
+    <string name="legal_gate_title">Before you continue</string>
+    <string name="legal_gate_subtitle">Please review the Terms of Service and Privacy Policy before using TrueVault.</string>
+
+    <string name="legal_terms_row_title">Terms of Service</string>
+    <string name="legal_terms_row_body">Read the conditions for using TrueVault</string>
+    <string name="legal_privacy_row_title">Privacy Policy</string>
+    <string name="legal_privacy_row_body">Learn how TrueVault handles your information</string>
+
+    <string name="legal_agree_terms">I agree to the Terms of Service</string>
+    <string name="legal_acknowledge_privacy">I confirm that I have read the Privacy Policy</string>
+
+    <string name="legal_accept_continue">Accept and Continue</string>
+    <string name="legal_decline_exit">Decline and Exit</string>
+    <string name="legal_open_online">Open current version online</string>
+    <string name="legal_open_online_unavailable">A public web address has not been configured for this build. The full documents are available inside the app.</string>
+
+    <string name="legal_offline_note">Both documents are stored inside the app, so you can read them without an internet connection.</string>
+
+    <!-- Decline -->
+    <string name="legal_decline_title">Nothing has been set up</string>
+    <string name="legal_decline_body">No vault was created, no permission was requested, and none of your files were touched. You can still read both documents.</string>
+    <string name="legal_decline_read_again">Read the documents</string>
+    <string name="legal_decline_exit_app">Close TrueVault</string>
+    <string name="legal_decline_reconsider">Go back</string>
+
+    <!-- Re-acceptance -->
+    <string name="legal_update_title">Our terms or privacy practices have changed</string>
+    <string name="legal_update_previous">You accepted version %1$s</string>
+    <string name="legal_update_new">New version %1$s, effective %2$s</string>
+    <string name="legal_update_review">Review Changes</string>
+    <string name="legal_update_accept">Accept Updated Documents</string>
+    <string name="legal_update_decline">Decline</string>
+    <string name="legal_update_summary_title">What changed</string>
+
+    <!-- Document reader -->
+    <string name="legal_document_search_hint">Search in this document</string>
+    <string name="legal_document_search">Search</string>
+    <string name="legal_document_close_search">Close search</string>
+    <string name="legal_document_no_matches">No matches for “%1$s”.</string>
+    <string name="legal_document_matches">%1$d matching section(s)</string>
+    <string name="legal_document_version">Version %1$s</string>
+    <string name="legal_document_effective">Effective %1$s</string>
+    <string name="legal_document_updated">Last updated %1$s</string>
+    <string name="legal_document_text_smaller">Smaller text</string>
+    <string name="legal_document_text_larger">Larger text</string>
+    <string name="legal_document_text_size">Text size: %1$d percent</string>
+    <string name="legal_document_progress">Read %1$d percent</string>
+    <string name="legal_document_contact">Contact us about this document</string>
+    <string name="legal_document_unavailable">This document could not be opened.</string>
+
+    <!-- Placeholder warning, debug builds only -->
+    <string name="legal_placeholders_title">This build is not ready for release</string>
+    <string name="legal_placeholders_body">The legal documents still contain %1$d unresolved placeholder(s). Fill them in legal/legal-config.json and regenerate before publishing.</string>
+
+    <!-- Settings: Legal and Privacy -->
+    <string name="legal_settings_title">Legal and Privacy</string>
+    <string name="legal_settings_privacy_policy">Privacy Policy</string>
+    <string name="legal_settings_terms">Terms of Service</string>
+    <string name="legal_settings_data_permissions">Data and Permissions</string>
+    <string name="legal_settings_optional_sharing">Optional Data Sharing</string>
+    <string name="legal_settings_delete_data">Delete Vault Data</string>
+    <string name="legal_settings_export_backup">Export Encrypted Backup</string>
+    <string name="legal_settings_licences">Open-Source Licences</string>
+    <string name="legal_settings_versions">Legal Document Versions</string>
+    <string name="legal_settings_contact">Privacy Contact</string>
+
+    <string name="legal_settings_versions_body">Terms %1$s · Privacy Policy %2$s</string>
+    <string name="legal_settings_accepted_on">Accepted on this device</string>
+    <string name="legal_settings_acceptance_missing">No acceptance record found</string>
+    <string name="legal_settings_reacceptance_required">Updated documents need your review</string>
+
+    <!-- Optional sharing -->
+    <string name="legal_optional_none_title">There is nothing to share</string>
+    <string name="legal_optional_none_body">This version of TrueVault contains no analytics and no crash reporting, so there is no optional data collection to switch on or off. If that ever changes, you will be asked separately before anything is collected.</string>
+
+    <!-- Data and permissions dashboard -->
+    <string name="legal_data_title">Data and Permissions</string>
+    <string name="legal_data_on_device">On-device processing</string>
+    <string name="legal_data_external">External processing</string>
+    <string name="legal_data_view_details">View Detailed Data Practices</string>
+
+    <string name="legal_data_files_title">Files and media</string>
+    <string name="legal_data_files_access">Access: Only files you select</string>
+    <string name="legal_data_files_purpose">Purpose: Encrypt and store files in your vault</string>
+    <string name="legal_data_files_sent">Sent from device: No, unless you choose to share or export</string>
+
+    <string name="legal_data_biometrics_title">Biometrics</string>
+    <string name="legal_data_biometrics_access">Access: Verification result only</string>
+    <string name="legal_data_biometrics_purpose">Purpose: Unlock your Keystore-protected vault key</string>
+    <string name="legal_data_biometrics_note">TrueVault does not receive or store your fingerprint or face template</string>
+
+    <string name="legal_data_private_apps_title">Private Apps information</string>
+    <string name="legal_data_private_apps_access">Access: Only where supported and permitted by Android</string>
+    <string name="legal_data_private_apps_purpose">Purpose: Show supported private-profile app controls</string>
+    <string name="legal_data_private_apps_unsupported">Not available on this device, so nothing is read</string>
+
+    <string name="legal_data_encryption">File encryption</string>
+    <string name="legal_data_hashing">Duplicate hashing</string>
+    <string name="legal_data_thumbnails">Thumbnail generation</string>
+    <string name="legal_data_privacy_score">Privacy Score</string>
+
+    <string name="legal_data_crash">Crash diagnostics</string>
+    <string name="legal_data_analytics">Performance analytics</string>
+    <string name="legal_data_cloud_backup">Cloud backup</string>
+    <string name="legal_data_state_off">Off</string>
+    <string name="legal_data_state_on_device_short">On this device</string>
+    <string name="legal_data_state_not_present">Not present in this build</string>
+    <string name="legal_data_state_not_configured">Not configured</string>
+    <string name="legal_data_no_external">Nothing on this device sends your data anywhere. This app contains no analytics, no crash reporting and no cloud service.</string>
+
+    <!-- Delete vault data -->
+    <string name="legal_delete_title">Delete Vault Data</string>
+    <string name="legal_delete_option_selected">Delete selected vault items</string>
+    <string name="legal_delete_option_all">Delete all local vault data</string>
+    <string name="legal_delete_option_reset">Reset TrueVault</string>
+
+    <string name="legal_delete_warning">This action permanently removes encrypted local vault files and cannot be undone without a valid backup.</string>
+    <string name="legal_delete_affected_title">What will be removed</string>
+    <string name="legal_delete_affected_items">%1$d vault item(s)</string>
+    <string name="legal_delete_affected_thumbnails">Encrypted thumbnails</string>
+    <string name="legal_delete_affected_temp">Temporary files</string>
+    <string name="legal_delete_affected_database">Vault database</string>
+    <string name="legal_delete_affected_preferences">App preferences</string>
+    <string name="legal_delete_affected_keys">Locally wrapped keys</string>
+
+    <string name="legal_delete_unaffected_title">What will not be affected</string>
+    <string name="legal_delete_unaffected_originals">Files you kept outside the vault</string>
+    <string name="legal_delete_unaffected_shared">Files you already shared with other apps</string>
+    <string name="legal_delete_unaffected_backups">Backups you exported and saved elsewhere</string>
+
+    <string name="legal_delete_backup_prompt">Have you exported a backup?</string>
+    <string name="legal_delete_backup_export">Export a backup first</string>
+    <string name="legal_delete_backup_skip">Continue without a backup</string>
+    <string name="legal_delete_backup_last">Last backup exported %1$s</string>
+    <string name="legal_delete_backup_never">No backup has ever been exported from this device</string>
+
+    <string name="legal_delete_authenticate">Confirm it is you</string>
+    <string name="legal_delete_phrase_label">Type DELETE MY LOCAL VAULT to confirm</string>
+    <string name="legal_delete_phrase">DELETE MY LOCAL VAULT</string>
+    <string name="legal_delete_confirm">Delete permanently</string>
+    <string name="legal_delete_cancel">Cancel</string>
+    <string name="legal_delete_in_progress">Removing local data…</string>
+
+    <string name="legal_delete_done_title">Done</string>
+    <string name="legal_delete_done_body">TrueVault local data has been removed from this device. External backups and files previously shared with other apps are not affected.</string>
+    <string name="legal_delete_done_continue">Continue</string>
+    <string name="legal_delete_failed">Some data could not be removed. Nothing outside TrueVault was changed.</string>
+
+    <string name="legal_delete_not_account">This removes local data only. TrueVault has no online account, so there is no account to delete.</string>
+</resources>

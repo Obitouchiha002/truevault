@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.model.LockThrottleTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:11:21.908Z" hostname="MacBook-Pro.local" time="0.054">
+  <properties/>
+  <testcase name="waiting the full delay clears it" classname="com.truevault.core.model.LockThrottleTest" time="0.032"/>
+  <testcase name="partway through the delay reports what is left" classname="com.truevault.core.model.LockThrottleTest" time="0.0"/>
+  <testcase name="no recorded failure means no wait" classname="com.truevault.core.model.LockThrottleTest" time="0.0"/>
+  <testcase name="ordinary mistyping is not punished" classname="com.truevault.core.model.LockThrottleTest" time="0.012"/>
+  <testcase name="moving the clock backwards does not shorten the wait" classname="com.truevault.core.model.LockThrottleTest" time="0.001"/>
+  <testcase name="the delay grows and then settles at thirty minutes" classname="com.truevault.core.model.LockThrottleTest" time="0.0"/>
+  <testcase name="a four digit PIN costs months of continuous attack, not minutes" classname="com.truevault.core.model.LockThrottleTest" time="0.006"/>
+  <testcase name="a six digit PIN is out of reach" classname="com.truevault.core.model.LockThrottleTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

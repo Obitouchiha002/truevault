@@ -182,10 +182,7 @@ class PrivacyScanEngine @Inject constructor(
         }
 
         // Pass 2: candidates in the scanned folder. Size is the cheap filter; only survivors get hashed.
-        val candidates = sources.filter { source ->
-            val size = source.sizeBytes ?: return@filter false
-            size in sizesInVault
-        }
+        val candidates = candidateSources(sources, sizesInVault)
 
         candidates.forEachIndexed { index, source ->
             if (!currentCoroutineContext().isActive) return findings
@@ -269,4 +266,22 @@ class PrivacyScanEngine @Inject constructor(
     @Suppress("unused")
     private fun VaultItemEntity.categoryOrOther(): MimeCategory =
         runCatching { MimeCategory.valueOf(mimeCategory) }.getOrDefault(MimeCategory.OTHER)
+}
+
+/**
+ * Narrows a scanned folder to the files worth hashing.
+ *
+ * Size is the only filter cheap enough to apply to every file in a large tree, and it is safe in the
+ * direction that matters: two files with different sizes can never have the same content, so nothing
+ * a full hash would have caught is dropped here.
+ *
+ * A file whose size the provider did not report is **excluded**. It cannot be compared, and
+ * including it would put a file in the results that the scanner has no evidence about.
+ */
+internal fun candidateSources(
+    sources: List<SelectedSource>,
+    sizesInVault: Set<Long>,
+): List<SelectedSource> = sources.filter { source ->
+    val size = source.sizeBytes ?: return@filter false
+    size in sizesInVault
 }

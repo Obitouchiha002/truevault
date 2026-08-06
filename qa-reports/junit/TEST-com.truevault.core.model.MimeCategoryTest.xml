@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.model.MimeCategoryTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:11:21.967Z" hostname="MacBook-Pro.local" time="0.149">
+  <properties/>
+  <testcase name="an unknown file is Other rather than rejected" classname="com.truevault.core.model.MimeCategoryTest" time="0.129"/>
+  <testcase name="a generic MIME type falls back to the extension" classname="com.truevault.core.model.MimeCategoryTest" time="0.0"/>
+  <testcase name="a missing MIME type still classifies by extension" classname="com.truevault.core.model.MimeCategoryTest" time="0.0"/>
+  <testcase name="a source with no reported size is flagged rather than assumed" classname="com.truevault.core.model.MimeCategoryTest" time="0.017"/>
+  <testcase name="MIME type is trusted first" classname="com.truevault.core.model.MimeCategoryTest" time="0.0"/>
+  <testcase name="unicode file names are classified normally" classname="com.truevault.core.model.MimeCategoryTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

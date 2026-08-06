@@ -13,7 +13,10 @@ import org.gradle.kotlin.dsl.dependencies
  * the schema JSONs are checked into the repository. Those schemas are what the migration tests read,
  * so they are a required build output, not a convenience.
  *
- * They land in `src/androidTest/assets/schemas` because that is where `MigrationTestHelper` looks,
+ * They land directly in `src/androidTest/assets` because `MigrationTestHelper` resolves
+ * `<databaseClass>/<version>.json` from the **assets root**. An extra `schemas/` folder shifts every
+ * path by one segment, and the failure only shows up on a device — every migration test reporting
+ * "Cannot find the schema file in the assets folder". That is exactly how this was found.
  * and because AGP 9's Kotlin DSL no longer allows re-typing the androidTest source set to add an
  * extra assets directory.
  */
@@ -23,7 +26,7 @@ class AndroidRoomConventionPlugin : Plugin<Project> {
 
         // Exported into the androidTest assets tree so MigrationTestHelper can read them at runtime
         // without any source-set surgery, and so they are checked in next to the tests that use them.
-        val schemaDir = layout.projectDirectory.dir("src/androidTest/assets/schemas")
+        val schemaDir = layout.projectDirectory.dir("src/androidTest/assets")
 
         extensions.configure<KspExtension> {
             arg("room.schemaLocation", schemaDir.asFile.absolutePath)

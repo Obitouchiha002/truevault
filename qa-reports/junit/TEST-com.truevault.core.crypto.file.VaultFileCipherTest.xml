@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.crypto.file.VaultFileCipherTest" tests="23" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:12:09.323Z" hostname="MacBook-Pro.local" time="0.36">
+  <properties/>
+  <testcase name="encrypting the same file twice produces different ciphertext" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.005"/>
+  <testcase name="a multi chunk file round trips" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.021"/>
+  <testcase name="a newer format version is refused instead of guessed at" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.004"/>
+  <testcase name="a source that shrinks mid-read fails instead of writing a lying container" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.013"/>
+  <testcase name="a flipped ciphertext byte is rejected" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.002"/>
+  <testcase name="chunks from one file cannot be spliced into another" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.018"/>
+  <testcase name="verification checks every tag and produces nothing" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.014"/>
+  <testcase name="the wrong key produces no plaintext at all" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.002"/>
+  <testcase name="progress is reported up to the exact file size" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.181"/>
+  <testcase name="swapping two chunks is rejected" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.011"/>
+  <testcase name="verification fails on a tampered container" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.002"/>
+  <testcase name="altering the declared plaintext size in the header is rejected" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.002"/>
+  <testcase name="cancelling stops the stream and reports it" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.011"/>
+  <testcase name="an unknown algorithm identifier is refused" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.002"/>
+  <testcase name="a file exactly one chunk long round trips" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.005"/>
+  <testcase name="an absurd chunk size in the header is refused before allocating" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.006"/>
+  <testcase name="an empty file is refused as a container" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.002"/>
+  <testcase name="a zero byte file round trips" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.001"/>
+  <testcase name="dropping the final chunk is detected rather than silently shortening the file" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.008"/>
+  <testcase name="a single chunk file round trips" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.001"/>
+  <testcase name="a file cut off mid-chunk is detected" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.038"/>
+  <testcase name="a container with the wrong magic bytes is refused" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.002"/>
+  <testcase name="the header identifies the format and carries the exact plaintext size" classname="com.truevault.core.crypto.file.VaultFileCipherTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

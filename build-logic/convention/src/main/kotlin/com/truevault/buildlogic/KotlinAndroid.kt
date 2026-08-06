@@ -59,6 +59,11 @@ internal fun configurePackaging(packaging: Packaging) {
 internal fun configureTestOptions(testOptions: TestOptions) {
     testOptions.unitTests.isIncludeAndroidResources = true
     testOptions.unitTests.isReturnDefaultValues = false
+
+    // Each instrumented test runs in its own process, which is what lets `clearPackageData` wipe the
+    // app between tests. It costs a few seconds per test and buys a suite whose result does not
+    // depend on which test happened to run first.
+    testOptions.execution = "ANDROIDX_TEST_ORCHESTRATOR"
 }
 
 /**

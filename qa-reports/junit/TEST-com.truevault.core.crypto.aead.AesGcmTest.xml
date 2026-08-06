@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.crypto.aead.AesGcmTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:12:07.462Z" hostname="MacBook-Pro.local" time="0.948">
+  <properties/>
+  <testcase name="toString never reveals ciphertext" classname="com.truevault.core.crypto.aead.AesGcmTest" time="0.346"/>
+  <testcase name="the same plaintext produces different ciphertext every time" classname="com.truevault.core.crypto.aead.AesGcmTest" time="0.03"/>
+  <testcase name="the nonce comes from the cipher, not from the caller" classname="com.truevault.core.crypto.aead.AesGcmTest" time="0.012"/>
+  <testcase name="the wrong key is rejected rather than returning garbage" classname="com.truevault.core.crypto.aead.AesGcmTest" time="0.003"/>
+  <testcase name="serialised form survives a round trip through bytes" classname="com.truevault.core.crypto.aead.AesGcmTest" time="0.527"/>
+  <testcase name="a truncated blob is rejected before any crypto runs" classname="com.truevault.core.crypto.aead.AesGcmTest" time="0.002"/>
+  <testcase name="round trip returns the original bytes" classname="com.truevault.core.crypto.aead.AesGcmTest" time="0.002"/>
+  <testcase name="associated data must match on decryption" classname="com.truevault.core.crypto.aead.AesGcmTest" time="0.003"/>
+  <testcase name="a flipped nonce bit fails authentication" classname="com.truevault.core.crypto.aead.AesGcmTest" time="0.003"/>
+  <testcase name="an empty payload still round trips" classname="com.truevault.core.crypto.aead.AesGcmTest" time="0.001"/>
+  <testcase name="a flipped ciphertext bit fails authentication" classname="com.truevault.core.crypto.aead.AesGcmTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.model.VaultLockTypeTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:11:22.383Z" hostname="MacBook-Pro.local" time="0.021">
+  <properties/>
+  <testcase name="pin lengths are exactly four and six" classname="com.truevault.core.model.VaultLockTypeTest" time="0.004"/>
+  <testcase name="isPin distinguishes the two families" classname="com.truevault.core.model.VaultLockTypeTest" time="0.016"/>
+  <testcase name="only four and six digit pins are offered" classname="com.truevault.core.model.VaultLockTypeTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

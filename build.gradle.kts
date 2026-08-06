@@ -8,6 +8,22 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.hilt) apply false
+    alias(libs.plugins.kover)
+}
+
+/**
+ * Coverage is measured across every module rather than per module.
+ *
+ * The numbers that matter are for the security-critical code — the crypto engine, the import
+ * transaction engine, the throttle — and those live in `:core:*`. A per-module report would let a
+ * module with no tests hide behind one that is well covered.
+ */
+dependencies {
+    subprojects.forEach { module ->
+        module.plugins.withId("org.jetbrains.kotlinx.kover") {
+            kover(project(module.path))
+        }
+    }
 }
 
 /**

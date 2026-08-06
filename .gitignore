@@ -1,5 +1,9 @@
 *.iml
 .gradle/
+# Kotlin 2.x build-session scratch directory, regenerated on every build.
+.kotlin/
+# Heap dumps written by a crashed JVM during a build.
+*.hprof
 local.properties
 .idea/
 .DS_Store

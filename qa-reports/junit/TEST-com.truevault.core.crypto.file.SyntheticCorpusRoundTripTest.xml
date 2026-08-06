@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.core.crypto.file.SyntheticCorpusRoundTripTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:12:08.439Z" hostname="MacBook-Pro.local" time="0.862">
+  <properties/>
+  <testcase name="cleanUp removes every generated file" classname="com.truevault.core.crypto.file.SyntheticCorpusRoundTripTest" time="0.456"/>
+  <testcase name="two files of identical size but different content stay distinguishable" classname="com.truevault.core.crypto.file.SyntheticCorpusRoundTripTest" time="0.124"/>
+  <testcase name="every file in the corpus round trips byte for byte" classname="com.truevault.core.crypto.file.SyntheticCorpusRoundTripTest" time="0.139"/>
+  <testcase name="a corpus file cannot be opened with the wrong key" classname="com.truevault.core.crypto.file.SyntheticCorpusRoundTripTest" time="0.042"/>
+  <testcase name="a deliberately corrupted container is refused" classname="com.truevault.core.crypto.file.SyntheticCorpusRoundTripTest" time="0.015"/>
+  <testcase name="a zero byte file produces a container that still authenticates" classname="com.truevault.core.crypto.file.SyntheticCorpusRoundTripTest" time="0.043"/>
+  <testcase name="identical content under different names produces identical plaintext but different ciphertext" classname="com.truevault.core.crypto.file.SyntheticCorpusRoundTripTest" time="0.041"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

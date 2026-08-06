@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="index, follow">
+<title>Terms of Service — TrueVault</title>
+<style>
+:root { color-scheme: light dark; --fg:#1a1a1a; --bg:#ffffff; --muted:#5b5b5b;
+        --rule:#e2e2e2; --accent:#2b5c8a; --code:#f4f4f5; }
+@media (prefers-color-scheme: dark) {
+  :root { --fg:#e8e8e8; --bg:#121212; --muted:#a0a0a0; --rule:#2e2e2e;
+          --accent:#7fb3e0; --code:#1e1e1e; }
+}
+* { box-sizing: border-box; }
+body { margin:0; padding:2rem 1.25rem 5rem; background:var(--bg); color:var(--fg);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       max-width:44rem; margin-inline:auto; overflow-wrap:break-word; }
+h1 { font-size:1.85rem; line-height:1.25; margin:0 0 .5rem; }
+h2 { font-size:1.3rem; margin:2.5rem 0 .75rem; padding-top:.75rem;
+     border-top:1px solid var(--rule); }
+h3 { font-size:1.05rem; margin:1.75rem 0 .5rem; }
+p, li { color:var(--fg); }
+ul, ol { padding-left:1.35rem; }
+li { margin:.3rem 0; }
+a { color:var(--accent); }
+hr { border:0; border-top:1px solid var(--rule); margin:2rem 0; }
+blockquote { margin:1.25rem 0; padding:.75rem 1rem; border-left:3px solid var(--rule);
+             color:var(--muted); background:var(--code); border-radius:0 6px 6px 0; }
+code { background:var(--code); padding:.1rem .35rem; border-radius:4px; font-size:.9em; }
+.meta { color:var(--muted); font-size:.95rem; margin:0 0 2rem; }
+.table-scroll { overflow-x:auto; margin:1.25rem 0; }
+table { border-collapse:collapse; width:100%; min-width:22rem; font-size:.95rem; }
+th, td { border:1px solid var(--rule); padding:.5rem .65rem; text-align:left; vertical-align:top; }
+th { background:var(--code); font-weight:600; }
+strong { font-weight:650; }
+@media print { body { max-width:none; padding:0; } h2 { break-after:avoid; } }
+</style>
+</head>
+<body>
+<h1>Terms of Service</h1>
+<p><strong>Version:</strong> 1.0 <strong>Effective date:</strong> [EFFECTIVE DATE REQUIRED] <strong>Last updated:</strong> [LAST UPDATED DATE REQUIRED] <strong>Provider:</strong> [LEGAL BUSINESS NAME REQUIRED] <strong>Contact:</strong> [SUPPORT EMAIL REQUIRED]</p>
+<blockquote><p>Placeholders in square brackets are unresolved. Clauses marked <strong>[LEGAL REVIEW]</strong> are jurisdiction-sensitive and must be reviewed by a qualified lawyer for each target market before release. Some of them are unenforceable in some countries as written.</p></blockquote>
+<hr>
+<h2>1. Acceptance of these Terms</h2>
+<p>By using TrueVault you agree to these Terms. If you do not agree, do not use the app. You can decline on the first screen; declining does not create a vault, does not request permissions and does not process any of your files.</p>
+<h2>2. Eligibility</h2>
+<p>You must be at least [MINIMUM USER AGE REQUIRED] to use TrueVault, and you must be able to enter a binding agreement under the law of [GOVERNING LAW REQUIRED]. <strong>[LEGAL REVIEW]</strong> — minimum age differs by market.</p>
+<h2>3. What TrueVault is</h2>
+<p>TrueVault is an Android application that encrypts files you select and stores them on your device. It provides:</p>
+<ul>
+<li>an encrypted local vault</li>
+<li>Secure Copy and Secure Move</li>
+<li>a privacy leak scanner for folders you grant</li>
+<li>encrypted local backup and restore</li>
+<li>private-app controls where Android supports them</li>
+</ul>
+<p>TrueVault is <strong>not</strong> a cloud service, a backup service, a data-recovery service, or a guarantee that your files cannot be accessed by anyone else. There is no account and no server.</p>
+<h2>4. Your password is your responsibility</h2>
+<p>Your password or PIN protects your vault. You are responsible for choosing it, remembering it, and keeping it private.</p>
+<p><strong>[LEGAL REVIEW]</strong> The developer cannot reset your password, cannot recover your vault, and has no copy of your key. This is a design property, not a support limitation: there is nothing on any server to reset.</p>
+<h2>5. Your recovery key is your responsibility</h2>
+<p>The recovery key is shown once during setup. It is the only route into your vault if you forget your password, and the only route on a different device.</p>
+<p><strong>If you lose your password and your recovery key, your data is permanently unrecoverable.</strong> Store the recovery key somewhere you will still have access to it in a year.</p>
+<h2>6. Backups are your responsibility</h2>
+<ul>
+<li>Vault data is stored <strong>only</strong> on your device.</li>
+<li>Uninstalling the app, resetting the device, losing the device or damaging it will lose the vault.</li>
+<li>Android's automatic backup is disabled for this app by design, so the vault is never swept into a</li>
+</ul>
+<p>system backup you did not ask for.</p>
+<ul>
+<li>The only thing that survives is an encrypted backup <strong>you</strong> export and store somewhere safe.</li>
+</ul>
+<p>Export backups regularly. The app cannot do this for you.</p>
+<h2>7. Secure Copy and Secure Move</h2>
+<ul>
+<li><strong>Secure Copy</strong> creates an encrypted copy and leaves your original where it is.</li>
+<li><strong>Secure Move</strong> creates and verifies an encrypted copy first, and only then asks Android to delete</li>
+</ul>
+<p>the original.</p>
+<p>The order is never reversed. No original is ever deleted before its encrypted copy has been verified.</p>
+<h2>8. Risks when originals are deleted</h2>
+<p>By using Secure Move you accept that:</p>
+<ul>
+<li>Android performs the deletion, and asks you to confirm it</li>
+<li>deletion can fail, or be unsupported by the storage provider</li>
+<li>you can decline, in which case the original stays and the app says so</li>
+<li>a deleted file may sit in a system trash for a period afterwards</li>
+<li><strong>once an original is deleted, it cannot be restored by TrueVault</strong></li>
+</ul>
+<p>Verify a moved file opens correctly in the vault before you rely on the original being gone.</p>
+<h2>9. Duplicates and copies TrueVault cannot reach</h2>
+<p>TrueVault cannot find or remove copies of your files that it cannot access, including copies in other apps' storage, in messages, on cloud services, on other devices, or already sent to another person.</p>
+<p>The Privacy Leak Scanner reports what it found in the locations you granted. A result of "nothing found" means nothing was found <strong>there</strong>. It is not a guarantee that no copy exists.</p>
+<h2>10. Private Apps limitations</h2>
+<ul>
+<li>Private Space is an Android feature, provided and controlled by Android.</li>
+<li>It exists only on supported Android versions and devices.</li>
+<li>Device policy, your employer's management software, or your manufacturer may disable it.</li>
+<li>TrueVault does not clone apps, does not copy another app's data, and does not install or uninstall</li>
+</ul>
+<p>anything.</p>
+<ul>
+<li>Manufacturer "private space" features are separate products and are not covered by these Terms.</li>
+</ul>
+<h2>11. Prohibited uses</h2>
+<p>You must not use TrueVault to:</p>
+<ul>
+<li>store or conceal material that is illegal where you are</li>
+<li>conceal evidence, or obstruct a lawful investigation</li>
+<li>hide content on a device you do not own or are not authorised to use</li>
+<li>mislead a device's owner about what is installed on it</li>
+<li>infringe anyone's rights</li>
+<li>circumvent security measures on a device or service</li>
+<li>reverse engineer, redistribute or resell the app except where the law permits it</li>
+</ul>
+<p>Availability of a privacy feature is not permission to break the law with it.</p>
+<h2>12. Your content stays yours</h2>
+<p>You keep all rights in the files you store. The developer claims no ownership, no licence and no right to use them — and, having no server and receiving no data, has no ability to do so.</p>
+<h2>13. Third-party services</h2>
+<p>TrueVault includes open-source libraries, each under its own licence (see Settings → Open-Source Licences). They run on your device and receive no data.</p>
+<p>If you share a file with another app, or store a backup on a cloud service, that provider's terms and privacy policy apply to what you sent them. Those services are not covered by these Terms.</p>
+<h2>14. Updates</h2>
+<p>Updates may add, change or remove features. Some fix security issues; you are strongly encouraged to install them. An update may change the minimum Android version required.</p>
+<p>An update never changes the vault format in a way that makes existing data unreadable without a documented, tested migration.</p>
+<h2>15. Availability and compatibility</h2>
+<p>TrueVault requires Android [MINSDK — currently 8.0]. Some features depend on the device: biometric unlock needs enrolled biometrics; hardware-backed key storage needs the hardware; Private Space needs Android 15 or later plus a device that supports it. The app reports what your device can and cannot do rather than failing silently.</p>
+<p>The app is not guaranteed to work on rooted, modified or emulated devices.</p>
+<h2>16. Security limitations</h2>
+<p>TrueVault applies strong encryption correctly, and it cannot do more than that. It cannot protect against a compromised or rooted device, malware with system access, someone who knows your password, physical coercion, or a weak PIN. No independent security audit of this app has been performed.</p>
+<p>Encryption protects data at rest on the device. It does not make a device secure.</p>
+<h2>17. No guarantee of recovery</h2>
+<p><strong>[LEGAL REVIEW]</strong> To the extent permitted by law, the developer does not guarantee that vault data can be recovered in any circumstance, including forgotten passwords, lost recovery keys, device failure, corrupted storage, failed backups or app defects.</p>
+<h2>18. Data loss</h2>
+<p><strong>[LEGAL REVIEW]</strong> To the extent permitted by law, the developer is not liable for loss of data arising from your use of the app, including data lost through Secure Move, deletion, reset, uninstallation or device failure. Keep backups.</p>
+<p>This clause does not exclude liability that cannot be excluded by law — including liability for death or personal injury caused by negligence, for fraud, and for breaches of your statutory consumer rights.</p>
+<h2>19. Ending your use</h2>
+<p>You may stop at any time by deleting your vault data, resetting the app, or uninstalling it. Local data is removed; backups you exported and files you shared elsewhere are not affected.</p>
+<h2>20. Discontinuation</h2>
+<p>The developer may stop distributing or updating TrueVault. Because the app works entirely on your device with no server, an installed copy keeps working. Export a backup if you want long-term assurance.</p>
+<h2>21. Disclaimer of warranties</h2>
+<p><strong>[LEGAL REVIEW]</strong> To the maximum extent permitted by applicable law, TrueVault is provided "as is" without warranties of any kind.</p>
+<p>Nothing here removes rights you have as a consumer under the law of your country. In many jurisdictions — including the EU, the UK, Australia and India — statutory guarantees cannot be disclaimed, and this clause does not attempt to.</p>
+<h2>22. Limitation of liability</h2>
+<p><strong>[LEGAL REVIEW]</strong> To the maximum extent permitted by applicable law, the developer's total liability arising from your use of TrueVault is limited to the amount you paid for the app in the twelve months before the claim.</p>
+<p>This limit does not apply to liability that cannot be limited by law.</p>
+<h2>23. Indemnity</h2>
+<p><strong>[LEGAL REVIEW]</strong> You agree to indemnify the developer against claims arising from your unlawful use of the app or your breach of section 11.</p>
+<p>This clause is unenforceable against consumers in several jurisdictions and must be reviewed — or removed for consumer markets — before release.</p>
+<h2>24. Governing law</h2>
+<p>These Terms are governed by the law of [GOVERNING LAW REQUIRED].</p>
+<p><strong>[LEGAL REVIEW]</strong> Consumer-protection law in your country of residence may apply regardless of this clause, and mandatory consumer rights are not displaced by it.</p>
+<h2>25. Disputes</h2>
+<p><strong>[LEGAL REVIEW]</strong> [DISPUTE RESOLUTION REQUIRED]. Nothing here prevents you from bringing a claim in your local courts where the law gives you that right, or from complaining to a consumer or data-protection authority.</p>
+<h2>26. Changes to these Terms</h2>
+<p>Material changes get a new version, a new effective date, and a plain-language summary of what changed. You will be asked to review them in the app. Continuing to use TrueVault after that means you accept the updated Terms; if you do not, you can export your data and stop using the app.</p>
+<p>Typographical and formatting corrections do not require re-acceptance.</p>
+<h2>27. Contact</h2>
+<div class="table-scroll"><table><tr><th></th><th></th></tr><tr><td>Support</td><td>[SUPPORT EMAIL REQUIRED]</td></tr><tr><td>Privacy</td><td>[PRIVACY EMAIL REQUIRED]</td></tr><tr><td>Provider</td><td>[LEGAL BUSINESS NAME REQUIRED]</td></tr><tr><td>Address</td><td>[BUSINESS ADDRESS REQUIRED WHERE LEGALLY MANDATED]</td></tr><tr><td>Website</td><td>[WEBSITE DOMAIN REQUIRED]</td></tr></table></div>
+</body>
+</html>

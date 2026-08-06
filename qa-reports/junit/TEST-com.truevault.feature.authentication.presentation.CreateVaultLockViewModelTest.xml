@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.truevault.feature.authentication.presentation.CreateVaultLockViewModelTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-08-06T06:34:00.131Z" hostname="MacBook-Pro.local" time="6.716">
+  <properties/>
+  <testcase name="a short password blocks submission" classname="com.truevault.feature.authentication.presentation.CreateVaultLockViewModelTest" time="4.973"/>
+  <testcase name="a matching strong password enables submission" classname="com.truevault.feature.authentication.presentation.CreateVaultLockViewModelTest" time="0.061"/>
+  <testcase name="opting into biometrics asks for enrolment before finishing" classname="com.truevault.feature.authentication.presentation.CreateVaultLockViewModelTest" time="0.913"/>
+  <testcase name="the password is never held in UI state" classname="com.truevault.feature.authentication.presentation.CreateVaultLockViewModelTest" time="0.063"/>
+  <testcase name="declining the biometric prompt still leaves a working vault" classname="com.truevault.feature.authentication.presentation.CreateVaultLockViewModelTest" time="0.258"/>
+  <testcase name="biometrics cannot be offered on a device that does not support them" classname="com.truevault.feature.authentication.presentation.CreateVaultLockViewModelTest" time="0.21"/>
+  <testcase name="submitting without biometrics creates the vault and finishes" classname="com.truevault.feature.authentication.presentation.CreateVaultLockViewModelTest" time="0.201"/>
+  <testcase name="mismatched confirmation blocks submission even for a strong password" classname="com.truevault.feature.authentication.presentation.CreateVaultLockViewModelTest" time="0.021"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/Users/apple/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.18.2/62f38a6faf7f069d661b79a07d566f504b0b20c4/byte-buddy-agent-1.18.2.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
+</testsuite>

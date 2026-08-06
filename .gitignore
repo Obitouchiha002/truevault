@@ -19,3 +19,5 @@ keystore.properties
 release/
 /build-logic/build/
 /build-logic/.gradle/
+# Built APKs served by the local site. Rebuild with ./gradlew :app:assembleRelease
+/web/download/

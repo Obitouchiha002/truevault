@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.truevault.android.application)
     alias(libs.plugins.truevault.android.application.compose)
@@ -11,6 +13,36 @@ android {
     defaultConfig {
         versionCode = 3
         versionName = "0.1.2"
+    }
+
+    /**
+     * Release signing, read from `keystore.properties` at the project root.
+     *
+     * That file and the keystore itself are gitignored. Losing either means never
+     * being able to publish an update to an app already installed under this key —
+     * Android refuses the upgrade, and every existing user would have to uninstall
+     * and lose their vault. Back both up.
+     *
+     * When the file is absent the release build simply stays unsigned rather than
+     * falling back to the debug key: a release accidentally signed with a shared
+     * debug certificate is worse than one that cannot be installed.
+     */
+    val signingProps: Properties? = rootProject.file("keystore.properties")
+        .takeIf { it.exists() }
+        ?.let { file -> Properties().apply { file.inputStream().use { load(it) } } }
+
+    signingConfigs {
+        if (signingProps != null) {
+            create("release") {
+                storeFile = rootProject.file(signingProps.getProperty("storeFile"))
+                storePassword = signingProps.getProperty("storePassword")
+                keyAlias = signingProps.getProperty("keyAlias")
+                keyPassword = signingProps.getProperty("keyPassword")
+                enableV1Signing = false   // v1 is obsolete and minSdk is 26
+                enableV2Signing = true
+                enableV3Signing = true
+            }
+        }
     }
 
     buildTypes {
@@ -28,7 +60,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // No debug signing config is attached: a release build must be signed explicitly.
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 }

@@ -34,7 +34,7 @@
       "operatingSystem": "Android 8.0 and later",
       "applicationCategory": "SecurityApplication",
       "softwareVersion": "0.1.2",
-      "fileSize": "4.07 MB",
+      "fileSize": "4.09 MB",
       "datePublished": "2026-08-06",
       "description": "An Android file vault that opens to a working notes app. Files are encrypted on the device with AES-GCM and a key derived with Argon2id. No account, no analytics, no internet permission.",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
@@ -771,7 +771,7 @@ footer{padding:38px 0 68px; border-top:1px solid var(--line)}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M4 21h16"/></svg>
         Download the APK
       </button>
-      <div class="dl-meta"><span>v0.1.2</span><span>4.07 MB</span><span>Android 8.0+</span><span>No install permissions</span></div>
+      <div class="dl-meta"><span>v0.1.2</span><span>4.09 MB</span><span>Android 8.0+</span><span>No install permissions</span></div>
     </div>
   </div>
 </section>
@@ -811,7 +811,8 @@ footer{padding:38px 0 68px; border-top:1px solid var(--line)}
     <table class="dl-table"><tbody>
       <tr><th>App name</th><td>TrueVault</td></tr>
       <tr><th>Version</th><td>0.1.2 (build 3)</td></tr>
-      <tr><th>File size</th><td>4.07 MB (4,074,894 bytes)</td></tr>
+      <tr><th>File size</th><td>4.09 MB (4,091,278 bytes)</td></tr>
+      <tr><th>SHA-256</th><td class="mono" style="font-size:.68rem; word-break:break-all">c10a54ca08ecf5e6204e039a1b68e18cb436f137758e0f219dd6868ce628d340</td></tr>
       <tr><th>Package</th><td class="mono">com.truevault.app</td></tr>
       <tr><th>Requires</th><td>Android 8.0 (API 26) or newer</td></tr>
       <tr><th>Architecture</th><td>Universal</td></tr>
@@ -826,9 +827,9 @@ footer{padding:38px 0 68px; border-top:1px solid var(--line)}
     </div>
 
     <div class="modal-actions">
-      <a class="btn btn-primary" id="dlLink" href="[DOWNLOAD URL REQUIRED]" download>
+      <a class="btn btn-primary" id="dlLink" href="download/truevault-0.1.2.apk" download="truevault-0.1.2.apk">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M4 21h16"/></svg>
-        Download APK · 4.07 MB
+        Download APK · 4.09 MB
       </a>
       <a class="btn btn-quiet" href="privacy-policy.html">Read the Privacy Policy first</a>
     </div>
@@ -939,15 +940,18 @@ document.getElementById("dlClose").addEventListener("click", closeModal);
 modal.addEventListener("click", (e)=>{ if(e.target === modal) closeModal(); });
 addEventListener("keydown", (e)=>{ if(e.key === "Escape" && !modal.hidden) closeModal(); });
 
-/* The link is a placeholder until a signed APK is hosted. Saying so beats a
-   button that quietly goes nowhere. */
+/* If the APK is ever missing from web/download/, say so rather than handing the
+   visitor a 404 from a button that looked like it worked. */
 const dlLink = document.getElementById("dlLink");
-if(dlLink.getAttribute("href").startsWith("[")){
-  dlLink.addEventListener("click",(e)=>{
+dlLink.addEventListener("click", async (e) => {
+  try {
+    const res = await fetch(dlLink.getAttribute("href"), { method: "HEAD" });
+    if (!res.ok) throw new Error(res.status);
+  } catch {
     e.preventDefault();
-    alert("No download URL has been set yet.\n\nReplace [DOWNLOAD URL REQUIRED] in web/index.html with the address of your signed APK.");
-  });
-}
+    alert("The APK is not on this server yet.\n\nBuild it with:  ./gradlew :app:assembleRelease\nthen copy it to  web/download/truevault-0.1.2.apk");
+  }
+});
 
 /* Theme, sticky bar, reveals, mobile section spy */
 const root = document.documentElement;

@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.truevault.feature.launcher.presentation.AdvancedPrivacyScreen
+import com.truevault.feature.launcher.presentation.AppearanceScreen
 import com.truevault.feature.launcher.presentation.SecureLauncherScreen
 import kotlinx.serialization.Serializable
 
@@ -16,11 +17,18 @@ data object SecureLauncherRoute
 @Serializable
 data object AdvancedPrivacyRoute
 
+/** Settings → App Appearance: which icon and name the launcher shows. */
+@Serializable
+data object AppearanceRoute
+
 fun NavController.navigateToAdvancedPrivacy(navOptions: NavOptions? = null) =
     navigate(AdvancedPrivacyRoute, navOptions)
 
 fun NavController.navigateToSecureLauncher(navOptions: NavOptions? = null) =
     navigate(SecureLauncherRoute, navOptions)
+
+fun NavController.navigateToAppearance(navOptions: NavOptions? = null) =
+    navigate(AppearanceRoute, navOptions)
 
 fun NavGraphBuilder.launcherScreens(onNavigateBack: () -> Unit) {
     composable<AdvancedPrivacyRoute> {
@@ -28,5 +36,8 @@ fun NavGraphBuilder.launcherScreens(onNavigateBack: () -> Unit) {
     }
     composable<SecureLauncherRoute> {
         SecureLauncherScreen()
+    }
+    composable<AppearanceRoute> {
+        AppearanceScreen(onNavigateBack = onNavigateBack)
     }
 }

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notes_title">Notes</string>
+    <string name="notes_new">New note</string>
+    <string name="notes_search_hint">Search notes</string>
+    <string name="notes_search">Search</string>
+    <string name="notes_close_search">Close search</string>
+
+    <string name="notes_empty_title">Nothing written down yet</string>
+    <string name="notes_empty_body">Tap the button below to start a note. Notes are stored on this device and are not encrypted — move anything private into the vault instead.</string>
+    <string name="notes_no_results">No notes match “%1$s”.</string>
+
+    <string name="notes_editor_title_hint">Title</string>
+    <string name="notes_editor_body_hint">Write something…</string>
+    <string name="notes_editor_saved">Saved</string>
+    <string name="notes_editor_edited">Edited %1$s</string>
+
+    <string name="notes_pin">Pin</string>
+    <string name="notes_unpin">Unpin</string>
+    <string name="notes_pinned">Pinned</string>
+    <string name="notes_archive">Archive</string>
+    <string name="notes_unarchive">Move out of archive</string>
+    <string name="notes_delete">Delete</string>
+    <string name="notes_deleted">Moved to trash</string>
+    <string name="notes_undo">Undo</string>
+
+    <string name="notes_not_encrypted">Notes are not encrypted. For anything private, use the vault.</string>
+</resources>

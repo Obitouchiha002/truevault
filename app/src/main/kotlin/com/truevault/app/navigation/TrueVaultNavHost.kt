@@ -25,12 +25,15 @@ import com.truevault.feature.home.navigation.navigateToHome
 import com.truevault.feature.importfiles.navigation.importScreens
 import com.truevault.feature.importfiles.navigation.navigateToImport
 import com.truevault.feature.launcher.navigation.launcherScreens
+import com.truevault.feature.launcher.navigation.navigateToAppearance
 import com.truevault.feature.launcher.navigation.navigateToAdvancedPrivacy
 import com.truevault.feature.onboarding.navigation.OnboardingRoute
 import com.truevault.feature.onboarding.navigation.onboardingScreen
 import com.truevault.feature.privateapps.navigation.navigateToPrivateApps
 import com.truevault.feature.privateapps.navigation.privateAppsScreen
 import com.truevault.feature.scanner.navigation.navigateToScanner
+import com.truevault.feature.notes.navigation.navigateToNoteEditor
+import com.truevault.feature.notes.navigation.notesScreens
 import com.truevault.feature.scanner.navigation.scannerScreen
 import com.truevault.feature.settings.navigation.navigateToDeviceCapabilities
 import com.truevault.feature.settings.navigation.settingsScreen
@@ -130,10 +133,16 @@ fun TrueVaultNavHost(
 
         scannerScreen()
 
+        notesScreens(
+            onOpenNote = { noteId -> navController.navigateToNoteEditor(noteId) },
+            onNavigateBack = { navController.popBackStack() },
+        )
+
         settingsScreen(
             onOpenSecuritySettings = { navController.navigateToSecuritySettings() },
             onOpenDeviceCapabilities = { navController.navigateToDeviceCapabilities() },
             onOpenAdvancedPrivacy = { navController.navigateToAdvancedPrivacy() },
+            onOpenAppearance = { navController.navigateToAppearance() },
             onOpenPrivateApps = { navController.navigateToPrivateApps() },
             onNavigateBack = { navController.popBackStack() },
         )

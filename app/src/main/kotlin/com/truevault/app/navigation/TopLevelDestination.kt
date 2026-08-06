@@ -1,6 +1,8 @@
 package com.truevault.app.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.EventNote
+import androidx.compose.material.icons.automirrored.outlined.EventNote
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Radar
 import androidx.compose.material.icons.filled.Settings
@@ -12,6 +14,7 @@ import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.truevault.app.R
 import com.truevault.feature.home.navigation.HomeRoute
+import com.truevault.feature.notes.navigation.NotesRoute
 import com.truevault.feature.scanner.navigation.ScannerRoute
 import com.truevault.feature.settings.navigation.SettingsRoute
 import com.truevault.feature.vault.navigation.VaultRoute
@@ -30,6 +33,20 @@ enum class TopLevelDestination(
     val contentDescriptionRes: Int,
     val route: KClass<*>,
 ) {
+    /**
+     * Notes come first because the app opens here.
+     *
+     * That is the point of the cover: what is on screen when someone hands the phone over is a
+     * notes app, and the vault is one tap away behind authentication rather than the first thing
+     * anyone sees.
+     */
+    NOTES(
+        selectedIcon = Icons.AutoMirrored.Filled.EventNote,
+        unselectedIcon = Icons.AutoMirrored.Outlined.EventNote,
+        labelRes = R.string.nav_notes,
+        contentDescriptionRes = R.string.nav_notes_description,
+        route = NotesRoute::class,
+    ),
     HOME(
         selectedIcon = Icons.Filled.Shield,
         unselectedIcon = Icons.Outlined.Shield,

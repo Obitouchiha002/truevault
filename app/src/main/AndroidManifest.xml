@@ -63,11 +63,6 @@
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|smallestScreenSize|density"
             android:theme="@style/Theme.TrueVault.Splash"
             android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
             <!--
               Receiving a share is how a file gets in from anywhere on the phone: the gallery, a file
               manager, a chat app, a browser download. Without this, a user has to come to TrueVault
@@ -88,6 +83,77 @@
                 <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
+
+        <!--
+          Launcher identities.
+
+          MainActivity itself has no LAUNCHER intent filter — these aliases carry it, so exactly one
+          of them decides what the home screen shows. TrueVaultAlias ships enabled; the rest are off
+          until the user chooses one in Settings -> Appearance.
+
+          What this changes: the icon and the name in the launcher, and which screen opens first.
+          What it does NOT change: the app remains fully visible in Android Settings, storage usage,
+          battery usage and permission controls. The Appearance screen says exactly that, because an
+          app that let someone believe otherwise would be putting them at risk on a false promise.
+
+          Every identity below belongs to this product. None imitates Android, Google, a
+          manufacturer, a bank, an antivirus or another developer's app.
+        -->
+        <activity-alias
+            android:name=".launcher.TrueVaultAlias"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".launcher.NexaAlias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_nexa"
+            android:roundIcon="@mipmap/ic_launcher_nexa_round"
+            android:label="@string/appearance_label_nexa"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".launcher.NexaNotesAlias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_nexa"
+            android:roundIcon="@mipmap/ic_launcher_nexa_round"
+            android:label="@string/appearance_label_nexa_notes"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".launcher.NexaFilesAlias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_nexa"
+            android:roundIcon="@mipmap/ic_launcher_nexa_round"
+            android:label="@string/appearance_label_nexa_files"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <!--
           Secure Launcher Mode's Home activity.

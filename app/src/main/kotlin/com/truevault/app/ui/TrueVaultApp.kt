@@ -39,6 +39,7 @@ import com.truevault.core.crypto.session.VaultLockState
 import com.truevault.feature.authentication.navigation.UnlockRoute
 import com.truevault.core.designsystem.theme.TvMotion
 import com.truevault.feature.home.navigation.navigateToHome
+import com.truevault.feature.notes.navigation.navigateToNotes
 import com.truevault.feature.importfiles.navigation.ImportSourceRoute
 import com.truevault.feature.importfiles.navigation.navigateToImport
 import com.truevault.feature.scanner.navigation.navigateToScanner
@@ -198,6 +199,7 @@ private fun androidx.navigation.NavHostController.navigateToTopLevel(
     }
 
     when (destination) {
+        TopLevelDestination.NOTES -> navigateToNotes(options)
         TopLevelDestination.HOME -> navigateToHome(options)
         TopLevelDestination.VAULT -> navigateToVault(options)
         TopLevelDestination.SCAN -> navigateToScanner(options)

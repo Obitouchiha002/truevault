@@ -80,4 +80,5 @@
     <string name="settings_storage_unlimited">No limit</string>
     <string name="settings_storage_note">This is a limit on new files only. Nothing already in your vault is ever removed or shrunk to make room — if the limit is reached, TrueVault stops taking files in and tells you.</string>
     <string name="settings_storage_over">Your vault is larger than this limit. Nothing has been removed; new files are refused until you raise it.</string>
+    <string name="settings_app_icon">App icon and name</string>
 </resources>

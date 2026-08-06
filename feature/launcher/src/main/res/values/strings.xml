@@ -48,4 +48,30 @@
         <item quantity="one">%1$d icon hidden</item>
         <item quantity="other">%1$d icons hidden</item>
     </plurals>
+
+    <!-- App appearance -->
+    <string name="appearance_title">App Appearance</string>
+    <string name="appearance_choose">Choose how the app looks</string>
+    <string name="appearance_apply">Apply Appearance</string>
+    <string name="appearance_applying">Applying…</string>
+    <string name="appearance_current">Currently in use</string>
+
+    <string name="appearance_limits_title">What this does, and what it does not</string>
+    <string name="appearance_limits_body">Changing the icon makes the app less noticeable on your home screen. It does not make it invisible: Android Settings, storage usage, battery usage and permission screens will still list this app under its real package. If someone looks there, they will find it.</string>
+
+    <string name="appearance_vault_note">Your vault is protected by your password or biometric, not by the icon. Changing the appearance never changes what it takes to open the vault.</string>
+
+    <string name="appearance_truevault">TrueVault</string>
+    <string name="appearance_truevault_body">The app under its own name and icon.</string>
+    <string name="appearance_nexa">Nexa</string>
+    <string name="appearance_nexa_body">Opens to your personal notes. Your private vault stays behind authentication.</string>
+    <string name="appearance_nexa_notes">Nexa Notes</string>
+    <string name="appearance_nexa_notes_body">The same app, presented as a notes app.</string>
+    <string name="appearance_nexa_files">Nexa Files</string>
+    <string name="appearance_nexa_files_body">The same app, presented as file organisation.</string>
+
+    <string name="appearance_updated_title">Appearance updated</string>
+    <string name="appearance_updated_body">Your launcher may take a moment to display the new icon.</string>
+    <string name="appearance_partial_title">Two icons may appear</string>
+    <string name="appearance_partial_body">The new icon is active, but the previous one could not be removed. Try applying the appearance again, or restart your launcher.</string>
 </resources>

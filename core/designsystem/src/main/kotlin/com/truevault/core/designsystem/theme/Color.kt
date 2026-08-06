@@ -12,23 +12,28 @@ import androidx.compose.ui.graphics.Color
  * Direction: calm, high-contrast, privacy-serious. A deep navy-black base with a single emerald
  * accent, so the accent only ever means "this is the safe, primary action". Status colours
  * (success / warning / error) are reserved for privacy state and never used decoratively.
+ *
+ * The neutrals sit slightly deeper and cooler than they used to, and the accent slightly brighter,
+ * so text keeps its contrast against the larger corner radii and softer surfaces. Contrast ratios
+ * were the constraint, not the mood: an app people read warnings in cannot trade legibility for
+ * atmosphere.
  */
 
 // --- Dark ----------------------------------------------------------------------------------------
-private val DarkBackground = Color(0xFF0A0E13)
-private val DarkSurface = Color(0xFF10161E)
-private val DarkSurfaceLow = Color(0xFF0D131A)
-private val DarkSurfaceHigh = Color(0xFF161E28)
-private val DarkSurfaceHighest = Color(0xFF1C2632)
-private val DarkSurfaceVariant = Color(0xFF1A222C)
+private val DarkBackground = Color(0xFF090C11)
+private val DarkSurface = Color(0xFF121820)
+private val DarkSurfaceLow = Color(0xFF0D1219)
+private val DarkSurfaceHigh = Color(0xFF19212B)
+private val DarkSurfaceHighest = Color(0xFF202A36)
+private val DarkSurfaceVariant = Color(0xFF1C2530)
 private val DarkOutline = Color(0xFF32404E)
-private val DarkOutlineVariant = Color(0xFF222C37)
+private val DarkOutlineVariant = Color(0xFF26313D)
 private val DarkOnBackground = Color(0xFFE7EDF3)
 private val DarkOnSurfaceVariant = Color(0xFF9AA9B8)
 
-private val EmeraldDark = Color(0xFF2FD3A7)
+private val EmeraldDark = Color(0xFF45E0B4)
 private val EmeraldOnDark = Color(0xFF00281E)
-private val EmeraldContainerDark = Color(0xFF12493C)
+private val EmeraldContainerDark = Color(0xFF10523F)
 private val EmeraldOnContainerDark = Color(0xFFA9F2DC)
 
 private val BlueDark = Color(0xFF86ACFF)
@@ -47,9 +52,9 @@ private val RedContainerDark = Color(0xFF6B221C)
 private val RedOnContainerDark = Color(0xFFFFDAD5)
 
 // --- Light ---------------------------------------------------------------------------------------
-private val LightBackground = Color(0xFFF4F7FA)
+private val LightBackground = Color(0xFFF6F8FB)
 private val LightSurface = Color(0xFFFFFFFF)
-private val LightSurfaceLow = Color(0xFFEFF3F8)
+private val LightSurfaceLow = Color(0xFFF0F4F9)
 private val LightSurfaceHigh = Color(0xFFE9EFF5)
 private val LightSurfaceHighest = Color(0xFFE2EAF2)
 private val LightSurfaceVariant = Color(0xFFE7EDF3)
@@ -58,7 +63,7 @@ private val LightOutlineVariant = Color(0xFFDCE4EC)
 private val LightOnBackground = Color(0xFF0E1A26)
 private val LightOnSurfaceVariant = Color(0xFF556676)
 
-private val TealLight = Color(0xFF0C6B62)
+private val TealLight = Color(0xFF0A7A6B)
 private val TealOnLight = Color(0xFFFFFFFF)
 private val TealContainerLight = Color(0xFFB5EFE2)
 private val TealOnContainerLight = Color(0xFF00201B)

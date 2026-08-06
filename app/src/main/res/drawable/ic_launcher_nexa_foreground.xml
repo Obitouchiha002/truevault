@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Nexa identity: a notebook page with a folded corner.
+
+  Deliberately generic stationery. It does not resemble Android's own icons, Google's apps, any
+  manufacturer's system app, or any other developer's product — a launcher icon that imitated one of
+  those would be impersonation, not privacy.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Page with a folded top-right corner -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M36,26h27l12,12v44a4,4 0 0,1 -4,4H36a4,4 0 0,1 -4,-4V30A4,4 0 0,1 36,26z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.55"
+        android:pathData="M63,26l12,12h-12z" />
+
+    <!-- Three ruled lines -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.0"
+        android:strokeColor="#1F6F5C"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M41,52h26 M41,62h26 M41,72h16" />
+</vector>

@@ -26,12 +26,19 @@ object TvSpacing {
     val contentBottom = 96.dp
 }
 
+/**
+ * Corner radii.
+ *
+ * Generous and consistent. Cards and buttons are close enough in roundness that a button sitting on
+ * a card reads as part of it rather than as something pasted on top — which is what a 20dp card
+ * around a 4dp button always looks like.
+ */
 object TvRadius {
-    val card = 20.dp
-    val button = 16.dp
+    val card = 24.dp
+    val button = 20.dp
     val pill = 999.dp
-    val sheet = 28.dp
-    val small = 12.dp
+    val sheet = 32.dp
+    val small = 14.dp
 }
 
 object TvElevation {
@@ -42,8 +49,8 @@ object TvElevation {
 }
 
 internal val TrueVaultShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(12.dp),
+    extraSmall = RoundedCornerShape(10.dp),
+    small = RoundedCornerShape(TvRadius.small),
     medium = RoundedCornerShape(TvRadius.button),
     large = RoundedCornerShape(TvRadius.card),
     extraLarge = RoundedCornerShape(TvRadius.sheet),

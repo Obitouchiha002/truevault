@@ -24,6 +24,7 @@ fun NavGraphBuilder.settingsScreen(
     onOpenSecuritySettings: () -> Unit,
     onOpenDeviceCapabilities: () -> Unit,
     onOpenAdvancedPrivacy: () -> Unit,
+    onOpenAppearance: () -> Unit,
     onOpenPrivateApps: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
@@ -32,6 +33,7 @@ fun NavGraphBuilder.settingsScreen(
             onOpenSecuritySettings = onOpenSecuritySettings,
             onOpenDeviceCapabilities = onOpenDeviceCapabilities,
             onOpenAdvancedPrivacy = onOpenAdvancedPrivacy,
+            onOpenAppearance = onOpenAppearance,
             onOpenPrivateApps = onOpenPrivateApps,
         )
     }

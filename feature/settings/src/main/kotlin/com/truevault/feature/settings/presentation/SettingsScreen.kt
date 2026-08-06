@@ -46,6 +46,7 @@ fun SettingsScreen(
     onOpenSecuritySettings: () -> Unit,
     onOpenDeviceCapabilities: () -> Unit,
     onOpenAdvancedPrivacy: () -> Unit,
+    onOpenAppearance: () -> Unit,
     onOpenPrivateApps: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
@@ -58,6 +59,7 @@ fun SettingsScreen(
                 SettingsEffect.NavigateToSecuritySettings -> onOpenSecuritySettings()
                 SettingsEffect.NavigateToDeviceCapabilities -> onOpenDeviceCapabilities()
                 SettingsEffect.NavigateToAdvancedPrivacy -> onOpenAdvancedPrivacy()
+                SettingsEffect.NavigateToAppearance -> onOpenAppearance()
                 SettingsEffect.NavigateToPrivateApps -> onOpenPrivateApps()
             }
         }
@@ -228,6 +230,9 @@ internal fun SettingsContent(
             )
             TvCard(onClick = { onAction(SettingsAction.AdvancedPrivacyClicked) }) {
                 NavigationRow(title = stringResource(R.string.settings_advanced_privacy))
+            }
+            TvCard(onClick = { onAction(SettingsAction.AppearanceClicked) }) {
+                NavigationRow(title = stringResource(R.string.settings_app_icon))
             }
         }
     }

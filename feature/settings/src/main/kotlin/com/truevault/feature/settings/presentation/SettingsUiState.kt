@@ -43,6 +43,7 @@ sealed interface SettingsAction {
     data object SecuritySettingsClicked : SettingsAction
     data object DeviceCapabilitiesClicked : SettingsAction
     data object AdvancedPrivacyClicked : SettingsAction
+    data object AppearanceClicked : SettingsAction
     data object PrivateAppsClicked : SettingsAction
     data class StorageBudgetSelected(val budget: StorageBudget) : SettingsAction
 }
@@ -51,5 +52,6 @@ sealed interface SettingsEffect {
     data object NavigateToSecuritySettings : SettingsEffect
     data object NavigateToDeviceCapabilities : SettingsEffect
     data object NavigateToAdvancedPrivacy : SettingsEffect
+    data object NavigateToAppearance : SettingsEffect
     data object NavigateToPrivateApps : SettingsEffect
 }

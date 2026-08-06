@@ -3,6 +3,7 @@ package com.truevault.app
 import android.app.Application
 import com.truevault.app.lifecycle.AutoLockController
 import com.truevault.core.capabilities.DeviceCapabilityDetectorImpl
+import com.truevault.core.capabilities.provider.LauncherAppearanceController
 import com.truevault.core.common.log.SecureLog
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -15,6 +16,9 @@ class TrueVaultApplication : Application() {
 
     @Inject
     lateinit var capabilityDetector: DeviceCapabilityDetectorImpl
+
+    @Inject
+    lateinit var appearanceController: LauncherAppearanceController
 
     override fun onCreate() {
         super.onCreate()
@@ -30,5 +34,11 @@ class TrueVaultApplication : Application() {
         // Space that is locked or unlocked while TrueVault is running updates the UI without a
         // restart.
         capabilityDetector.start()
+
+        // Switching the launcher icon is two package-manager calls, and a process death between
+        // them can leave the app with no launcher entry at all. The user could not fix that
+        // themselves — they would have no icon to tap. This is the one chance to notice and put
+        // one back, and it costs a single cheap query on every start.
+        appearanceController.repair()
     }
 }

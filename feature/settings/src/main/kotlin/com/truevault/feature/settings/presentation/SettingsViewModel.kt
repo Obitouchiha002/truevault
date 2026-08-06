@@ -86,6 +86,8 @@ class SettingsViewModel @Inject constructor(
                 viewModelScope.launch { _effects.emit(SettingsEffect.NavigateToDeviceCapabilities) }
             SettingsAction.AdvancedPrivacyClicked ->
                 viewModelScope.launch { _effects.emit(SettingsEffect.NavigateToAdvancedPrivacy) }
+            SettingsAction.AppearanceClicked ->
+                viewModelScope.launch { _effects.emit(SettingsEffect.NavigateToAppearance) }
             SettingsAction.PrivateAppsClicked ->
                 viewModelScope.launch { _effects.emit(SettingsEffect.NavigateToPrivateApps) }
             is SettingsAction.StorageBudgetSelected ->

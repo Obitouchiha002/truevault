@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -14,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
@@ -33,6 +36,8 @@ import com.truevault.core.designsystem.component.TvPreviewSurface
 import com.truevault.core.designsystem.component.TvSectionHeader
 import com.truevault.core.designsystem.component.TvTopAppBar
 import com.truevault.core.designsystem.theme.TvSpacing
+import com.truevault.core.common.format.formatBytes
+import com.truevault.core.model.StorageBudget
 import com.truevault.core.model.ThemePreference
 import com.truevault.feature.settings.R
 
@@ -154,6 +159,70 @@ internal fun SettingsContent(
 
         Column {
             TvSectionHeader(
+                title = stringResource(R.string.settings_storage),
+                subtitle = stringResource(R.string.settings_storage_summary),
+            )
+            TvCard {
+                Text(
+                    text = stringResource(
+                        R.string.settings_storage_used,
+                        formatBytes(uiState.vaultUsedBytes),
+                        if (uiState.storageBudget.isUnlimited) {
+                            stringResource(R.string.settings_storage_unlimited)
+                        } else {
+                            formatBytes(uiState.storageBudget.limitBytes ?: 0L)
+                        },
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+
+                uiState.budgetFraction?.let { fraction ->
+                    Spacer(Modifier.height(TvSpacing.small))
+                    LinearProgressIndicator(
+                        progress = { fraction },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+
+                Spacer(Modifier.height(TvSpacing.xs))
+                Text(
+                    text = stringResource(
+                        R.string.settings_storage_free,
+                        formatBytes(uiState.deviceFreeBytes),
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                Spacer(Modifier.height(TvSpacing.standard))
+
+                // Only ceilings at or above what is already stored. Offering a smaller one would
+                // strand the vault over budget with no way back except deleting files, and the
+                // budget deliberately cannot delete anything.
+                Column(modifier = Modifier.selectableGroup()) {
+                    uiState.selectableBudgets.forEach { budget ->
+                        StorageBudgetRow(
+                            budget = budget,
+                            selected = budget == uiState.storageBudget,
+                            onSelected = {
+                                onAction(SettingsAction.StorageBudgetSelected(budget))
+                            },
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(TvSpacing.small))
+                Text(
+                    text = stringResource(R.string.settings_storage_note),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        Column {
+            TvSectionHeader(
                 title = stringResource(R.string.settings_advanced),
                 subtitle = stringResource(R.string.settings_advanced_summary),
             )
@@ -225,5 +294,40 @@ private fun NavigationRow(title: String) {
 private fun SettingsPreview() {
     TvPreviewSurface {
         SettingsContent(uiState = SettingsUiState(isLoading = false), onAction = {})
+    }
+}
+
+/**
+ * One storage ceiling.
+ *
+ * A radio row rather than a slider: the choices are a short list of round numbers, and a slider
+ * would invite someone to set 3.7 GB, which is not a number anyone means.
+ */
+@Composable
+private fun StorageBudgetRow(
+    budget: StorageBudget,
+    selected: Boolean,
+    onSelected: () -> Unit,
+) {
+    val label = if (budget.isUnlimited) {
+        stringResource(R.string.settings_storage_unlimited)
+    } else {
+        formatBytes(budget.limitBytes ?: 0L)
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectable(selected = selected, onClick = onSelected, role = Role.RadioButton)
+            .padding(vertical = TvSpacing.small),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TvSpacing.small),
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
     }
 }

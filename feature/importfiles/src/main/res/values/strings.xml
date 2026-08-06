@@ -73,4 +73,9 @@
         <item quantity="one">%1$d file could not be imported. Review the details before trying again.</item>
         <item quantity="other">%1$d files could not be imported. Review the details before trying again.</item>
     </plurals>
+    <!-- Storage failures -->
+    <string name="import_device_full_title">This phone is full</string>
+    <string name="import_device_full_body">TrueVault needs about %1$s more free space. Nothing was imported, and your files are untouched.</string>
+    <string name="import_budget_full_title">Vault storage limit reached</string>
+    <string name="import_budget_full_body">You set a %1$s limit for the vault. Nothing was imported and nothing was removed — raise the limit in Settings to add more.</string>
 </resources>

@@ -67,6 +67,26 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!--
+              Receiving a share is how a file gets in from anywhere on the phone: the gallery, a file
+              manager, a chat app, a browser download. Without this, a user has to come to TrueVault
+              first and go looking for the file, which is the wrong way round for the common case.
+
+              `*/*` because a vault that only accepted images would be a photo vault. Sharing an
+              item grants read access to it and nothing else — no storage permission is involved, and
+              nothing outside what the user picked becomes reachable.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
         </activity>
 
         <!--

@@ -21,6 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination
@@ -30,12 +32,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.truevault.app.R
 import com.truevault.app.StartDestination
+import com.truevault.app.AppShellViewModel
 import com.truevault.app.navigation.TopLevelDestination
 import com.truevault.app.navigation.TrueVaultNavHost
 import com.truevault.core.crypto.session.VaultLockState
 import com.truevault.feature.authentication.navigation.UnlockRoute
 import com.truevault.core.designsystem.theme.TvMotion
 import com.truevault.feature.home.navigation.navigateToHome
+import com.truevault.feature.importfiles.navigation.ImportSourceRoute
 import com.truevault.feature.importfiles.navigation.navigateToImport
 import com.truevault.feature.scanner.navigation.navigateToScanner
 import com.truevault.feature.settings.navigation.navigateToSettings
@@ -52,7 +56,9 @@ fun TrueVaultApp(
     startDestination: StartDestination,
     lockState: VaultLockState,
     modifier: Modifier = Modifier,
+    shellViewModel: AppShellViewModel = hiltViewModel(),
 ) {
+    val pendingShares = shellViewModel.hasPendingShare
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
@@ -78,6 +84,19 @@ fun TrueVaultApp(
                 popUpTo(navController.graph.id) { inclusive = true }
                 launchSingleTop = true
             }
+        }
+    }
+
+    // A share that arrived while the vault was locked waits in memory; the moment there is a key to
+    // encrypt with, the import flow opens on its own. Requiring the user to unlock and then go find
+    // "Add to Vault" would make the share sheet a slower route than not using it.
+    val hasPendingShare by pendingShares.collectAsStateWithLifecycle()
+    LaunchedEffect(hasPendingShare, lockState) {
+        if (hasPendingShare &&
+            lockState == VaultLockState.Unlocked &&
+            navController.currentDestination?.hasRoute(ImportSourceRoute::class) != true
+        ) {
+            navController.navigateToImport()
         }
     }
 

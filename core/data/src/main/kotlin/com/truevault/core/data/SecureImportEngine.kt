@@ -20,6 +20,7 @@ import com.truevault.core.database.dao.ImportTransactionDao
 import com.truevault.core.database.dao.VaultItemDao
 import com.truevault.core.database.entity.ImportTransactionEntity
 import com.truevault.core.database.entity.VaultItemEntity
+import com.truevault.core.datastore.UserPreferencesDataSource
 import com.truevault.core.model.DeletionOutcome
 import com.truevault.core.model.ImportMode
 import com.truevault.core.model.ImportTransactionState
@@ -27,6 +28,8 @@ import com.truevault.core.model.MimeCategory
 import com.truevault.core.model.OriginalDeletionState
 import com.truevault.core.model.PrivacyStatus
 import com.truevault.core.model.SelectedSource
+import com.truevault.core.model.StorageAllowance
+import com.truevault.core.model.StorageBudgetPolicy
 import com.truevault.core.model.VaultError
 import com.truevault.core.model.VerificationStatus
 import com.truevault.core.model.resolve
@@ -51,6 +54,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -94,6 +98,7 @@ class SecureImportEngine @Inject constructor(
     private val vaultItemDao: VaultItemDao,
     private val transactionDao: ImportTransactionDao,
     private val activityRepository: ActivityRepository,
+    private val preferences: UserPreferencesDataSource,
     private val timeProvider: TimeProvider,
     @param:Dispatcher(TrueVaultDispatcher.Default) private val defaultDispatcher: CoroutineDispatcher,
 ) {
@@ -187,13 +192,40 @@ class SecureImportEngine @Inject constructor(
             chunkSize = VaultContainer.DEFAULT_CHUNK_SIZE,
             includesThumbnail = source.category.hasThumbnail(),
         )
-        val available = fileSystem.freeSpaceBytes()
-        if (available < required) {
-            return@withContext ImportOutcome.Failed(
+        // Both ceilings are checked here: the device's, and the one the user chose. The budget is a
+        // limit on what comes *in* — nothing already in the vault is ever evicted, compressed or
+        // deleted to make room, because a storage setting that can destroy data is not a setting.
+        val budget = preferences.userPreferences.first().storageBudget
+        val allowance = StorageBudgetPolicy.evaluate(
+            budget = budget,
+            usedBytes = fileSystem.totalVaultBytes(),
+            requiredBytes = required,
+            deviceFreeBytes = fileSystem.freeSpaceBytes(),
+        )
+
+        when (allowance) {
+            is StorageAllowance.DeviceFull -> return@withContext ImportOutcome.Failed(
                 source = source,
-                error = VaultError.InsufficientStorage(required, available),
+                error = VaultError.InsufficientStorage(
+                    allowance.requiredBytes,
+                    allowance.availableBytes,
+                ),
                 retryAllowed = true,
             )
+
+            is StorageAllowance.BudgetExceeded -> return@withContext ImportOutcome.Failed(
+                source = source,
+                error = VaultError.StorageBudgetReached(
+                    budget = allowance.budget,
+                    requiredBytes = allowance.requiredBytes,
+                    usedBytes = allowance.usedBytes,
+                ),
+                // Not retryable: the same import would hit the same ceiling. The user raises the
+                // budget or removes something; the app does not pretend a retry might work.
+                retryAllowed = false,
+            )
+
+            StorageAllowance.Allowed -> Unit
         }
 
         // Step 3: a random id, derived from nothing. It appears in file names on disk, so deriving

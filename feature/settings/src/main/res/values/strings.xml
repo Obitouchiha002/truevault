@@ -72,4 +72,12 @@
     <string name="capabilities_check_device_settings">Check device settings</string>
     <string name="capabilities_none_detected">None detected</string>
     <string name="capabilities_footer">Your file vault, scanner and backup work identically in both modes. Only private-app features depend on what your device provides.</string>
+    <!-- Storage -->
+    <string name="settings_storage">Storage</string>
+    <string name="settings_storage_summary">Decide how much of this phone the vault may use.</string>
+    <string name="settings_storage_used">Vault is using %1$s of %2$s</string>
+    <string name="settings_storage_free">%1$s free on this device</string>
+    <string name="settings_storage_unlimited">No limit</string>
+    <string name="settings_storage_note">This is a limit on new files only. Nothing already in your vault is ever removed or shrunk to make room — if the limit is reached, TrueVault stops taking files in and tells you.</string>
+    <string name="settings_storage_over">Your vault is larger than this limit. Nothing has been removed; new files are refused until you raise it.</string>
 </resources>

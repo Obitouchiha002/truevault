@@ -16,6 +16,7 @@ import com.truevault.core.model.DeletionOutcome
 import com.truevault.core.model.ImportMode
 import com.truevault.core.model.ImportModePreference
 import com.truevault.core.model.MimeCategory
+import com.truevault.core.data.PendingShareBuffer
 import com.truevault.core.model.SelectedSource
 import com.truevault.core.model.VaultError
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -42,6 +43,7 @@ import kotlinx.coroutines.launch
  */
 @HiltViewModel
 class ImportViewModel @Inject constructor(
+    private val pendingShares: PendingShareBuffer,
     private val sessionStore: ImportSessionStore,
     private val coordinator: ImportCoordinator,
     private val reviewBuilder: ImportReviewBuilder,
@@ -68,6 +70,17 @@ class ImportViewModel @Inject constructor(
         viewModelScope.launch {
             val prefs = preferences.userPreferences.first()
             _uiState.update { it.copy(modePreference = prefs.importModePreference) }
+        }
+
+        // Files shared into TrueVault from another app skip the picker entirely — the user already
+        // chose them, in the gallery or wherever they came from, and asking again would be asking
+        // the same question twice. They are consumed here so a second visit to this screen does not
+        // re-import the same share.
+        viewModelScope.launch {
+            val shared = pendingShares.consume()
+            if (shared.isNotEmpty()) {
+                onSourcesPicked(shared, fromPhotoPicker = false)
+            }
         }
     }
 

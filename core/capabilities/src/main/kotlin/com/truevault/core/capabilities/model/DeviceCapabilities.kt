@@ -121,9 +121,20 @@ data class DeviceCapabilities(
 ) {
     val isModern: Boolean get() = productMode == TrueVaultProductMode.MODERN
 
-    /** Whether the Private Apps destination should appear in navigation at all. */
+    /**
+     * Whether the Private Apps destination appears in navigation.
+     *
+     * **Always.** This used to be Modern-mode only, and the result was that a user on Android 14
+     * went looking for the app-hiding feature and found nothing at all: no entry, no explanation,
+     * no way to tell whether the feature did not exist on their device or they had simply failed to
+     * find it. Of the available answers, silence is the worst one.
+     *
+     * The screen behind it reports what *this* device can actually do — full launcher integration,
+     * guided Private Space setup, a policy block, a manufacturer alternative, or nothing at all.
+     * Each of those is a sentence the user can act on. [privateAppsSupport] decides which one shows.
+     */
     val showsPrivateAppsDestination: Boolean
-        get() = productMode == TrueVaultProductMode.MODERN
+        get() = true
 
     companion object {
         /**

@@ -2,6 +2,7 @@ package com.truevault.core.datastore
 
 import com.truevault.core.model.AutoLockDuration
 import com.truevault.core.model.ImportModePreference
+import com.truevault.core.model.StorageBudget
 import com.truevault.core.model.ThemePreference
 import com.truevault.core.model.VaultLayout
 import com.truevault.core.model.VaultSortOrder
@@ -25,4 +26,7 @@ data class UserPreferences(
     val vaultSortOrder: VaultSortOrder = VaultSortOrder.DATE_ADDED_DESC,
     val recoveryKeyConfigured: Boolean = false,
     val lastBackupAtMillis: Long? = null,
+    /** How much of the phone the vault may occupy. A ceiling on new imports, never on what is
+     *  already stored — see [com.truevault.core.model.StorageBudget]. */
+    val storageBudget: StorageBudget = StorageBudget.DEFAULT,
 )

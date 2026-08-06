@@ -23,6 +23,19 @@ sealed interface VaultError {
         val availableBytes: Long,
     ) : VaultError
 
+    /**
+     * The device has room, but the vault has reached the ceiling the user set.
+     *
+     * Kept separate from [InsufficientStorage] because the two need different words and different
+     * buttons: a full phone is solved in system settings, a full budget is solved in TrueVault in
+     * two taps. Collapsing them would send a user to free up space they already have.
+     */
+    data class StorageBudgetReached(
+        val budget: StorageBudget,
+        val requiredBytes: Long,
+        val usedBytes: Long,
+    ) : VaultError
+
     /** The vault session is locked or expired; the caller must authenticate again. */
     data object AuthenticationRequired : VaultError
 
@@ -95,5 +108,9 @@ val VaultError.isRetryable: Boolean
         VaultError.UnsupportedFile,
         VaultError.Cancelled,
         VaultError.BackupInvalid,
+        // Retrying the identical import cannot succeed: the ceiling is where the user put it, and
+        // only they can move it. The screen offers that, rather than a Retry button that would do
+        // the same thing and fail the same way.
+        is VaultError.StorageBudgetReached,
         -> false
     }

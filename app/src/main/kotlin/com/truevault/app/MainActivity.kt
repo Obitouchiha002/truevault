@@ -1,5 +1,7 @@
 package com.truevault.app
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.compose.setContent
@@ -14,7 +16,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.truevault.app.ui.TrueVaultApp
 import com.truevault.core.designsystem.theme.TrueVaultTheme
+import com.truevault.core.data.PendingShareBuffer
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 /**
@@ -35,9 +39,14 @@ class MainActivity : FragmentActivity() {
 
     private val viewModel: MainActivityViewModel by viewModels()
 
+    @Inject
+    lateinit var pendingShares: PendingShareBuffer
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        handleShare(intent)
 
         splashScreen.setKeepOnScreenCondition {
             viewModel.uiState.value is MainActivityUiState.Loading
@@ -67,6 +76,31 @@ class MainActivity : FragmentActivity() {
                 )
             }
         }
+    }
+
+    /**
+     * A share can arrive while the activity is already running, because the launch mode is
+     * `singleTask`. Without this, the second share of a session would be silently dropped.
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleShare(intent)
+    }
+
+    /**
+     * Parks incoming files until the vault is unlocked.
+     *
+     * Nothing is read, decrypted or imported here. The URIs go into an in-memory buffer and the
+     * navigation layer picks them up once there is a key to encrypt with — a share that arrives at a
+     * locked vault must neither be lost nor acted on.
+     */
+    private fun handleShare(intent: Intent?) {
+        if (intent == null || !SharedIntentReader.isShare(intent)) return
+
+        val uris = SharedIntentReader.read(intent)
+        SharedIntentReader.takeReadPermission(intent, uris, contentResolver)
+        pendingShares.offer(uris.map(Uri::toString))
     }
 
     private fun applyScreenshotProtection(enabled: Boolean) {

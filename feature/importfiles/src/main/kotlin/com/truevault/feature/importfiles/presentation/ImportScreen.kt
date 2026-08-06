@@ -49,6 +49,7 @@ import com.truevault.core.designsystem.theme.TvMotion
 import com.truevault.core.designsystem.theme.TvSpacing
 import com.truevault.core.model.DeletionOutcome
 import com.truevault.core.model.ImportMode
+import com.truevault.core.model.VaultError
 import com.truevault.feature.importfiles.R
 import kotlin.math.roundToInt
 
@@ -187,11 +188,34 @@ internal fun ImportContent(
                     )
                 }
 
-                if (uiState.error != null) {
-                    TvBanner(
-                        text = stringResource(R.string.import_generic_error),
-                        tone = TvBannerTone.Error,
-                    )
+                uiState.error?.let { error ->
+                    // The two storage failures get different words on purpose: a full phone is
+                    // solved in system settings, a full budget is solved in TrueVault in two taps.
+                    // One message for both would send half the users to fix the wrong thing.
+                    when (error) {
+                        is VaultError.InsufficientStorage -> TvBanner(
+                            title = stringResource(R.string.import_device_full_title),
+                            text = stringResource(
+                                R.string.import_device_full_body,
+                                formatBytes(error.requiredBytes - error.availableBytes),
+                            ),
+                            tone = TvBannerTone.Error,
+                        )
+
+                        is VaultError.StorageBudgetReached -> TvBanner(
+                            title = stringResource(R.string.import_budget_full_title),
+                            text = stringResource(
+                                R.string.import_budget_full_body,
+                                formatBytes(error.budget.limitBytes ?: 0L),
+                            ),
+                            tone = TvBannerTone.Warning,
+                        )
+
+                        else -> TvBanner(
+                            text = stringResource(R.string.import_generic_error),
+                            tone = TvBannerTone.Error,
+                        )
+                    }
                 }
             }
         }

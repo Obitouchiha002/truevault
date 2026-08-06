@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.truevault.core.common.log.SecureLog
 import com.truevault.core.model.AutoLockDuration
 import com.truevault.core.model.ImportModePreference
+import com.truevault.core.model.StorageBudget
 import com.truevault.core.model.ThemePreference
 import com.truevault.core.model.VaultLayout
 import com.truevault.core.model.VaultSortOrder
@@ -62,6 +63,9 @@ class UserPreferencesDataSource @Inject constructor(
 
     suspend fun setVaultLayout(layout: VaultLayout) = edit { it[Keys.VAULT_LAYOUT] = layout.name }
 
+    suspend fun setStorageBudget(budget: StorageBudget) =
+        edit { it[Keys.STORAGE_BUDGET] = budget.name }
+
     suspend fun setVaultSortOrder(order: VaultSortOrder) = edit { it[Keys.VAULT_SORT] = order.name }
 
     suspend fun setRecoveryKeyConfigured(configured: Boolean) =
@@ -88,6 +92,7 @@ class UserPreferencesDataSource @Inject constructor(
         val BIOMETRIC_UNLOCK = booleanPreferencesKey("biometric_unlock")
         val IMPORT_MODE = stringPreferencesKey("import_mode_preference")
         val VAULT_LAYOUT = stringPreferencesKey("vault_layout")
+        val STORAGE_BUDGET = stringPreferencesKey("storage_budget")
         val VAULT_SORT = stringPreferencesKey("vault_sort_order")
         val RECOVERY_KEY_CONFIGURED = booleanPreferencesKey("recovery_key_configured")
         val LAST_BACKUP_AT = longPreferencesKey("last_backup_at")
@@ -103,6 +108,7 @@ class UserPreferencesDataSource @Inject constructor(
         biometricUnlockEnabled = this[Keys.BIOMETRIC_UNLOCK] ?: false,
         importModePreference = enumOrDefault(this[Keys.IMPORT_MODE], ImportModePreference.ALWAYS_ASK),
         vaultLayout = enumOrDefault(this[Keys.VAULT_LAYOUT], VaultLayout.GRID),
+        storageBudget = StorageBudget.fromName(this[Keys.STORAGE_BUDGET]),
         vaultSortOrder = enumOrDefault(this[Keys.VAULT_SORT], VaultSortOrder.DATE_ADDED_DESC),
         recoveryKeyConfigured = this[Keys.RECOVERY_KEY_CONFIGURED] ?: false,
         lastBackupAtMillis = this[Keys.LAST_BACKUP_AT],

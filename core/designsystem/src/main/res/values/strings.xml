@@ -11,4 +11,8 @@
 
     <!-- Shared component copy -->
     <string name="tv_back">Back</string>
+
+    <!-- PIN pad -->
+    <string name="tv_pin_entered">Entered: %1$d / %2$d</string>
+    <string name="tv_pin_backspace">Delete last digit</string>
 </resources>

@@ -17,8 +17,11 @@ import com.truevault.core.crypto.keystore.HardwareKeyStore
 import com.truevault.core.crypto.keystore.KeyStoreUnavailableException
 import com.truevault.core.crypto.recovery.RecoveryKey
 import com.truevault.core.crypto.session.VaultSession
+import com.truevault.core.model.LockThrottle
 import com.truevault.core.model.VaultError
+import com.truevault.core.model.VaultLockType
 import java.security.GeneralSecurityException
+import java.security.InvalidAlgorithmParameterException
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
 import javax.crypto.spec.SecretKeySpec
@@ -28,6 +31,25 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
 private const val TAG = "VaultKeys"
+
+/**
+ * Why biometric enrolment can or cannot start.
+ *
+ * Each value maps to a different sentence the user can act on — which is the whole reason this is
+ * not a nullable Cipher.
+ */
+sealed interface BiometricSetup {
+    data class Ready(val cipher: Cipher) : BiometricSetup
+
+    /** The vault must be open first: enabling biometrics cannot bypass proving the password. */
+    data object VaultLocked : BiometricSetup
+
+    /** No fingerprint or face is enrolled on the device. Fixable in system settings. */
+    data object NoBiometricEnrolled : BiometricSetup
+
+    /** The Keystore declined to create an auth-bound key on this device. Not fixable by the user. */
+    data object KeystoreRefused : BiometricSetup
+}
 
 /** Associated data binds a sealed blob to its purpose, so blobs cannot be swapped between slots. */
 private val AAD_PASSWORD_LAYER = "truevault.master.password.v1".toByteArray()
@@ -70,7 +92,10 @@ class VaultKeyManager @Inject constructor(
      * The caller owns [password] and must wipe it; this function does not, because the caller may
      * still need it to compare against a confirmation field.
      */
-    suspend fun createLock(password: CharArray): Outcome<Unit> = withContext(defaultDispatcher) {
+    suspend fun createLock(
+        password: CharArray,
+        lockType: VaultLockType = VaultLockType.PASSPHRASE,
+    ): Outcome<Unit> = withContext(defaultDispatcher) {
         if (lockStore.read() != null) {
             return@withContext VaultError.Unknown("A vault already exists on this device.").asFailure()
         }
@@ -98,6 +123,9 @@ class VaultKeyManager @Inject constructor(
                     recoverySealedMasterKey = null,
                     recoverySalt = null,
                     recoveryCheckValue = null,
+                    lockType = lockType,
+                    failedAttempts = 0,
+                    lastFailedAtMillis = null,
                     createdAtMillis = now,
                     updatedAtMillis = now,
                 ),
@@ -136,6 +164,17 @@ class VaultKeyManager @Inject constructor(
                     maxSupportedVersion = KdfParams.CURRENT.version,
                 ).asFailure()
 
+            // The throttle is checked before the KDF runs, so a locked-out attacker cannot even
+            // spend the device's CPU, and a legitimate user is told how long is left.
+            val waitMillis = LockThrottle.remainingMillis(
+                consecutiveFailures = record.failedAttempts,
+                lastFailedAtMillis = record.lastFailedAtMillis,
+                nowMillis = timeProvider.currentTimeMillis(),
+            )
+            if (waitMillis > 0) {
+                return@withContext VaultError.TooManyAttempts(waitMillis).asFailure()
+            }
+
             var masterKeyBytes: ByteArray? = null
             try {
                 val innerBytes = AesGcm.decrypt(
@@ -152,10 +191,12 @@ class VaultKeyManager @Inject constructor(
                 innerBytes.wipe()
 
                 session.open(SecretKeySpec(masterKeyBytes, "AES"))
+                clearFailedAttempts(record)
                 Unit.asSuccess()
             } catch (e: GeneralSecurityException) {
-                // Expected on every wrong password. Not an error worth logging in detail.
+                // Expected on every wrong secret. Not an error worth logging in detail.
                 SecureLog.d(TAG, "Unlock rejected")
+                recordFailedAttempt(record)
                 VaultError.AuthenticationRequired.asFailure()
             } catch (e: IllegalArgumentException) {
                 SecureLog.e(TAG, "Stored lock record is malformed", e)
@@ -212,11 +253,36 @@ class VaultKeyManager @Inject constructor(
      * A [Cipher] for sealing the master key behind biometrics. Requires an unlocked session, because
      * enabling biometrics must never be a way to bypass proving you know the password.
      */
-    fun biometricEnrolCipher(): Cipher? = try {
-        if (!session.isUnlocked) null else keyStore.biometricEncryptCipher()
-    } catch (e: Exception) {
-        SecureLog.w(TAG, "Biometric enrolment cipher unavailable (${e.javaClass.simpleName})")
-        null
+    fun biometricEnrolCipher(): Cipher? =
+        (prepareBiometricEnrolment() as? BiometricSetup.Ready)?.cipher
+
+    /**
+     * Prepares biometric enrolment, reporting **why** it cannot proceed.
+     *
+     * The previous version returned a bare null, so a device that refused to create the key looked
+     * identical to a user who had not opted in: the switch flipped back and nothing was said. A
+     * silent failure in an authentication feature is worse than no feature, because the user walks
+     * away believing their vault is protected by a fingerprint that was never set up.
+     */
+    fun prepareBiometricEnrolment(): BiometricSetup {
+        if (!session.isUnlocked) return BiometricSetup.VaultLocked
+
+        return try {
+            BiometricSetup.Ready(keyStore.biometricEncryptCipher())
+        } catch (e: KeyStoreUnavailableException) {
+            SecureLog.w(TAG, "Keystore refused to create the biometric key")
+            BiometricSetup.KeystoreRefused
+        } catch (e: IllegalStateException) {
+            // Android's wording varies by version; the cause is always the same one.
+            SecureLog.w(TAG, "Biometric key needs an enrolled biometric")
+            BiometricSetup.NoBiometricEnrolled
+        } catch (e: InvalidAlgorithmParameterException) {
+            SecureLog.w(TAG, "Biometric key parameters rejected by this device")
+            BiometricSetup.NoBiometricEnrolled
+        } catch (e: Exception) {
+            SecureLog.w(TAG, "Biometric enrolment unavailable (${e.javaClass.simpleName})")
+            BiometricSetup.KeystoreRefused
+        }
     }
 
     /** Stores the biometric-sealed copy of the master key, after BiometricPrompt authenticated. */
@@ -396,6 +462,40 @@ class VaultKeyManager @Inject constructor(
         }
 
     suspend fun hasRecoveryKey(): Boolean = lockStore.read()?.recoveryKeyConfigured == true
+
+    /** How the vault is locked, so the unlock screen can show a keypad or a text field. */
+    suspend fun lockType(): VaultLockType? = lockStore.read()?.lockType
+
+    /** Milliseconds the user must wait before the next attempt is accepted. Zero when free. */
+    suspend fun throttleRemainingMillis(): Long {
+        val record = lockStore.read() ?: return 0L
+        return LockThrottle.remainingMillis(
+            consecutiveFailures = record.failedAttempts,
+            lastFailedAtMillis = record.lastFailedAtMillis,
+            nowMillis = timeProvider.currentTimeMillis(),
+        )
+    }
+
+    private suspend fun recordFailedAttempt(record: VaultLockRecord) {
+        lockStore.write(
+            record.copy(
+                failedAttempts = record.failedAttempts + 1,
+                lastFailedAtMillis = timeProvider.currentTimeMillis(),
+                updatedAtMillis = timeProvider.currentTimeMillis(),
+            ),
+        )
+    }
+
+    private suspend fun clearFailedAttempts(record: VaultLockRecord) {
+        if (record.failedAttempts == 0 && record.lastFailedAtMillis == null) return
+        lockStore.write(
+            record.copy(
+                failedAttempts = 0,
+                lastFailedAtMillis = null,
+                updatedAtMillis = timeProvider.currentTimeMillis(),
+            ),
+        )
+    }
 
     /** The master key, for modules that legitimately need to wrap per-file keys. Null when locked. */
     internal fun masterKeyOrNull(): SecretKey? = session.masterKeyOrNull()

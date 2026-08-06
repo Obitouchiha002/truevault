@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.truevault.core.common.result.Outcome
 import com.truevault.core.crypto.keystore.HardwareKeyStore
 import com.truevault.core.crypto.session.VaultSession
+import com.truevault.core.crypto.vault.BiometricSetup
 import com.truevault.core.crypto.vault.VaultKeyManager
 import com.truevault.core.datastore.UserPreferencesDataSource
 import com.truevault.feature.authentication.domain.BiometricCapability
@@ -14,11 +15,12 @@ import javax.crypto.Cipher
 import javax.inject.Inject
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -33,8 +35,11 @@ class SecuritySettingsViewModel @Inject constructor(
 
     private val hardwareBacked = hardwareKeyStore.isHardwareBacked()
 
-    val uiState: StateFlow<SecuritySettingsUiState> = preferences.userPreferences
-        .map { prefs ->
+    /** Transient, not persisted: why the last attempt to switch biometrics on did not proceed. */
+    private val biometricProblem = MutableStateFlow<BiometricProblem?>(null)
+
+    val uiState: StateFlow<SecuritySettingsUiState> =
+        combine(preferences.userPreferences, biometricProblem) { prefs, problem ->
             SecuritySettingsUiState(
                 isLoading = false,
                 autoLockDuration = prefs.autoLockDuration,
@@ -43,6 +48,7 @@ class SecuritySettingsViewModel @Inject constructor(
                 biometricUnlockEnabled = prefs.biometricUnlockEnabled,
                 biometricCapability = biometricCapabilityChecker.capability(),
                 hardwareBackedKeystore = hardwareBacked,
+                biometricProblem = problem,
             )
         }
         .stateIn(
@@ -76,6 +82,9 @@ class SecuritySettingsViewModel @Inject constructor(
             SecuritySettingsAction.BiometricEnrolmentCancelled ->
                 edit { setBiometricUnlockEnabled(false) }
 
+            SecuritySettingsAction.BiometricProblemDismissed ->
+                biometricProblem.value = null
+
             SecuritySettingsAction.LockNow -> lockNow()
         }
     }
@@ -88,12 +97,27 @@ class SecuritySettingsViewModel @Inject constructor(
                 return@launch
             }
 
-            if (biometricCapabilityChecker.capability() != BiometricCapability.AVAILABLE) return@launch
+            val capability = biometricCapabilityChecker.capability()
+            if (capability != BiometricCapability.AVAILABLE) {
+                biometricProblem.value = capability.toProblem()
+                return@launch
+            }
 
             // Requires an unlocked session by design: turning biometrics on must never become a way
             // to gain access without first having proved knowledge of the password.
-            val cipher = keyManager.biometricEnrolCipher() ?: return@launch
-            _effects.emit(SecuritySettingsEffect.RequestBiometricEnrolment(cipher))
+            when (val setup = keyManager.prepareBiometricEnrolment()) {
+                is BiometricSetup.Ready ->
+                    _effects.emit(SecuritySettingsEffect.RequestBiometricEnrolment(setup.cipher))
+
+                BiometricSetup.NoBiometricEnrolled ->
+                    biometricProblem.value = BiometricProblem.NOT_ENROLLED
+
+                BiometricSetup.KeystoreRefused ->
+                    biometricProblem.value = BiometricProblem.DEVICE_REFUSED
+
+                BiometricSetup.VaultLocked ->
+                    biometricProblem.value = BiometricProblem.VAULT_LOCKED
+            }
         }
     }
 
@@ -101,9 +125,19 @@ class SecuritySettingsViewModel @Inject constructor(
         viewModelScope.launch {
             when (keyManager.enableBiometricUnlock(cipher)) {
                 is Outcome.Success -> preferences.setBiometricUnlockEnabled(true)
-                is Outcome.Failure -> preferences.setBiometricUnlockEnabled(false)
+                is Outcome.Failure -> {
+                    preferences.setBiometricUnlockEnabled(false)
+                    biometricProblem.value = BiometricProblem.DEVICE_REFUSED
+                }
             }
         }
+    }
+
+    private fun BiometricCapability.toProblem(): BiometricProblem = when (this) {
+        BiometricCapability.NOT_ENROLLED -> BiometricProblem.NOT_ENROLLED
+        BiometricCapability.TEMPORARILY_UNAVAILABLE -> BiometricProblem.TEMPORARILY_UNAVAILABLE
+        BiometricCapability.UNSUPPORTED -> BiometricProblem.UNSUPPORTED
+        BiometricCapability.AVAILABLE -> BiometricProblem.DEVICE_REFUSED
     }
 
     private fun lockNow() {

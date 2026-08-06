@@ -1,5 +1,6 @@
 package com.truevault.core.crypto.vault
 
+import com.truevault.core.model.VaultLockType
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -47,6 +48,20 @@ data class VaultLockRecord(
     /** Lets the app say "wrong recovery key" instead of a generic failure. */
     val recoveryCheckValue: ByteArray?,
 
+    /** Whether the user chose a passphrase or a PIN, and how long that PIN is. */
+    val lockType: VaultLockType,
+
+    /**
+     * Consecutive failed unlock attempts.
+     *
+     * Persisted with the lock record rather than in preferences: a throttle a user could reset by
+     * clearing app settings is not a throttle. Reset to zero on any successful unlock.
+     */
+    val failedAttempts: Int,
+
+    /** When the last failure happened, so the throttle can tell how much of the wait has elapsed. */
+    val lastFailedAtMillis: Long?,
+
     val createdAtMillis: Long,
 
     val updatedAtMillis: Long,
@@ -63,6 +78,9 @@ data class VaultLockRecord(
         recoverySealedMasterKey.contentEqualsNullable(other.recoverySealedMasterKey) &&
         recoverySalt.contentEqualsNullable(other.recoverySalt) &&
         recoveryCheckValue.contentEqualsNullable(other.recoveryCheckValue) &&
+        lockType == other.lockType &&
+        failedAttempts == other.failedAttempts &&
+        lastFailedAtMillis == other.lastFailedAtMillis &&
         createdAtMillis == other.createdAtMillis &&
         updatedAtMillis == other.updatedAtMillis
 
@@ -77,8 +95,9 @@ data class VaultLockRecord(
     }
 
     /** Never print the blobs. */
-    override fun toString(): String = "VaultLockRecord(kdfVersion=$kdfVersion, " +
-        "biometric=$biometricUnlockEnabled, recovery=$recoveryKeyConfigured)"
+    override fun toString(): String = "VaultLockRecord(kdfVersion=$kdfVersion, type=$lockType, " +
+        "biometric=$biometricUnlockEnabled, recovery=$recoveryKeyConfigured, " +
+        "failedAttempts=$failedAttempts)"
 }
 
 private fun ByteArray?.contentEqualsNullable(other: ByteArray?): Boolean = when {

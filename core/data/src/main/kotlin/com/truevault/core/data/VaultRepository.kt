@@ -168,7 +168,7 @@ class VaultRepository @Inject constructor(
         try {
             fileSystem.itemFile(id).inputStream().use { input ->
                 FileOutputStream(target).use { output ->
-                    cryptoService.decryptFile(input, output)
+                    cryptoService.decryptFile(input, output, entity.wrappedFileKey)
                 }
             }
             target.asSuccess()
@@ -210,7 +210,9 @@ class VaultRepository @Inject constructor(
             ?: return@withContext VaultError.SourceNotFound.asFailure()
 
         try {
-            fileSystem.itemFile(entity.id).inputStream().use { cryptoService.verifyFile(it) }
+            fileSystem.itemFile(entity.id).inputStream().use {
+                cryptoService.verifyFile(it, entity.wrappedFileKey)
+            }
             vaultItemDao.updateVerification(
                 entity.id,
                 VerificationStatus.VERIFIED.name,
@@ -281,11 +283,13 @@ class VaultRepository @Inject constructor(
         )
     }
 
+    /** The item's file key: the row's wrapped copy first, the container header only as a fallback. */
     private fun fileKeyFor(entity: VaultItemEntity): javax.crypto.SecretKey? = try {
-        fileSystem.itemFile(entity.id).inputStream().use { input ->
-            val header = com.truevault.core.crypto.file.VaultContainerCodec.read(input)
-            cryptoService.unwrapFileKey(header.wrappedFileKey)
-        }
+        entity.wrappedFileKey?.let(cryptoService::unwrapFileKey)
+            ?: fileSystem.itemFile(entity.id).inputStream().use { input ->
+                val header = com.truevault.core.crypto.file.VaultContainerCodec.read(input)
+                cryptoService.unwrapFileKey(header.wrappedFileKey)
+            }
     } catch (e: Exception) {
         null
     }

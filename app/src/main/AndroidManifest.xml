@@ -52,9 +52,19 @@
           requests the Home role on its own, and the feature stays off until it is enabled from
           Settings -> Advanced Privacy. It shows app icons only and never vault content.
         -->
+        <!--
+          Disabled at install time, on purpose.
+
+          Declaring category.HOME makes an app a candidate launcher, and Android then asks the user
+          to choose a home app every time they press Home. Shipping that enabled would force the
+          launcher question on every user who never asked for Secure Launcher Mode. The component is
+          switched on only when the user turns that mode on, and switched off again when they turn
+          it off — see SecureLauncherComponent.
+        -->
         <activity
             android:name=".SecureLauncherActivity"
             android:exported="true"
+            android:enabled="false"
             android:launchMode="singleTask"
             android:stateNotNeeded="true"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|smallestScreenSize|density"

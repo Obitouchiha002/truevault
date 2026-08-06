@@ -82,6 +82,17 @@ data class VaultItemEntity(
     @ColumnInfo(name = "content_fingerprint", typeAffinity = ColumnInfo.BLOB)
     val contentFingerprint: ByteArray?,
 
+    /**
+     * The item's file key, wrapped by the vault master key **of this vault**.
+     *
+     * The container header carries a copy too, but that copy was wrapped by whichever master key
+     * existed when the file was written. After a restore into a different vault the header's copy
+     * is unusable, so the authoritative wrapped key lives here, where a restore can re-wrap it.
+     * Null only for rows written before schema version 2, which fall back to the header.
+     */
+    @ColumnInfo(name = "wrapped_file_key", typeAffinity = ColumnInfo.BLOB)
+    val wrappedFileKey: ByteArray?,
+
     @ColumnInfo(name = "last_integrity_check_at")
     val lastIntegrityCheckAt: Long?,
 ) {
@@ -102,6 +113,7 @@ data class VaultItemEntity(
         fileFormatVersion == other.fileFormatVersion &&
         originalDeletionState == other.originalDeletionState &&
         contentFingerprint.contentEqualsOrNull(other.contentFingerprint) &&
+        wrappedFileKey.contentEqualsOrNull(other.wrappedFileKey) &&
         lastIntegrityCheckAt == other.lastIntegrityCheckAt
 
     override fun hashCode(): Int {

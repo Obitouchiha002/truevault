@@ -4,11 +4,20 @@ import androidx.compose.runtime.Immutable
 import com.truevault.core.model.PasswordAssessment
 import com.truevault.core.model.PasswordStrength
 import com.truevault.core.model.VaultError
+import com.truevault.core.model.VaultLockType
 import com.truevault.feature.authentication.domain.BiometricCapability
 import javax.crypto.Cipher
 
+/** Which step of choosing a secret the user is on. */
+enum class CreateLockStage { CHOOSE_TYPE, ENTER, CONFIRM }
+
 @Immutable
 data class CreateVaultLockUiState(
+    val lockType: VaultLockType = VaultLockType.PIN_6,
+    val stage: CreateLockStage = CreateLockStage.CHOOSE_TYPE,
+    /** Digits entered so far. Only the count reaches the UI — never the digits. */
+    val pinEnteredCount: Int = 0,
+    val pinMismatch: Boolean = false,
     val assessment: PasswordAssessment? = null,
     val passwordsMatch: Boolean = false,
     val confirmTouched: Boolean = false,
@@ -24,6 +33,12 @@ data class CreateVaultLockUiState(
 }
 
 sealed interface CreateVaultLockAction {
+    data class LockTypeSelected(val lockType: VaultLockType) : CreateVaultLockAction
+    data object LockTypeConfirmed : CreateVaultLockAction
+    data class PinDigitEntered(val digit: Char) : CreateVaultLockAction
+    data object PinBackspace : CreateVaultLockAction
+    data object StartOver : CreateVaultLockAction
+
     data class PasswordChanged(val password: CharArray, val confirmation: CharArray) :
         CreateVaultLockAction {
         // Generated equals on a CharArray field compares references, which would make two identical

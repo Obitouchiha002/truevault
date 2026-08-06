@@ -26,6 +26,14 @@ sealed interface VaultError {
     /** The vault session is locked or expired; the caller must authenticate again. */
     data object AuthenticationRequired : VaultError
 
+    /**
+     * Too many consecutive failed unlocks; the vault is refusing attempts for [waitMillis] longer.
+     *
+     * Carries the remaining wait so the screen can count it down rather than leaving the user
+     * guessing whether the app is broken.
+     */
+    data class TooManyAttempts(val waitMillis: Long) : VaultError
+
     /** Encryption could not complete. The original file is untouched when this is reported. */
     data object EncryptionFailed : VaultError
 
@@ -79,6 +87,7 @@ val VaultError.isRetryable: Boolean
         VaultError.SourceNotFound,
         VaultError.PermissionDenied,
         VaultError.AuthenticationRequired,
+        is VaultError.TooManyAttempts,
         VaultError.IntegrityCheckFailed,
         is VaultError.UnsupportedFormatVersion,
         VaultError.UserCancelledDeletion,

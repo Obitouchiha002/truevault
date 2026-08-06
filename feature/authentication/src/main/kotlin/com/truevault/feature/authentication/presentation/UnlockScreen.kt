@@ -34,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.truevault.core.designsystem.component.TvBanner
 import com.truevault.core.designsystem.component.TvBannerTone
 import com.truevault.core.designsystem.component.TvPreviewSurface
+import com.truevault.core.designsystem.component.TvPinPad
 import com.truevault.core.designsystem.component.TvPrimaryButton
 import com.truevault.core.designsystem.component.TvSecondaryButton
 import com.truevault.core.designsystem.component.TvTextButton
@@ -100,6 +101,8 @@ fun UnlockScreen(
         },
         onBiometricRequested = { viewModel.onAction(UnlockAction.BiometricRequested) },
         onRecoveryRequested = { viewModel.onAction(UnlockAction.RecoveryRequested) },
+        onPinDigit = { viewModel.onAction(UnlockAction.PinDigitEntered(it)) },
+        onPinBackspace = { viewModel.onAction(UnlockAction.PinBackspace) },
         onSubmitRecovery = {
             viewModel.onAction(UnlockAction.SubmitRecoveryKey(recoveryState.text.toString()))
             recoveryState.clearText()
@@ -117,6 +120,8 @@ internal fun UnlockContent(
     onBiometricRequested: () -> Unit,
     onRecoveryRequested: () -> Unit,
     onSubmitRecovery: () -> Unit,
+    onPinDigit: (Char) -> Unit,
+    onPinBackspace: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -158,14 +163,40 @@ internal fun UnlockContent(
             modifier = Modifier.padding(top = TvSpacing.small),
         )
 
-        OutlinedSecureTextField(
-            state = passwordState,
-            label = { Text(stringResource(R.string.unlock_password_label)) },
-            isError = uiState.error != null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = TvSpacing.section),
-        )
+        if (uiState.isThrottled) {
+            // Counted down rather than shown once, so the user can watch it clear.
+            TvBanner(
+                title = stringResource(R.string.unlock_throttled_title),
+                text = stringResource(
+                    R.string.unlock_throttled_body,
+                    formatWait(uiState.throttleRemainingMillis),
+                ),
+                tone = TvBannerTone.Warning,
+                modifier = Modifier.padding(top = TvSpacing.section),
+            )
+        }
+
+        val lockType = uiState.lockType
+        if (lockType != null && lockType.isPin) {
+            TvPinPad(
+                length = lockType.pinLength ?: 6,
+                entered = uiState.pinEnteredCount,
+                onDigit = { onPinDigit(it) },
+                onBackspace = onPinBackspace,
+                enabled = !uiState.isCheckingPassword && !uiState.isThrottled,
+                modifier = Modifier.padding(top = TvSpacing.section),
+            )
+        } else {
+            OutlinedSecureTextField(
+                state = passwordState,
+                label = { Text(stringResource(R.string.unlock_password_label)) },
+                isError = uiState.error != null,
+                enabled = !uiState.isThrottled,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TvSpacing.section),
+            )
+        }
 
         if (uiState.error != null) {
             TvBanner(
@@ -183,14 +214,16 @@ internal fun UnlockContent(
             )
         }
 
-        TvPrimaryButton(
-            text = stringResource(R.string.unlock_action),
-            onClick = onSubmit,
-            enabled = !uiState.isCheckingPassword,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = TvSpacing.section),
-        )
+        if (lockType == null || !lockType.isPin) {
+            TvPrimaryButton(
+                text = stringResource(R.string.unlock_action),
+                onClick = onSubmit,
+                enabled = !uiState.isCheckingPassword && !uiState.isThrottled,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TvSpacing.section),
+            )
+        }
 
         if (uiState.recoveryKeyAvailable && !uiState.showingRecoveryEntry) {
             TvTextButton(
@@ -235,6 +268,12 @@ internal fun UnlockContent(
  * Wrong password and tampered blob deliberately map to the same message: telling them apart for the
  * user would also tell them apart for anyone testing guesses.
  */
+/** Whole minutes while the wait is long, seconds once it is nearly over. */
+private fun formatWait(millis: Long): String {
+    val seconds = (millis / 1000).coerceAtLeast(1)
+    return if (seconds >= 60) "${(seconds + 59) / 60} min" else "$seconds s"
+}
+
 private fun VaultError.unlockMessageRes(): Int = when (this) {
     is VaultError.UnsupportedFormatVersion -> R.string.unlock_unsupported_version
     VaultError.IntegrityCheckFailed -> R.string.unlock_corrupted
@@ -253,6 +292,8 @@ private fun UnlockPreview() {
             onBiometricRequested = {},
             onRecoveryRequested = {},
             onSubmitRecovery = {},
+            onPinDigit = {},
+            onPinBackspace = {},
         )
     }
 }

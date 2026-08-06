@@ -131,9 +131,14 @@ class AndroidHardwareKeyStore @Inject constructor() : HardwareKeyStore {
                         setUserAuthenticationParameters(0, KeyProperties.AUTH_BIOMETRIC_STRONG)
                     }
                 }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    // Ask for the secure element when the device has one. This is a request, not a
-                    // guarantee; isHardwareBacked() reports what was actually granted.
+                // StrongBox is requested only for the device key.
+                //
+                // An auth-bound StrongBox key is rejected outright on a large share of shipping
+                // devices — the secure element supports far fewer key constraints than the TEE. The
+                // fallback below would catch that, but the retry costs a second Keystore round trip
+                // on every affected phone for a benefit the biometric key does not need: it is
+                // already gated by the user's fingerprint, which is the property that matters.
+                if (!requireUserAuth && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     setIsStrongBoxBacked(true)
                 }
             }
@@ -142,7 +147,7 @@ class AndroidHardwareKeyStore @Inject constructor() : HardwareKeyStore {
         return try {
             generateWith(spec)
         } catch (e: Exception) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if (!requireUserAuth && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 // StrongBox is absent or full on this device; fall back to the TEE-backed Keystore.
                 SecureLog.w(TAG, "StrongBox unavailable, falling back to the standard Keystore")
                 generateWith(
@@ -169,6 +174,8 @@ class AndroidHardwareKeyStore @Inject constructor() : HardwareKeyStore {
                         .build(),
                 )
             } else {
+                // Surfaced, not swallowed. The most common cause is that no biometric is enrolled,
+                // and the user can only fix that if they are told.
                 throw KeyStoreUnavailableException("Key generation failed: ${e.javaClass.simpleName}")
             }
         }

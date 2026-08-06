@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.truevault.core.common.log.SecureLog
 import com.truevault.core.crypto.vault.VaultLockRecord
 import com.truevault.core.crypto.vault.VaultLockStore
+import com.truevault.core.model.VaultLockType
 import com.truevault.core.datastore.di.VaultLockPreferences
 import java.io.IOException
 import javax.inject.Inject
@@ -66,6 +67,11 @@ class VaultLockDataSource @Inject constructor(
             record.recoveryCheckValue
                 ?.let { prefs[Keys.RECOVERY_CHECK] = it.encode() }
                 ?: prefs.remove(Keys.RECOVERY_CHECK)
+            prefs[Keys.LOCK_TYPE] = record.lockType.name
+            prefs[Keys.FAILED_ATTEMPTS] = record.failedAttempts
+            record.lastFailedAtMillis
+                ?.let { prefs[Keys.LAST_FAILED_AT] = it }
+                ?: prefs.remove(Keys.LAST_FAILED_AT)
             prefs[Keys.CREATED_AT] = record.createdAtMillis
             prefs[Keys.UPDATED_AT] = record.updatedAtMillis
         }
@@ -88,6 +94,12 @@ class VaultLockDataSource @Inject constructor(
             recoverySealedMasterKey = this[Keys.RECOVERY_SEALED_MASTER_KEY]?.decode(),
             recoverySalt = this[Keys.RECOVERY_SALT]?.decode(),
             recoveryCheckValue = this[Keys.RECOVERY_CHECK]?.decode(),
+            // An older record predates the choice, so it can only have been a passphrase.
+            lockType = this[Keys.LOCK_TYPE]
+                ?.let { name -> VaultLockType.entries.firstOrNull { it.name == name } }
+                ?: VaultLockType.PASSPHRASE,
+            failedAttempts = this[Keys.FAILED_ATTEMPTS] ?: 0,
+            lastFailedAtMillis = this[Keys.LAST_FAILED_AT],
             createdAtMillis = this[Keys.CREATED_AT] ?: 0L,
             updatedAtMillis = this[Keys.UPDATED_AT] ?: 0L,
         )
@@ -101,6 +113,9 @@ class VaultLockDataSource @Inject constructor(
         val RECOVERY_SEALED_MASTER_KEY = stringPreferencesKey("recovery_sealed_master_key")
         val RECOVERY_SALT = stringPreferencesKey("recovery_salt")
         val RECOVERY_CHECK = stringPreferencesKey("recovery_check_value")
+        val LOCK_TYPE = stringPreferencesKey("lock_type")
+        val FAILED_ATTEMPTS = intPreferencesKey("failed_attempts")
+        val LAST_FAILED_AT = longPreferencesKey("last_failed_at")
         val CREATED_AT = longPreferencesKey("created_at")
         val UPDATED_AT = longPreferencesKey("updated_at")
     }

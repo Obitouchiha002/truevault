@@ -356,6 +356,9 @@ class SecureImportEngine @Inject constructor(
                     ImportMode.SECURE_MOVE -> OriginalDeletionState.REQUESTED
                 }.name,
                 contentFingerprint = fingerprint,
+                // The authoritative copy. The header holds the same bytes today, but only the row's
+                // copy can be re-wrapped when this item is restored into a different vault.
+                wrappedFileKey = wrappedFileKey,
                 lastIntegrityCheckAt = timeProvider.currentTimeMillis(),
             )
 

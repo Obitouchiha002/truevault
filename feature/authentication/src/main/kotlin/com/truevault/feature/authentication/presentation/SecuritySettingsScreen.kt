@@ -160,6 +160,14 @@ internal fun SecuritySettingsContent(
                 }
             }
 
+            if (uiState.biometricProblem != null) {
+                TvBanner(
+                    title = stringResource(R.string.security_biometric_problem_title),
+                    text = stringResource(uiState.biometricProblem.messageRes()),
+                    tone = TvBannerTone.Warning,
+                )
+            }
+
             Column {
                 TvSectionHeader(title = stringResource(R.string.security_protection))
                 TvCard {
@@ -252,6 +260,15 @@ private fun SwitchRow(
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
     }
+}
+
+/** Each problem gets its own sentence, because each has a different next step for the user. */
+private fun BiometricProblem.messageRes(): Int = when (this) {
+    BiometricProblem.NOT_ENROLLED -> R.string.security_biometric_not_enrolled
+    BiometricProblem.TEMPORARILY_UNAVAILABLE -> R.string.security_biometric_busy
+    BiometricProblem.UNSUPPORTED -> R.string.security_biometric_unsupported
+    BiometricProblem.DEVICE_REFUSED -> R.string.security_biometric_refused
+    BiometricProblem.VAULT_LOCKED -> R.string.security_biometric_locked
 }
 
 private fun AutoLockDuration.labelRes(): Int = when (this) {

@@ -1,0 +1,446 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "427e7429c7912eaebcd1a850e342069b",
+    "entities": [
+      {
+        "tableName": "vault_items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `file_relative_path` TEXT NOT NULL, `thumbnail_relative_path` TEXT, `encrypted_metadata` BLOB NOT NULL, `mime_category` TEXT NOT NULL, `encrypted_size` INTEGER NOT NULL, `original_size` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `import_mode` TEXT NOT NULL, `privacy_status` TEXT NOT NULL, `verification_status` TEXT NOT NULL, `key_version` INTEGER NOT NULL, `file_format_version` INTEGER NOT NULL, `original_deletion_state` TEXT NOT NULL, `content_fingerprint` BLOB, `wrapped_file_key` BLOB, `last_integrity_check_at` INTEGER, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fileRelativePath",
+            "columnName": "file_relative_path",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "thumbnailRelativePath",
+            "columnName": "thumbnail_relative_path",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "encryptedMetadata",
+            "columnName": "encrypted_metadata",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mimeCategory",
+            "columnName": "mime_category",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "encryptedSize",
+            "columnName": "encrypted_size",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "originalSize",
+            "columnName": "original_size",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "importMode",
+            "columnName": "import_mode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "privacyStatus",
+            "columnName": "privacy_status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "verificationStatus",
+            "columnName": "verification_status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "keyVersion",
+            "columnName": "key_version",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fileFormatVersion",
+            "columnName": "file_format_version",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "originalDeletionState",
+            "columnName": "original_deletion_state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "contentFingerprint",
+            "columnName": "content_fingerprint",
+            "affinity": "BLOB"
+          },
+          {
+            "fieldPath": "wrappedFileKey",
+            "columnName": "wrapped_file_key",
+            "affinity": "BLOB"
+          },
+          {
+            "fieldPath": "lastIntegrityCheckAt",
+            "columnName": "last_integrity_check_at",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_vault_items_created_at",
+            "unique": false,
+            "columnNames": [
+              "created_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_vault_items_created_at` ON `${TABLE_NAME}` (`created_at`)"
+          },
+          {
+            "name": "index_vault_items_mime_category",
+            "unique": false,
+            "columnNames": [
+              "mime_category"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_vault_items_mime_category` ON `${TABLE_NAME}` (`mime_category`)"
+          },
+          {
+            "name": "index_vault_items_privacy_status",
+            "unique": false,
+            "columnNames": [
+              "privacy_status"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_vault_items_privacy_status` ON `${TABLE_NAME}` (`privacy_status`)"
+          },
+          {
+            "name": "index_vault_items_content_fingerprint",
+            "unique": false,
+            "columnNames": [
+              "content_fingerprint"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_vault_items_content_fingerprint` ON `${TABLE_NAME}` (`content_fingerprint`)"
+          },
+          {
+            "name": "index_vault_items_original_size",
+            "unique": false,
+            "columnNames": [
+              "original_size"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_vault_items_original_size` ON `${TABLE_NAME}` (`original_size`)"
+          }
+        ]
+      },
+      {
+        "tableName": "import_transactions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`transaction_id` TEXT NOT NULL, `vault_item_id` TEXT NOT NULL, `encrypted_source_token` BLOB NOT NULL, `state` TEXT NOT NULL, `import_mode` TEXT NOT NULL, `bytes_processed` INTEGER NOT NULL, `total_bytes` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `failure_code` TEXT, `retry_allowed` INTEGER NOT NULL, PRIMARY KEY(`transaction_id`))",
+        "fields": [
+          {
+            "fieldPath": "transactionId",
+            "columnName": "transaction_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vaultItemId",
+            "columnName": "vault_item_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "encryptedSourceToken",
+            "columnName": "encrypted_source_token",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "importMode",
+            "columnName": "import_mode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bytesProcessed",
+            "columnName": "bytes_processed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalBytes",
+            "columnName": "total_bytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "failureCode",
+            "columnName": "failure_code",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "retryAllowed",
+            "columnName": "retry_allowed",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "transaction_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_import_transactions_state",
+            "unique": false,
+            "columnNames": [
+              "state"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_import_transactions_state` ON `${TABLE_NAME}` (`state`)"
+          },
+          {
+            "name": "index_import_transactions_vault_item_id",
+            "unique": false,
+            "columnNames": [
+              "vault_item_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_import_transactions_vault_item_id` ON `${TABLE_NAME}` (`vault_item_id`)"
+          },
+          {
+            "name": "index_import_transactions_created_at",
+            "unique": false,
+            "columnNames": [
+              "created_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_import_transactions_created_at` ON `${TABLE_NAME}` (`created_at`)"
+          }
+        ]
+      },
+      {
+        "tableName": "scan_results",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `scan_id` TEXT NOT NULL, `vault_item_id` TEXT NOT NULL, `match_type` TEXT NOT NULL, `encrypted_matched_token` BLOB NOT NULL, `confidence` INTEGER NOT NULL, `matched_size` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `resolved` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`vault_item_id`) REFERENCES `vault_items`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scanId",
+            "columnName": "scan_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vaultItemId",
+            "columnName": "vault_item_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "matchType",
+            "columnName": "match_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "encryptedMatchedToken",
+            "columnName": "encrypted_matched_token",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "confidence",
+            "columnName": "confidence",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "matchedSize",
+            "columnName": "matched_size",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "resolved",
+            "columnName": "resolved",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_scan_results_vault_item_id",
+            "unique": false,
+            "columnNames": [
+              "vault_item_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_scan_results_vault_item_id` ON `${TABLE_NAME}` (`vault_item_id`)"
+          },
+          {
+            "name": "index_scan_results_resolved",
+            "unique": false,
+            "columnNames": [
+              "resolved"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_scan_results_resolved` ON `${TABLE_NAME}` (`resolved`)"
+          },
+          {
+            "name": "index_scan_results_scan_id",
+            "unique": false,
+            "columnNames": [
+              "scan_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_scan_results_scan_id` ON `${TABLE_NAME}` (`scan_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vault_items",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vault_item_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "activity_events",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `kind` TEXT NOT NULL, `item_count` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemCount",
+            "columnName": "item_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_activity_events_created_at",
+            "unique": false,
+            "columnNames": [
+              "created_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_activity_events_created_at` ON `${TABLE_NAME}` (`created_at`)"
+          },
+          {
+            "name": "index_activity_events_kind",
+            "unique": false,
+            "columnNames": [
+              "kind"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_activity_events_kind` ON `${TABLE_NAME}` (`kind`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '427e7429c7912eaebcd1a850e342069b')"
+    ]
+  }
+}

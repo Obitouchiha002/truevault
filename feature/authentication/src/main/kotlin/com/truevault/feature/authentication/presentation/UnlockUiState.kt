@@ -2,6 +2,7 @@ package com.truevault.feature.authentication.presentation
 
 import androidx.compose.runtime.Immutable
 import com.truevault.core.model.VaultError
+import com.truevault.core.model.VaultLockType
 import javax.crypto.Cipher
 
 @Immutable
@@ -14,7 +15,15 @@ data class UnlockUiState(
     val biometricWasReset: Boolean = false,
     val recoveryKeyAvailable: Boolean = false,
     val showingRecoveryEntry: Boolean = false,
-)
+    /** Null until the stored lock record has been read. */
+    val lockType: VaultLockType? = null,
+    /** Digits entered so far. Only the count, never the digits. */
+    val pinEnteredCount: Int = 0,
+    /** Milliseconds still to wait after too many failures; zero when attempts are accepted. */
+    val throttleRemainingMillis: Long = 0,
+) {
+    val isThrottled: Boolean get() = throttleRemainingMillis > 0
+}
 
 sealed interface UnlockAction {
     data class Submit(val password: CharArray) : UnlockAction {
@@ -25,6 +34,10 @@ sealed interface UnlockAction {
     }
 
     data object BiometricRequested : UnlockAction
+
+    data class PinDigitEntered(val digit: Char) : UnlockAction
+
+    data object PinBackspace : UnlockAction
 
     data object RecoveryRequested : UnlockAction
 

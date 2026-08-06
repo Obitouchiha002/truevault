@@ -54,6 +54,24 @@ class VaultCryptoService @Inject constructor(
         }
     }
 
+    /**
+     * Wraps a file key under an arbitrary key rather than the vault master key.
+     *
+     * Used at the backup boundary: an archive must be openable on a device whose vault master key
+     * does not yet exist, so the file key travels wrapped by the archive key instead.
+     */
+    fun wrapFileKeyWith(wrappingKey: SecretKey, fileKey: SecretKey): ByteArray =
+        AesGcm.encrypt(wrappingKey, fileKey.encoded, AAD_FILE_KEY).toByteArray()
+
+    fun unwrapFileKeyWith(wrappingKey: SecretKey, wrapped: ByteArray): SecretKey {
+        val raw = AesGcm.decrypt(wrappingKey, SealedData.fromByteArray(wrapped), AAD_FILE_KEY)
+        return try {
+            SecretKeySpec(raw, "AES")
+        } finally {
+            raw.fill(0)
+        }
+    }
+
     /** Seals the metadata blob that travels inside a container header. */
     fun sealMetadata(plaintext: ByteArray, fileKey: SecretKey): ByteArray =
         AesGcm.encrypt(fileKey, plaintext, AAD_METADATA).toByteArray()
@@ -118,15 +136,24 @@ class VaultCryptoService @Inject constructor(
         progressListener = progressListener,
     )
 
+    /**
+     * Decrypts a container.
+     *
+     * [wrappedFileKey] overrides the copy stored in the container header. The row's copy is the
+     * authoritative one: after a backup is restored into a different vault, the header still carries
+     * a key wrapped by the *original* vault's master key, which this vault cannot unwrap. The header
+     * cannot simply be rewritten — it is the associated data for every chunk.
+     */
     fun decryptFile(
         source: InputStream,
         destination: OutputStream,
+        wrappedFileKey: ByteArray? = null,
         cancellationSignal: CancellationSignal = CancellationSignal.Never,
         progressListener: ByteProgressListener? = null,
     ): VaultContainerHeader = VaultFileCipher.decrypt(
         source = source,
         destination = destination,
-        unwrapFileKey = ::unwrapFileKey,
+        unwrapFileKey = { fromHeader -> unwrapFileKey(wrappedFileKey ?: fromHeader) },
         cancellationSignal = cancellationSignal,
         progressListener = progressListener,
     )
@@ -134,11 +161,12 @@ class VaultCryptoService @Inject constructor(
     /** Reads a container end to end and checks every tag, producing no plaintext. */
     fun verifyFile(
         source: InputStream,
+        wrappedFileKey: ByteArray? = null,
         cancellationSignal: CancellationSignal = CancellationSignal.Never,
         progressListener: ByteProgressListener? = null,
     ): VaultContainerHeader = VaultFileCipher.verify(
         source = source,
-        unwrapFileKey = ::unwrapFileKey,
+        unwrapFileKey = { fromHeader -> unwrapFileKey(wrappedFileKey ?: fromHeader) },
         cancellationSignal = cancellationSignal,
         progressListener = progressListener,
     )

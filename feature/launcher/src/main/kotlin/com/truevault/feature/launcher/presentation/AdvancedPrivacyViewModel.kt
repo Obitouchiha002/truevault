@@ -7,6 +7,7 @@ import com.truevault.core.capabilities.DeviceCapabilityDetector
 import com.truevault.core.capabilities.model.CapabilityActionResult
 import com.truevault.core.capabilities.model.DeviceCapabilities
 import com.truevault.core.capabilities.privateapps.PrivateAppsController
+import com.truevault.core.capabilities.provider.SecureLauncherComponent
 import com.truevault.feature.launcher.domain.LauncherVisibilityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -23,6 +24,8 @@ data class AdvancedPrivacyUiState(
     val capabilities: DeviceCapabilities = DeviceCapabilities.Unknown,
     val visibilityEnabled: Boolean = false,
     val hiddenCount: Int = 0,
+    /** Whether TrueVault currently offers itself as a home app at all. */
+    val secureLauncherEnabled: Boolean = false,
     val showingRoleExplanation: Boolean = false,
     val showingVisibilityWarning: Boolean = false,
     val lastResult: CapabilityActionResult? = null,
@@ -32,6 +35,9 @@ sealed interface AdvancedPrivacyAction {
     data object SecureLauncherRequested : AdvancedPrivacyAction
     data object RoleExplanationDismissed : AdvancedPrivacyAction
     data object RoleRequestConfirmed : AdvancedPrivacyAction
+
+    /** Removes TrueVault from the home-app chooser again. */
+    data object SecureLauncherDisabled : AdvancedPrivacyAction
     data object VisibilityRequested : AdvancedPrivacyAction
     data object VisibilityWarningDismissed : AdvancedPrivacyAction
     data object VisibilityConfirmed : AdvancedPrivacyAction
@@ -52,6 +58,7 @@ class AdvancedPrivacyViewModel @Inject constructor(
     private val capabilityDetector: DeviceCapabilityDetector,
     private val privateAppsController: PrivateAppsController,
     private val visibilityStore: LauncherVisibilityStore,
+    private val launcherComponent: SecureLauncherComponent,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AdvancedPrivacyUiState())
@@ -69,6 +76,8 @@ class AdvancedPrivacyViewModel @Inject constructor(
         visibilityStore.hiddenPackages
             .onEach { hidden -> _uiState.update { it.copy(hiddenCount = hidden.size) } }
             .launchIn(viewModelScope)
+
+        _uiState.update { it.copy(secureLauncherEnabled = launcherComponent.isEnabled) }
     }
 
     fun refresh() = capabilityDetector.refresh()
@@ -83,8 +92,27 @@ class AdvancedPrivacyViewModel @Inject constructor(
 
             AdvancedPrivacyAction.RoleRequestConfirmed -> viewModelScope.launch {
                 _uiState.update { it.copy(showingRoleExplanation = false) }
+
+                // The home activity ships disabled so Android never asks an uninterested user to
+                // choose a launcher. It has to exist before the role can be requested, so it is
+                // enabled here — and switched off again if the user declines, leaving the phone
+                // exactly as it was.
+                launcherComponent.setEnabled(true)
+
                 val result = privateAppsController.requestLauncherRole()
-                _uiState.update { it.copy(lastResult = result) }
+                if (result != CapabilityActionResult.Success) {
+                    launcherComponent.setEnabled(false)
+                }
+                _uiState.update {
+                    it.copy(lastResult = result, secureLauncherEnabled = launcherComponent.isEnabled)
+                }
+            }
+
+            AdvancedPrivacyAction.SecureLauncherDisabled -> viewModelScope.launch {
+                // Removes TrueVault from the home-app chooser entirely. Android falls back to the
+                // system launcher on its own if this was the active one.
+                launcherComponent.setEnabled(false)
+                _uiState.update { it.copy(secureLauncherEnabled = false) }
             }
 
             AdvancedPrivacyAction.VisibilityRequested ->

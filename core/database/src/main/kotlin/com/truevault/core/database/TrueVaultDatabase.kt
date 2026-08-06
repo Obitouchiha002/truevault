@@ -3,6 +3,7 @@ package com.truevault.core.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.truevault.core.database.dao.ActivityEventDao
 import com.truevault.core.database.dao.ImportTransactionDao
 import com.truevault.core.database.dao.ScanResultDao
@@ -48,16 +49,34 @@ abstract class TrueVaultDatabase : RoomDatabase() {
     abstract fun activityEventDao(): ActivityEventDao
 
     companion object {
-        const val VERSION: Int = 1
+        const val VERSION: Int = 2
         const val NAME: String = "truevault.db"
+    }
+}
+
+/**
+ * v1 → v2: the vault item row gains its own copy of the wrapped file key.
+ *
+ * Before this, the only wrapped file key lived in the container header, sealed by whichever master
+ * key was current when the file was written. That made a backup restored into a *different* vault
+ * undecryptable: the new vault's master key cannot unwrap the old vault's wrapping. Keeping the
+ * wrapped key in the row lets a restore re-wrap it under the destination vault's master key without
+ * touching the container — whose header is the associated data for every chunk and therefore cannot
+ * be rewritten.
+ *
+ * The column is nullable and is not backfilled. Existing rows keep working because the read path
+ * falls back to the header, which is still correct for items that never left this vault.
+ */
+private val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE vault_items ADD COLUMN wrapped_file_key BLOB")
     }
 }
 
 /**
  * Every migration this build knows about.
  *
- * The list is empty at version 1 and grows by one entry per schema change. It exists now, rather
- * than being introduced when the first migration is needed, so that adding one is a one-line change
- * and never a reason to reach for destructive migration under time pressure.
+ * Destructive migration is never enabled: dropping the table would destroy the vault index while
+ * leaving the encrypted files orphaned on disk.
  */
-val TRUEVAULT_MIGRATIONS: Array<Migration> = emptyArray()
+val TRUEVAULT_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2)

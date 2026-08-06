@@ -4,6 +4,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedSecureTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -35,11 +39,14 @@ import com.truevault.core.designsystem.component.TvBanner
 import com.truevault.core.designsystem.component.TvBannerTone
 import com.truevault.core.designsystem.component.TvCard
 import com.truevault.core.designsystem.component.TvPreviewSurface
+import com.truevault.core.designsystem.component.TvPinPad
 import com.truevault.core.designsystem.component.TvPrimaryButton
+import com.truevault.core.designsystem.component.TvTextButton
 import com.truevault.core.designsystem.theme.TrueVaultTheme
 import com.truevault.core.designsystem.theme.TvMotion
 import com.truevault.core.designsystem.theme.TvSpacing
 import com.truevault.core.model.PasswordStrength
+import com.truevault.core.model.VaultLockType
 import com.truevault.core.model.PasswordSuggestion
 import com.truevault.feature.authentication.R
 import com.truevault.feature.authentication.domain.BiometricCapability
@@ -117,6 +124,7 @@ fun CreateVaultLockScreen(
         uiState = uiState,
         passwordState = passwordState,
         confirmState = confirmState,
+        onAction = viewModel::onAction,
         onSubmit = {
             viewModel.onAction(
                 CreateVaultLockAction.Submit(passwordState.text.toString().toCharArray()),
@@ -132,6 +140,7 @@ internal fun CreateVaultLockContent(
     uiState: CreateVaultLockUiState,
     passwordState: TextFieldState,
     confirmState: TextFieldState,
+    onAction: (CreateVaultLockAction) -> Unit,
     onSubmit: () -> Unit,
     onBiometricToggled: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -147,52 +156,43 @@ internal fun CreateVaultLockContent(
                 bottom = TvSpacing.large,
             ),
         verticalArrangement = Arrangement.spacedBy(TvSpacing.standard),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = stringResource(R.string.create_lock_title),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        Text(
-            text = stringResource(R.string.create_lock_subtitle),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        when (uiState.stage) {
+            CreateLockStage.CHOOSE_TYPE -> ChooseLockType(uiState = uiState, onAction = onAction)
 
-        OutlinedSecureTextField(
-            state = passwordState,
-            label = { Text(stringResource(R.string.create_lock_password_label)) },
-            supportingText = { Text(stringResource(R.string.create_lock_password_hint)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = TvSpacing.small),
-        )
-
-        StrengthMeter(uiState = uiState)
-
-        OutlinedSecureTextField(
-            state = confirmState,
-            label = { Text(stringResource(R.string.create_lock_confirm_label)) },
-            isError = uiState.confirmTouched && !uiState.passwordsMatch,
-            supportingText = {
-                if (uiState.confirmTouched && !uiState.passwordsMatch) {
-                    Text(stringResource(R.string.create_lock_mismatch))
+            CreateLockStage.ENTER, CreateLockStage.CONFIRM -> {
+                if (uiState.lockType.isPin) {
+                    PinStage(uiState = uiState, onAction = onAction)
+                } else {
+                    PassphraseStage(
+                        uiState = uiState,
+                        passwordState = passwordState,
+                        confirmState = confirmState,
+                        onSubmit = onSubmit,
+                    )
                 }
-            },
-            modifier = Modifier.fillMaxWidth(),
-        )
+            }
+        }
 
-        BiometricOption(
-            capability = uiState.biometricCapability,
-            enabled = uiState.enableBiometrics,
-            onToggled = onBiometricToggled,
-        )
+        if (uiState.stage != CreateLockStage.CHOOSE_TYPE) {
+            BiometricOption(
+                capability = uiState.biometricCapability,
+                enabled = uiState.enableBiometrics,
+                onToggled = onBiometricToggled,
+            )
 
-        TvBanner(
-            title = stringResource(R.string.create_lock_warning_title),
-            text = stringResource(R.string.create_lock_warning_body),
-            tone = TvBannerTone.Warning,
-        )
+            TvBanner(
+                title = stringResource(R.string.create_lock_warning_title),
+                text = stringResource(R.string.create_lock_warning_body),
+                tone = TvBannerTone.Warning,
+            )
+
+            TvTextButton(
+                text = stringResource(R.string.create_lock_change_method),
+                onClick = { onAction(CreateVaultLockAction.StartOver) },
+            )
+        }
 
         if (uiState.error != null) {
             TvBanner(
@@ -200,16 +200,193 @@ internal fun CreateVaultLockContent(
                 tone = TvBannerTone.Error,
             )
         }
+    }
+}
 
-        TvPrimaryButton(
-            text = stringResource(R.string.create_lock_action),
-            onClick = onSubmit,
-            enabled = uiState.canSubmit,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = TvSpacing.small),
+/**
+ * The choice itself, with the trade-off stated rather than implied.
+ *
+ * The numbers under each option are measured against the unlock throttle, not marketing copy: a
+ * 4-digit PIN really is months of continuous on-device attack, and a user picking it deserves to
+ * know that before their files depend on it.
+ */
+@Composable
+private fun ChooseLockType(
+    uiState: CreateVaultLockUiState,
+    onAction: (CreateVaultLockAction) -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.create_lock_choose_title),
+        style = MaterialTheme.typography.headlineMedium,
+        color = MaterialTheme.colorScheme.onBackground,
+    )
+    Text(
+        text = stringResource(R.string.create_lock_choose_subtitle),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+
+    Column(modifier = Modifier.selectableGroup()) {
+        VaultLockType.entries.forEach { type ->
+            LockTypeRow(
+                type = type,
+                selected = uiState.lockType == type,
+                onSelected = { onAction(CreateVaultLockAction.LockTypeSelected(type)) },
+            )
+        }
+    }
+
+    if (uiState.lockType == VaultLockType.PIN_4) {
+        TvBanner(
+            text = stringResource(R.string.create_lock_pin4_warning),
+            tone = TvBannerTone.Warning,
         )
     }
+
+    TvPrimaryButton(
+        text = stringResource(R.string.create_lock_continue),
+        onClick = { onAction(CreateVaultLockAction.LockTypeConfirmed) },
+        modifier = Modifier.fillMaxWidth(),
+    )
+}
+
+@Composable
+private fun LockTypeRow(
+    type: VaultLockType,
+    selected: Boolean,
+    onSelected: () -> Unit,
+) {
+    val titleRes: Int
+    val bodyRes: Int
+    when (type) {
+        VaultLockType.PIN_4 -> {
+            titleRes = R.string.lock_type_pin4
+            bodyRes = R.string.lock_type_pin4_body
+        }
+        VaultLockType.PIN_6 -> {
+            titleRes = R.string.lock_type_pin6
+            bodyRes = R.string.lock_type_pin6_body
+        }
+        VaultLockType.PASSPHRASE -> {
+            titleRes = R.string.lock_type_passphrase
+            bodyRes = R.string.lock_type_passphrase_body
+        }
+    }
+
+    TvCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = TvSpacing.xs),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .selectable(selected = selected, onClick = onSelected, role = Role.RadioButton),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TvSpacing.small),
+        ) {
+            RadioButton(selected = selected, onClick = null)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(titleRes),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = stringResource(bodyRes),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PinStage(
+    uiState: CreateVaultLockUiState,
+    onAction: (CreateVaultLockAction) -> Unit,
+) {
+    val length = uiState.lockType.pinLength ?: return
+
+    Text(
+        text = stringResource(
+            if (uiState.stage == CreateLockStage.CONFIRM) {
+                R.string.create_lock_pin_confirm
+            } else {
+                R.string.create_lock_pin_enter
+            },
+        ),
+        style = MaterialTheme.typography.headlineSmall,
+        color = MaterialTheme.colorScheme.onBackground,
+    )
+
+    if (uiState.pinMismatch) {
+        TvBanner(
+            text = stringResource(R.string.create_lock_pin_mismatch),
+            tone = TvBannerTone.Error,
+        )
+    }
+
+    TvPinPad(
+        length = length,
+        entered = uiState.pinEnteredCount,
+        onDigit = { onAction(CreateVaultLockAction.PinDigitEntered(it)) },
+        onBackspace = { onAction(CreateVaultLockAction.PinBackspace) },
+        enabled = !uiState.isCreating,
+        modifier = Modifier.padding(top = TvSpacing.standard),
+    )
+}
+
+@Composable
+private fun PassphraseStage(
+    uiState: CreateVaultLockUiState,
+    passwordState: TextFieldState,
+    confirmState: TextFieldState,
+    onSubmit: () -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.create_lock_title),
+        style = MaterialTheme.typography.headlineMedium,
+        color = MaterialTheme.colorScheme.onBackground,
+    )
+    Text(
+        text = stringResource(R.string.create_lock_subtitle),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+
+    OutlinedSecureTextField(
+        state = passwordState,
+        label = { Text(stringResource(R.string.create_lock_password_label)) },
+        supportingText = { Text(stringResource(R.string.create_lock_password_hint)) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = TvSpacing.small),
+    )
+
+    StrengthMeter(uiState = uiState)
+
+    OutlinedSecureTextField(
+        state = confirmState,
+        label = { Text(stringResource(R.string.create_lock_confirm_label)) },
+        isError = uiState.confirmTouched && !uiState.passwordsMatch,
+        supportingText = {
+            if (uiState.confirmTouched && !uiState.passwordsMatch) {
+                Text(stringResource(R.string.create_lock_mismatch))
+            }
+        },
+        modifier = Modifier.fillMaxWidth(),
+    )
+
+    TvPrimaryButton(
+        text = stringResource(R.string.create_lock_action),
+        onClick = onSubmit,
+        enabled = uiState.canSubmit,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = TvSpacing.small),
+    )
 }
 
 @Composable
@@ -343,6 +520,7 @@ private fun CreateVaultLockPreview() {
             ),
             passwordState = TextFieldState("river stone lantern"),
             confirmState = TextFieldState("river stone lantern"),
+            onAction = {},
             onSubmit = {},
             onBiometricToggled = {},
         )

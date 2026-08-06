@@ -6,6 +6,7 @@ import com.truevault.core.common.result.Outcome
 import com.truevault.core.crypto.kdf.wipe
 import com.truevault.core.crypto.vault.VaultKeyManager
 import com.truevault.core.datastore.UserPreferencesDataSource
+import com.truevault.core.model.VaultError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.crypto.Cipher
 import javax.inject.Inject
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -50,7 +52,21 @@ class UnlockViewModel @Inject constructor(
                 it.copy(
                     biometricAvailable = cipher != null,
                     recoveryKeyAvailable = keyManager.hasRecoveryKey(),
+                    lockType = keyManager.lockType(),
+                    throttleRemainingMillis = keyManager.throttleRemainingMillis(),
                 )
+            }
+        }
+
+        // The remaining wait is counted down rather than shown once and left stale, so the user can
+        // see it clearing instead of wondering whether the app has frozen.
+        viewModelScope.launch {
+            while (true) {
+                delay(1_000)
+                val remaining = keyManager.throttleRemainingMillis()
+                if (remaining != _uiState.value.throttleRemainingMillis) {
+                    _uiState.update { it.copy(throttleRemainingMillis = remaining) }
+                }
             }
         }
     }
@@ -61,12 +77,40 @@ class UnlockViewModel @Inject constructor(
             UnlockAction.BiometricRequested -> requestBiometric()
             is UnlockAction.BiometricAuthenticated -> unlockWithBiometric(action.cipher)
             UnlockAction.BiometricDismissed -> Unit
+
+            is UnlockAction.PinDigitEntered -> onPinDigit(action.digit)
+
+            UnlockAction.PinBackspace -> {
+                if (pinBuffer.isNotEmpty()) {
+                    pinBuffer = pinBuffer.copyOf(pinBuffer.size - 1)
+                    _uiState.update { it.copy(pinEnteredCount = pinBuffer.size, error = null) }
+                }
+            }
             UnlockAction.RecoveryRequested ->
                 _uiState.update { it.copy(showingRecoveryEntry = true, error = null) }
             UnlockAction.RecoveryDismissed ->
                 _uiState.update { it.copy(showingRecoveryEntry = false) }
             is UnlockAction.SubmitRecoveryKey -> unlockWithRecoveryKey(action.key)
             UnlockAction.ErrorDismissed -> _uiState.update { it.copy(error = null) }
+        }
+    }
+
+    /** Entered digits. Never part of UI state — only the count is observable. */
+    private var pinBuffer = CharArray(0)
+
+    private fun onPinDigit(digit: Char) {
+        val length = _uiState.value.lockType?.pinLength ?: return
+        if (_uiState.value.isThrottled || pinBuffer.size >= length) return
+
+        pinBuffer = pinBuffer.copyOf(pinBuffer.size + 1).also { it[it.size - 1] = digit }
+        _uiState.update { it.copy(pinEnteredCount = pinBuffer.size, error = null) }
+
+        if (pinBuffer.size == length) {
+            val secret = pinBuffer.copyOf()
+            pinBuffer.wipe()
+            pinBuffer = CharArray(0)
+            _uiState.update { it.copy(pinEnteredCount = 0) }
+            unlock(secret)
         }
     }
 
@@ -87,6 +131,9 @@ class UnlockViewModel @Inject constructor(
                             isCheckingPassword = false,
                             failedAttempts = it.failedAttempts + 1,
                             error = result.error,
+                            throttleRemainingMillis = (result.error as? VaultError.TooManyAttempts)
+                                ?.waitMillis
+                                ?: keyManager.throttleRemainingMillis(),
                         )
                     }
                 }

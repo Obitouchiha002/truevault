@@ -29,7 +29,19 @@ data class BackupManifest(
 ) {
     companion object {
         const val MAGIC: String = "TRUEVAULT-BACKUP"
-        const val CURRENT_FORMAT_VERSION: Int = 1
+        /**
+         * Version 2.
+         *
+         * Version 1 could not be restored into any vault other than the one that produced it: the
+         * file keys inside each container are wrapped by the source vault's master key, and the
+         * archive carried nothing that let a new vault unwrap them. It also re-encrypted every
+         * container whole, in memory, which put large items out of reach entirely.
+         *
+         * Version 2 stores each container verbatim — it is already ciphertext — and carries the
+         * per-file key re-wrapped under the archive key. Restoring re-wraps it again under the
+         * destination vault's master key. Entries stream, so memory is constant.
+         */
+        const val CURRENT_FORMAT_VERSION: Int = 2
         const val MANIFEST_ENTRY_NAME: String = "manifest.json"
         const val ITEM_ENTRY_PREFIX: String = "items/"
         const val THUMBNAIL_ENTRY_PREFIX: String = "thumbnails/"
@@ -42,7 +54,7 @@ data class BackupManifest(
 data class BackupEntry(
     val name: String,
     val sealedSizeBytes: Long,
-    /** SHA-256 of the sealed bytes, so a truncated or altered entry is caught before commit. */
+    /** SHA-256 of the stored bytes, so a truncated or altered entry is caught before commit. */
     val sha256Base64: String,
 )
 

@@ -51,8 +51,49 @@ class CreateVaultLockViewModel @Inject constructor(
     /** Pure domain call, exposed so the screen does not perform the assessment itself. */
     fun assess(password: CharArray): PasswordAssessment = assessPassword(password)
 
+    /**
+     * The digits entered so far.
+     *
+     * A [CharArray] rather than a String, and never part of the UI state: only the *count* of
+     * entered digits is exposed, so the PIN itself is not held in an observable that survives
+     * recomposition or lands in a state restore.
+     */
+    private var pinBuffer = CharArray(0)
+    private var firstPin: CharArray? = null
+
     fun onAction(action: CreateVaultLockAction) {
         when (action) {
+            is CreateVaultLockAction.LockTypeSelected ->
+                _uiState.update { it.copy(lockType = action.lockType, error = null) }
+
+            CreateVaultLockAction.LockTypeConfirmed -> {
+                resetPinEntry()
+                _uiState.update { it.copy(stage = CreateLockStage.ENTER, pinMismatch = false) }
+            }
+
+            is CreateVaultLockAction.PinDigitEntered -> onPinDigit(action.digit)
+
+            CreateVaultLockAction.PinBackspace -> {
+                if (pinBuffer.isNotEmpty()) {
+                    pinBuffer = pinBuffer.copyOf(pinBuffer.size - 1)
+                    _uiState.update { it.copy(pinEnteredCount = pinBuffer.size, pinMismatch = false) }
+                }
+            }
+
+            CreateVaultLockAction.StartOver -> {
+                resetPinEntry()
+                firstPin?.wipe()
+                firstPin = null
+                _uiState.update {
+                    it.copy(
+                        stage = CreateLockStage.CHOOSE_TYPE,
+                        pinEnteredCount = 0,
+                        pinMismatch = false,
+                        error = null,
+                    )
+                }
+            }
+
             is CreateVaultLockAction.PasswordChanged -> {
                 val assessment = assessPassword(action.password)
                 _uiState.update {
@@ -79,13 +120,68 @@ class CreateVaultLockViewModel @Inject constructor(
         }
     }
 
+    private fun onPinDigit(digit: Char) {
+        val length = _uiState.value.lockType.pinLength ?: return
+        if (pinBuffer.size >= length) return
+
+        pinBuffer = pinBuffer.copyOf(pinBuffer.size + 1).also { it[it.size - 1] = digit }
+        _uiState.update { it.copy(pinEnteredCount = pinBuffer.size, pinMismatch = false) }
+
+        if (pinBuffer.size < length) return
+
+        when (_uiState.value.stage) {
+            CreateLockStage.ENTER -> {
+                firstPin = pinBuffer.copyOf()
+                resetPinEntry()
+                _uiState.update { it.copy(stage = CreateLockStage.CONFIRM, pinEnteredCount = 0) }
+            }
+
+            CreateLockStage.CONFIRM -> {
+                val first = firstPin
+                if (first != null && first.contentEquals(pinBuffer)) {
+                    val secret = pinBuffer.copyOf()
+                    first.wipe()
+                    firstPin = null
+                    resetPinEntry()
+                    createVault(secret)
+                } else {
+                    // Start the whole entry again rather than only the confirmation: a user who
+                    // mistyped does not know which of the two entries was wrong.
+                    first?.wipe()
+                    firstPin = null
+                    resetPinEntry()
+                    _uiState.update {
+                        it.copy(
+                            stage = CreateLockStage.ENTER,
+                            pinEnteredCount = 0,
+                            pinMismatch = true,
+                        )
+                    }
+                }
+            }
+
+            CreateLockStage.CHOOSE_TYPE -> Unit
+        }
+    }
+
+    private fun resetPinEntry() {
+        pinBuffer.wipe()
+        pinBuffer = CharArray(0)
+    }
+
+    override fun onCleared() {
+        resetPinEntry()
+        firstPin?.wipe()
+        firstPin = null
+    }
+
     private fun createVault(password: CharArray) {
         if (_uiState.value.isCreating) return
         _uiState.update { it.copy(isCreating = true, error = null) }
 
         viewModelScope.launch {
             try {
-                when (val result = keyManager.createLock(password)) {
+                when (val result = keyManager.createLock(password, _uiState.value.lockType)) {
                     is Outcome.Failure -> _uiState.update {
                         it.copy(isCreating = false, error = result.error)
                     }

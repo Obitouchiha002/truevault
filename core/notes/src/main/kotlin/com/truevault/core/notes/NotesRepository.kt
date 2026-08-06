@@ -27,7 +27,35 @@ data class Note(
     val isPinned: Boolean,
     val isArchived: Boolean,
     val isInTrash: Boolean,
+    val colour: Int = 0,
+    val isChecklist: Boolean = false,
 ) {
+    /**
+     * A checklist stored as text.
+     *
+     * "[ ] milk" / "[x] bread" rather than a second table: one migration instead of two, the
+     * checklist stays searchable as plain text, and turning a note into a list and back never
+     * loses a line.
+     */
+    val checklistItems: List<ChecklistItem>
+        get() = body.lineSequence()
+            .filter { it.isNotBlank() }
+            .map { line ->
+                val done = line.startsWith(DONE_PREFIX, ignoreCase = true)
+                val open = line.startsWith(OPEN_PREFIX)
+                ChecklistItem(
+                    text = when {
+                        done -> line.drop(DONE_PREFIX.length)
+                        open -> line.drop(OPEN_PREFIX.length)
+                        else -> line
+                    }.trim(),
+                    isDone = done,
+                )
+            }
+            .toList()
+
+    val openCount: Int get() = checklistItems.count { !it.isDone }
+    val doneCount: Int get() = checklistItems.count { it.isDone }
     val isBlank: Boolean get() = title.isBlank() && body.isBlank()
 
     /** First non-empty line, for a note the user never titled. */
@@ -106,6 +134,38 @@ class NotesRepository @Inject constructor(
             entity.id
         }
 
+    suspend fun setColour(id: String, colour: Int) = withContext(ioDispatcher) {
+        dao.setColour(id, colour, timeProvider.currentTimeMillis())
+    }
+
+    /**
+     * Turns a note into a checklist and back without losing a line.
+     *
+     * Going in, every non-empty line becomes an unticked item. Coming out, the markers are stripped
+     * and the text is left exactly as the user would have typed it.
+     */
+    suspend fun setChecklist(id: String, checklist: Boolean) = withContext(ioDispatcher) {
+        val note = dao.byId(id)?.toNote() ?: return@withContext
+        val body = if (checklist) {
+            note.body.lineSequence().filter { it.isNotBlank() }
+                .map { ChecklistItem(it.trim(), isDone = false) }
+                .toList().toChecklistBody()
+        } else {
+            note.checklistItems.joinToString("\n") { it.text }
+        }
+        dao.setChecklist(id, checklist, body, timeProvider.currentTimeMillis())
+    }
+
+    /** Ticks or unticks one line, leaving the rest of the note untouched. */
+    suspend fun toggleChecklistItem(id: String, index: Int) = withContext(ioDispatcher) {
+        val note = dao.byId(id)?.toNote() ?: return@withContext
+        val items = note.checklistItems.toMutableList()
+        if (index !in items.indices) return@withContext
+
+        items[index] = items[index].copy(isDone = !items[index].isDone)
+        dao.setChecklist(id, true, items.toChecklistBody(), timeProvider.currentTimeMillis())
+    }
+
     suspend fun setPinned(id: String, pinned: Boolean) = withContext(ioDispatcher) {
         dao.setPinned(id, pinned, timeProvider.currentTimeMillis())
     }
@@ -136,6 +196,16 @@ class NotesRepository @Inject constructor(
     }
 }
 
+/** One line of a checklist. */
+data class ChecklistItem(val text: String, val isDone: Boolean)
+
+private const val OPEN_PREFIX = "[ ] "
+private const val DONE_PREFIX = "[x] "
+
+/** Renders checklist items back to the stored text form. */
+fun List<ChecklistItem>.toChecklistBody(): String =
+    joinToString("\n") { (if (it.isDone) DONE_PREFIX else OPEN_PREFIX) + it.text }
+
 private fun NoteEntity.toNote() = Note(
     id = id,
     title = title,
@@ -145,4 +215,6 @@ private fun NoteEntity.toNote() = Note(
     isPinned = isPinned,
     isArchived = isArchived,
     isInTrash = isInTrash,
+    colour = colour,
+    isChecklist = isChecklist,
 )

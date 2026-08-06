@@ -21,6 +21,8 @@ data class NoteEditorUiState(
     val title: String = "",
     val body: String = "",
     val isPinned: Boolean = false,
+    val colour: Int = 0,
+    val isChecklist: Boolean = false,
     val updatedAt: Long? = null,
     val isLoading: Boolean = true,
     val savedAtLeastOnce: Boolean = false,
@@ -30,6 +32,8 @@ sealed interface NoteEditorAction {
     data class TitleChanged(val title: String) : NoteEditorAction
     data class BodyChanged(val body: String) : NoteEditorAction
     data object PinToggled : NoteEditorAction
+    data object ChecklistToggled : NoteEditorAction
+    data class ColourChosen(val colour: Int) : NoteEditorAction
     data object DeleteRequested : NoteEditorAction
 }
 
@@ -69,6 +73,8 @@ class NoteEditorViewModel @Inject constructor(
                     title = note?.title.orEmpty(),
                     body = note?.body.orEmpty(),
                     isPinned = note?.isPinned == true,
+                    colour = note?.colour ?: 0,
+                    isChecklist = note?.isChecklist == true,
                     updatedAt = note?.updatedAt,
                     isLoading = false,
                 )
@@ -98,6 +104,25 @@ class NoteEditorViewModel @Inject constructor(
                 }
             }
 
+            NoteEditorAction.ChecklistToggled -> {
+                val next = !_uiState.value.isChecklist
+                _uiState.update { it.copy(isChecklist = next) }
+                viewModelScope.launch {
+                    // Save first: a brand-new note has no row to convert yet.
+                    val id = persist() ?: return@launch
+                    repository.setChecklist(id, next)
+                    reload(id)
+                }
+            }
+
+            is NoteEditorAction.ColourChosen -> {
+                _uiState.update { it.copy(colour = action.colour) }
+                viewModelScope.launch {
+                    val id = persist() ?: return@launch
+                    repository.setColour(id, action.colour)
+                }
+            }
+
             NoteEditorAction.DeleteRequested -> viewModelScope.launch {
                 _uiState.value.noteId?.let { repository.moveToTrash(it) }
             }
@@ -116,6 +141,12 @@ class NoteEditorViewModel @Inject constructor(
             delay(AUTOSAVE_DELAY_MS)
             persist()
         }
+    }
+
+    /** Re-reads after a conversion, because the body text on disk is now different from the field. */
+    private suspend fun reload(id: String) {
+        val note = repository.note(id) ?: return
+        _uiState.update { it.copy(body = note.body, isChecklist = note.isChecklist) }
     }
 
     private suspend fun persist(): String? {

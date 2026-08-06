@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.automirrored.filled.Sort
@@ -61,6 +62,7 @@ import com.truevault.feature.vault.R
 fun VaultScreen(
     onAddFiles: () -> Unit,
     onOpenItem: (String) -> Unit,
+    onOpenTrash: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: VaultViewModel = hiltViewModel(),
 ) {
@@ -89,6 +91,14 @@ fun VaultScreen(
             TvTopAppBar(
                 title = stringResource(R.string.vault_title),
                 actions = {
+                    // Deleted items are recoverable, so there has to be somewhere to recover them
+                    // from. A trash nobody can find is the same as no trash.
+                    IconButton(onClick = onOpenTrash) {
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteOutline,
+                            contentDescription = stringResource(R.string.trash_open),
+                        )
+                    }
                     IconButton(onClick = { viewModel.onAction(VaultAction.ToggleLayout) }) {
                         Icon(
                             imageVector = if (uiState.layout == VaultLayout.GRID) {

@@ -31,6 +31,8 @@ data class VaultItem(
     val originalSizeBytes: Long,
     val encryptedSizeBytes: Long,
     val createdAtMillis: Long,
+    /** When this item was moved to the trash, or null while it is in the vault. */
+    val trashedAtMillis: Long? = null,
     val updatedAtMillis: Long,
     val importMode: ImportMode,
     val privacyStatus: PrivacyStatus,

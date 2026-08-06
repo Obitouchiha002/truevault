@@ -3,6 +3,7 @@ package com.truevault.core.notes.di
 import android.content.Context
 import androidx.room.Room
 import com.truevault.core.notes.db.NoteDao
+import com.truevault.core.notes.db.NOTES_MIGRATIONS
 import com.truevault.core.notes.db.NotesDatabase
 import dagger.Module
 import dagger.Provides
@@ -29,6 +30,7 @@ object NotesDatabaseModule {
     @Singleton
     fun provideNotesDatabase(@ApplicationContext context: Context): NotesDatabase =
         Room.databaseBuilder(context, NotesDatabase::class.java, NotesDatabase.NAME)
+            .addMigrations(*NOTES_MIGRATIONS)
             // No fallbackToDestructiveMigration. A migration that wipes notes on upgrade is a data
             // loss bug that only shows up in production, on other people's devices.
             .build()

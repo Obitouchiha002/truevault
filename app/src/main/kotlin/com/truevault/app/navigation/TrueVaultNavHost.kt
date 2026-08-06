@@ -47,6 +47,7 @@ import com.truevault.feature.settings.navigation.navigateToDeviceCapabilities
 import com.truevault.feature.settings.navigation.settingsScreen
 import com.truevault.feature.vault.navigation.navigateToVault
 import com.truevault.feature.vault.navigation.navigateToVaultItem
+import com.truevault.feature.vault.navigation.navigateToTrash
 import com.truevault.feature.vault.navigation.vaultScreen
 
 /**
@@ -139,6 +140,7 @@ fun TrueVaultNavHost(
         vaultScreen(
             onAddFiles = { navController.navigateToImport() },
             onOpenItem = { itemId -> navController.navigateToVaultItem(itemId) },
+            onOpenTrash = { navController.navigateToTrash() },
             onNavigateBack = { navController.popBackStack() },
         )
 

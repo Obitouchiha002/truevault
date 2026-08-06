@@ -17,6 +17,12 @@
     <string name="notes_unpin">Unpin</string>
     <string name="notes_delete">Delete</string>
 
-    <string name="notes_not_encrypted">Notes are not encrypted. For anything private, use the vault.</string>
     <string name="notes_open_vault">Open private vault</string>
+    <string name="notes_pinned_label">Pinned</string>
+    <string name="notes_checklist">Checklist</string>
+    <string name="notes_colour">Colour</string>
+    <plurals name="notes_more_items">
+        <item quantity="one">+%1$d more item</item>
+        <item quantity="other">+%1$d more items</item>
+    </plurals>
 </resources>

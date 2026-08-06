@@ -4,6 +4,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.CheckBox
+import androidx.compose.material.icons.filled.Notes
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.PushPin
@@ -72,6 +88,16 @@ fun NoteEditorScreen(
                             ),
                         )
                     }
+                    IconButton(onClick = { viewModel.onAction(NoteEditorAction.ChecklistToggled) }) {
+                        Icon(
+                            imageVector = if (uiState.isChecklist) {
+                                Icons.Filled.Notes
+                            } else {
+                                Icons.Filled.CheckBox
+                            },
+                            contentDescription = stringResource(R.string.notes_checklist),
+                        )
+                    }
                     IconButton(
                         onClick = {
                             viewModel.onAction(NoteEditorAction.DeleteRequested)
@@ -103,6 +129,49 @@ fun NoteEditorScreen(
                 colors = transparentFieldColors(),
                 modifier = Modifier.fillMaxWidth(),
             )
+
+            // Five tints, chosen inline. A colour picker behind a menu is a colour picker nobody
+            // uses.
+            val colourLabel = stringResource(R.string.notes_colour)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = TvSpacing.small)
+                    .selectableGroup()
+                    .semantics { contentDescription = colourLabel },
+                horizontalArrangement = Arrangement.spacedBy(TvSpacing.small),
+            ) {
+                (0..4).forEach { index ->
+                    val scheme = MaterialTheme.colorScheme
+                    val swatch = when (index) {
+                        1 -> scheme.primaryContainer
+                        2 -> scheme.secondaryContainer
+                        3 -> scheme.tertiaryContainer
+                        4 -> scheme.errorContainer
+                        else -> scheme.surfaceContainer
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(swatch)
+                            .border(
+                                width = if (uiState.colour == index) 2.dp else 1.dp,
+                                color = if (uiState.colour == index) {
+                                    scheme.primary
+                                } else {
+                                    scheme.outlineVariant
+                                },
+                                shape = CircleShape,
+                            )
+                            .selectable(
+                                selected = uiState.colour == index,
+                                onClick = { viewModel.onAction(NoteEditorAction.ColourChosen(index)) },
+                                role = Role.RadioButton,
+                            ),
+                    )
+                }
+            }
 
             OutlinedTextField(
                 value = uiState.body,

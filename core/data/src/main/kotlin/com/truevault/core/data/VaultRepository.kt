@@ -39,6 +39,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 private const val TAG = "VaultRepo"
+
+/** How long a deleted vault item stays restorable. Matches the notes trash, so one rule to learn. */
+private const val TRASH_RETENTION_DAYS = 30L
+private const val TRASH_RETENTION_MILLIS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000
 private const val PAGE_SIZE = 40
 
 /**
@@ -227,17 +231,50 @@ class VaultRepository @Inject constructor(
         }
     }
 
-    /** Removes a vault item and its files. Does not touch anything outside TrueVault. */
+    /**
+     * Moves an item to the trash. **Nothing is erased.**
+     *
+     * This used to delete the row and the encrypted container together, so a mis-tap destroyed a
+     * file permanently — in an app whose entire job is not losing the user's data. The container
+     * now stays exactly where it is and the item simply leaves every list, which makes restoring it
+     * a row update rather than a recovery.
+     *
+     * Nothing outside TrueVault is touched, then or now.
+     */
     suspend fun deleteItem(id: String): Outcome<Unit> = withContext(ioDispatcher) {
-        val removed = vaultItemDao.deleteById(id)
-        if (removed == 0) return@withContext VaultError.SourceNotFound.asFailure()
+        val moved = vaultItemDao.moveToTrash(listOf(id), timeProvider.currentTimeMillis())
+        if (moved == 0) return@withContext VaultError.SourceNotFound.asFailure()
 
-        fileSystem.deleteItem(id)
         invalidateNameIndex()
         Unit.asSuccess()
     }
 
     suspend fun deleteItems(ids: List<String>): Int = withContext(ioDispatcher) {
+        val moved = vaultItemDao.moveToTrash(ids, timeProvider.currentTimeMillis())
+        invalidateNameIndex()
+        moved
+    }
+
+    /** Everything currently in the trash, newest deletion first. */
+    fun observeTrash(): Flow<List<VaultItem>> =
+        vaultItemDao.observeTrash().map { rows -> rows.map(::toDomain) }
+
+    fun observeTrashCount(): Flow<Int> = vaultItemDao.observeTrashCount()
+
+    suspend fun restoreItems(ids: List<String>): Int = withContext(ioDispatcher) {
+        val restored = vaultItemDao.restoreFromTrash(ids, timeProvider.currentTimeMillis())
+        invalidateNameIndex()
+        restored
+    }
+
+    /**
+     * The only path that erases an encrypted file, and it is reachable from one screen.
+     *
+     * The row goes first: a crash between the two calls then leaves an orphaned container, which
+     * startup recovery cleans up. The reverse order would leave a row pointing at a file that is
+     * gone, which the vault would surface as a corrupted item the user cannot explain.
+     */
+    suspend fun permanentlyDelete(ids: List<String>): Int = withContext(ioDispatcher) {
         var deleted = 0
         ids.forEach { id ->
             if (vaultItemDao.deleteById(id) > 0) {
@@ -247,6 +284,19 @@ class VaultRepository @Inject constructor(
         }
         invalidateNameIndex()
         deleted
+    }
+
+    suspend fun emptyTrash(): Int = permanentlyDelete(vaultItemDao.trashedIds())
+
+    /**
+     * Erases trashed items past the retention window. Called once at startup.
+     *
+     * Only rows already in the trash are eligible, so a mistake in the date arithmetic can cost a
+     * user something they deleted a month ago — never something they still have.
+     */
+    suspend fun purgeExpiredTrash(): Int = withContext(ioDispatcher) {
+        val cutoff = timeProvider.currentTimeMillis() - TRASH_RETENTION_MILLIS
+        permanentlyDelete(vaultItemDao.expiredTrashIds(cutoff))
     }
 
     /** Called when the vault locks: the decrypted name index must not outlive the session. */
@@ -317,6 +367,7 @@ class VaultRepository @Inject constructor(
             originalSizeBytes = entity.originalSize,
             encryptedSizeBytes = entity.encryptedSize,
             createdAtMillis = entity.createdAt,
+            trashedAtMillis = entity.trashedAt,
             updatedAtMillis = entity.updatedAt,
             importMode = runCatching { ImportMode.valueOf(entity.importMode) }
                 .getOrDefault(ImportMode.SECURE_COPY),

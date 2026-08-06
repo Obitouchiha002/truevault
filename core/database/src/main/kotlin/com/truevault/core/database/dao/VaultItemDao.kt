@@ -38,22 +38,22 @@ interface VaultItemDao {
     @Query("DELETE FROM vault_items WHERE id = :id")
     suspend fun deleteById(id: String): Int
 
-    @Query("SELECT COUNT(*) FROM vault_items")
+    @Query("SELECT COUNT(*) FROM vault_items WHERE trashed_at IS NULL")
     fun observeCount(): Flow<Int>
 
-    @Query("SELECT mime_category AS category, COUNT(*) AS count FROM vault_items GROUP BY mime_category")
+    @Query("SELECT mime_category AS category, COUNT(*) AS count FROM vault_items WHERE trashed_at IS NULL GROUP BY mime_category")
     fun observeCategoryCounts(): Flow<List<CategoryCount>>
 
-    @Query("SELECT COUNT(*) FROM vault_items WHERE privacy_status = :status")
+    @Query("SELECT COUNT(*) FROM vault_items WHERE trashed_at IS NULL AND privacy_status = :status")
     fun observeCountByStatus(status: String): Flow<Int>
 
-    @Query("SELECT COALESCE(SUM(original_size), 0) FROM vault_items")
+    @Query("SELECT COALESCE(SUM(original_size), 0) FROM vault_items WHERE trashed_at IS NULL")
     fun observeTotalOriginalBytes(): Flow<Long>
 
     @Query(
         """
         SELECT * FROM vault_items
-        WHERE (:category IS NULL OR mime_category = :category)
+        WHERE trashed_at IS NULL AND (:category IS NULL OR mime_category = :category)
         ORDER BY created_at DESC
         """,
     )
@@ -62,7 +62,7 @@ interface VaultItemDao {
     @Query(
         """
         SELECT * FROM vault_items
-        WHERE (:category IS NULL OR mime_category = :category)
+        WHERE trashed_at IS NULL AND (:category IS NULL OR mime_category = :category)
         ORDER BY created_at ASC
         """,
     )
@@ -71,7 +71,7 @@ interface VaultItemDao {
     @Query(
         """
         SELECT * FROM vault_items
-        WHERE (:category IS NULL OR mime_category = :category)
+        WHERE trashed_at IS NULL AND (:category IS NULL OR mime_category = :category)
         ORDER BY original_size DESC
         """,
     )
@@ -80,7 +80,7 @@ interface VaultItemDao {
     @Query(
         """
         SELECT * FROM vault_items
-        WHERE (:category IS NULL OR mime_category = :category)
+        WHERE trashed_at IS NULL AND (:category IS NULL OR mime_category = :category)
         ORDER BY original_size ASC
         """,
     )
@@ -89,14 +89,14 @@ interface VaultItemDao {
     @Query(
         """
         SELECT * FROM vault_items
-        WHERE (:category IS NULL OR mime_category = :category)
+        WHERE trashed_at IS NULL AND (:category IS NULL OR mime_category = :category)
         ORDER BY mime_category ASC, created_at DESC
         """,
     )
     fun pagingSourceByType(category: String?): PagingSource<Int, VaultItemEntity>
 
     /** Backs the in-memory name index and name-ordered listing. Metadata only, no file contents. */
-    @Query("SELECT id, encrypted_metadata, mime_category, original_size, created_at FROM vault_items")
+    @Query("SELECT id, encrypted_metadata, mime_category, original_size, created_at FROM vault_items WHERE trashed_at IS NULL")
     suspend fun allMetadata(): List<VaultItemMetadataRow>
 
     @Query("SELECT * FROM vault_items WHERE id IN (:ids)")
@@ -113,6 +113,30 @@ interface VaultItemDao {
     suspend fun findStaleIntegrityChecks(before: Long, limit: Int): List<VaultItemEntity>
 
     @Transaction
+    // ---- Trash -------------------------------------------------------------------------------
+    //
+    // Deleting moves; only emptying removes. The encrypted container stays on disk the whole time,
+    // so a restore is a row update rather than a recovery.
+
+    @Query("UPDATE vault_items SET trashed_at = :now, updated_at = :now WHERE id IN (:ids)")
+    suspend fun moveToTrash(ids: List<String>, now: Long): Int
+
+    @Query("UPDATE vault_items SET trashed_at = NULL, updated_at = :now WHERE id IN (:ids)")
+    suspend fun restoreFromTrash(ids: List<String>, now: Long): Int
+
+    @Query("SELECT * FROM vault_items WHERE trashed_at IS NOT NULL ORDER BY trashed_at DESC")
+    fun observeTrash(): kotlinx.coroutines.flow.Flow<List<VaultItemEntity>>
+
+    @Query("SELECT COUNT(*) FROM vault_items WHERE trashed_at IS NOT NULL")
+    fun observeTrashCount(): kotlinx.coroutines.flow.Flow<Int>
+
+    @Query("SELECT id FROM vault_items WHERE trashed_at IS NOT NULL")
+    suspend fun trashedIds(): List<String>
+
+    /** Ids past the retention window. Only ever rows already in the trash. */
+    @Query("SELECT id FROM vault_items WHERE trashed_at IS NOT NULL AND trashed_at < :before")
+    suspend fun expiredTrashIds(before: Long): List<String>
+
     @Query("UPDATE vault_items SET privacy_status = :status, updated_at = :updatedAt WHERE id = :id")
     suspend fun updatePrivacyStatus(id: String, status: String, updatedAt: Long)
 

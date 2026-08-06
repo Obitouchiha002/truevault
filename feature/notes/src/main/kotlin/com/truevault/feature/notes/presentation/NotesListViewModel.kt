@@ -32,6 +32,7 @@ sealed interface NotesListAction {
     data class PinToggled(val note: Note) : NotesListAction
     data class Deleted(val note: Note) : NotesListAction
     data class UndoDelete(val noteId: String) : NotesListAction
+    data class ChecklistItemToggled(val noteId: String, val index: Int) : NotesListAction
 }
 
 /**
@@ -95,6 +96,12 @@ class NotesListViewModel @Inject constructor(
 
             is NotesListAction.UndoDelete -> viewModelScope.launch {
                 repository.restore(action.noteId)
+            }
+
+            // Ticking a line from the list is the whole point of a checklist card — making the
+            // user open the note first would defeat it.
+            is NotesListAction.ChecklistItemToggled -> viewModelScope.launch {
+                repository.toggleChecklistItem(action.noteId, action.index)
             }
         }
     }

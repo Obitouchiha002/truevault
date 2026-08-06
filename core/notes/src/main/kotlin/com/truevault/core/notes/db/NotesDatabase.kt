@@ -9,6 +9,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -37,6 +39,10 @@ data class NoteEntity(
     val isArchived: Boolean = false,
     val isInTrash: Boolean = false,
     val trashedAt: Long? = null,
+    /** Palette index, 0 = default. Kept as an int so the palette can change without a migration. */
+    val colour: Int = 0,
+    /** True when the body is a checklist rather than prose. */
+    val isChecklist: Boolean = false,
 )
 
 @Dao
@@ -92,6 +98,12 @@ interface NoteDao {
     @Query("UPDATE notes SET isInTrash = 0, trashedAt = NULL, updatedAt = :now WHERE id = :id")
     suspend fun restoreFromTrash(id: String, now: Long)
 
+    @Query("UPDATE notes SET colour = :colour, updatedAt = :now WHERE id = :id")
+    suspend fun setColour(id: String, colour: Int, now: Long)
+
+    @Query("UPDATE notes SET isChecklist = :checklist, body = :body, updatedAt = :now WHERE id = :id")
+    suspend fun setChecklist(id: String, checklist: Boolean, body: String, now: Long)
+
     @Query("UPDATE notes SET isPinned = :pinned, updatedAt = :now WHERE id = :id")
     suspend fun setPinned(id: String, pinned: Boolean, now: Long)
 
@@ -109,7 +121,22 @@ interface NoteDao {
     fun observeActiveCount(): Flow<Int>
 }
 
-@Database(entities = [NoteEntity::class], version = 1, exportSchema = true)
+/**
+ * v1 → v2: notes gain a colour and a checklist flag.
+ *
+ * Both default to the value an existing note already behaves as, so nothing is rewritten and every
+ * note that exists stays exactly what it was.
+ */
+private val NOTES_MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE notes ADD COLUMN colour INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE notes ADD COLUMN isChecklist INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
+val NOTES_MIGRATIONS: Array<Migration> = arrayOf(NOTES_MIGRATION_1_2)
+
+@Database(entities = [NoteEntity::class], version = 2, exportSchema = true)
 abstract class NotesDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
 

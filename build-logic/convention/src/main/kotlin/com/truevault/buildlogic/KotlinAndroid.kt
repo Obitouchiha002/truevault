@@ -52,6 +52,16 @@ internal fun configurePackaging(packaging: Packaging) {
             "/META-INF/LICENSE*",
             "/META-INF/NOTICE*",
             "/META-INF/versions/9/OSGI-INF/MANIFEST.MF",
+
+            // BouncyCastle ships lookup tables for its post-quantum "picnic"
+            // signature scheme as resources. TrueVault uses exactly one thing from
+            // that library — Argon2id — and never touches picnic, but resources are
+            // not reachability-shrunk the way code is, so roughly 1.1 MB of dead
+            // weight was riding along in every APK. Excluded rather than tolerated:
+            // a privacy app asking people to sideload should be as small as it
+            // honestly can be.
+            "/org/bouncycastle/pqc/**",
+            "/org/bouncycastle/x509/**",
         ),
     )
 }

@@ -45,9 +45,20 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
         // with ClassNotFoundException: AndroidJUnitRunner — because a module with no androidTest
         // sources never pulls the runner in. One green suite then reports as a failed build, which
         // is the worst kind of false alarm: it trains people to ignore the result.
+        // Narrow on purpose: only the tasks that build, install and run the test APK. An earlier
+        // version disabled everything whose name contained "AndroidTest", which also caught
+        // `generateDebugAndroidTestLintModel`. App-level lint runs with checkDependencies and is
+        // handed every module's model directory, so a model that is never generated becomes a path
+        // that does not exist — and lint fails with "Unexpected lint invalid arguments", which says
+        // nothing about the cause. Disable the run, not the analysis.
         val hasInstrumentedTests = layout.projectDirectory.dir("src/androidTest").asFile.exists()
         if (!hasInstrumentedTests) {
-            tasks.matching { it.name.contains("AndroidTest") }.configureEach { enabled = false }
+            tasks.matching { task ->
+                task.name.startsWith("connected") ||
+                    task.name.startsWith("assembleDebugAndroidTest") ||
+                    task.name.startsWith("packageDebugAndroidTest") ||
+                    task.name.startsWith("installDebugAndroidTest")
+            }.configureEach { enabled = false }
         }
 
         dependencies {

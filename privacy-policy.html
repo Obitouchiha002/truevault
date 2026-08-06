@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="index, follow">
+<title>Privacy Policy — TrueVault</title>
+<style>
+:root { color-scheme: light dark; --fg:#1a1a1a; --bg:#ffffff; --muted:#5b5b5b;
+        --rule:#e2e2e2; --accent:#2b5c8a; --code:#f4f4f5; }
+@media (prefers-color-scheme: dark) {
+  :root { --fg:#e8e8e8; --bg:#121212; --muted:#a0a0a0; --rule:#2e2e2e;
+          --accent:#7fb3e0; --code:#1e1e1e; }
+}
+* { box-sizing: border-box; }
+body { margin:0; padding:2rem 1.25rem 5rem; background:var(--bg); color:var(--fg);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       max-width:44rem; margin-inline:auto; overflow-wrap:break-word; }
+h1 { font-size:1.85rem; line-height:1.25; margin:0 0 .5rem; }
+h2 { font-size:1.3rem; margin:2.5rem 0 .75rem; padding-top:.75rem;
+     border-top:1px solid var(--rule); }
+h3 { font-size:1.05rem; margin:1.75rem 0 .5rem; }
+p, li { color:var(--fg); }
+ul, ol { padding-left:1.35rem; }
+li { margin:.3rem 0; }
+a { color:var(--accent); }
+hr { border:0; border-top:1px solid var(--rule); margin:2rem 0; }
+blockquote { margin:1.25rem 0; padding:.75rem 1rem; border-left:3px solid var(--rule);
+             color:var(--muted); background:var(--code); border-radius:0 6px 6px 0; }
+code { background:var(--code); padding:.1rem .35rem; border-radius:4px; font-size:.9em; }
+.meta { color:var(--muted); font-size:.95rem; margin:0 0 2rem; }
+.table-scroll { overflow-x:auto; margin:1.25rem 0; }
+table { border-collapse:collapse; width:100%; min-width:22rem; font-size:.95rem; }
+th, td { border:1px solid var(--rule); padding:.5rem .65rem; text-align:left; vertical-align:top; }
+th { background:var(--code); font-weight:600; }
+strong { font-weight:650; }
+@media print { body { max-width:none; padding:0; } h2 { break-after:avoid; } }
+</style>
+</head>
+<body>
+<h1>Privacy Policy</h1>
+<p><strong>Version:</strong> 1.0 <strong>Effective date:</strong> [EFFECTIVE DATE REQUIRED] <strong>Last updated:</strong> [LAST UPDATED DATE REQUIRED] <strong>Developer:</strong> [LEGAL BUSINESS NAME REQUIRED] <strong>Privacy contact:</strong> [PRIVACY EMAIL REQUIRED]</p>
+<blockquote><p>Placeholders in square brackets are unresolved and must be filled from <code>legal/legal-config.json</code> before release. The build's legal-readiness check fails while any remain.</p></blockquote>
+<hr>
+<h2>1. Introduction</h2>
+<p>TrueVault is an app that encrypts files you choose and keeps them on your device. This policy explains what the app reads, what it stores, where that data lives, and what it does not do.</p>
+<p>It is written to match the app's actual behaviour. The behaviour was audited section by section and recorded in <code>legal/data-practices-inventory.md</code>; this policy is generated from that audit. Where the audit could not prove something, this policy says so instead of guessing.</p>
+<h2>2. Who provides TrueVault</h2>
+<p>TrueVault is provided by [LEGAL BUSINESS NAME REQUIRED], a [BUSINESS TYPE REQUIRED] operating from [COUNTRY OF OPERATION REQUIRED]. Contact details are in section 30.</p>
+<h2>3. Scope</h2>
+<p>This policy covers the TrueVault mobile application for Android. It does not cover:</p>
+<ul>
+<li>Android itself, or your device manufacturer's software</li>
+<li>Other apps you share a file with</li>
+<li>Cloud storage services where you choose to save an exported backup</li>
+<li>Any website other than [WEBSITE DOMAIN REQUIRED]</li>
+</ul>
+<h2>4. Information the app accesses</h2>
+<p>TrueVault accesses only what you hand it:</p>
+<div class="table-scroll"><table><tr><th>What</th><th>When</th></tr><tr><td>Files, photos and videos you select</td><td>Only the specific items you pick through the Android photo picker or the document picker</td></tr><tr><td>Basic file details — name, size, type, dates</td><td>For the files you selected, so the app can display and organise them</td></tr><tr><td>Folders you explicitly grant</td><td>Only when you run the Privacy Leak Scanner and choose a folder</td></tr><tr><td>Biometric verification <strong>result</strong></td><td>Only if you turn on biometric unlock</td></tr><tr><td>Launchable apps in a private profile</td><td>Only on Android versions that support Private Space, and only while TrueVault is your home app</td></tr></table></div>
+<p>The app declares one Android permission: <code>USE_BIOMETRIC</code>. It requests no storage permission, no "all files access", no camera, no microphone, no location, no contacts, and no internet permission.</p>
+<h2>5. Information the developer collects</h2>
+<p><strong>None.</strong> The developer receives no data from your use of the app.</p>
+<p>This is a statement about the current version, and it rests on a specific audit rather than on intent: the app has no internet permission, contains no network library, and contains no analytics, crash-reporting or advertising component. If that ever changes, this section changes with it, the app will ask you separately, and you will be told before it happens.</p>
+<h2>6. Files you select</h2>
+<p>The files you bring into TrueVault are the reason the app exists. They are:</p>
+<ul>
+<li>read only after you select them</li>
+<li>encrypted before they become a vault item</li>
+<li>stored in the app's private storage on your device</li>
+<li>never uploaded anywhere by TrueVault</li>
+</ul>
+<p>Filenames are not used for the names of the encrypted files on disk. Each container is named with a random identifier, so the storage layout does not reveal what you have stored.</p>
+<h2>7. Encryption and local storage</h2>
+<p>Each file gets its own encryption key. That key is wrapped by your vault key, which is derived from your password or PIN using a deliberately slow key-derivation function, and then sealed again by a key held in your device's hardware-backed keystore.</p>
+<p>The practical effect: the stored data is useless without your password, and useless on a different device — with one deliberate exception, the recovery key described in section 12.</p>
+<p>Encrypted vault files live in the app's private storage. They are not on your SD card, not in your gallery, and not in any shared folder.</p>
+<h2>8. Secure Copy</h2>
+<p>Secure Copy creates an encrypted copy in the vault. <strong>The original file stays exactly where it was.</strong> The app shows the item's status as "Original remains" and does not describe it as fully secured, because it is not.</p>
+<h2>9. Secure Move and deletion of originals</h2>
+<p>Secure Move does the following, in this order, and never in another order:</p>
+<ol>
+<li>encrypts a copy into the vault</li>
+<li>verifies that the encrypted copy can be opened</li>
+<li>commits the vault item</li>
+<li><strong>only then</strong> asks Android to delete the original</li>
+</ol>
+<p>Things you should know about step 4:</p>
+<ul>
+<li>Android shows its own confirmation dialog. You can decline it.</li>
+<li>Deletion can fail — some storage providers do not support it at all.</li>
+<li>If you decline, or it fails, the app says the original remains. It will <strong>not</strong> tell you the file</li>
+</ul>
+<p>was deleted.</p>
+<ul>
+<li>Deleting a file may move it to a system trash that still holds it for a period.</li>
+<li>Copies you made earlier, edits, files already shared with someone, and copies synced to a cloud</li>
+</ul>
+<p>service are outside TrueVault's reach. It cannot delete what it cannot see.</p>
+<h2>10. Temporary files and cache</h2>
+<p>To show or share a file, the app must decrypt it. Decrypted copies are written to the app's private cache and are removed after use and on the next start. During an import, a partial encrypted file exists until the import is verified and committed; if the import is interrupted, that partial file is removed and your original is untouched.</p>
+<h2>11. Biometric authentication</h2>
+<p>If you enable it, Android performs the biometric check and returns only a result. <strong>TrueVault never receives, sees or stores your fingerprint or face data.</strong> It stores only a handle to a key that Android will unlock after a successful check.</p>
+<p>Your password still works, and still decides. Biometrics are a convenience layer on top of it.</p>
+<h2>12. Password and recovery key</h2>
+<ul>
+<li>Your password or PIN is never stored in a form that can be reversed.</li>
+<li>It is held in memory only while it is being used, and the buffer is overwritten afterwards.</li>
+<li>The recovery key is shown to you once. It is the only way back into your vault if you forget your</li>
+</ul>
+<p>password, and it is the only thing that works on a different device.</p>
+<ul>
+<li><strong>If you lose both, the vault cannot be recovered.</strong> Not by you, not by the developer, not by</li>
+</ul>
+<p>anyone. There is no account, no email reset and no support route back in. The app tells you this before you create your lock, not afterwards.</p>
+<h2>13. Backup and restore</h2>
+<p>TrueVault's backup is a <strong>local encrypted export</strong>. There is no cloud backup and no provider integration.</p>
+<ul>
+<li>The exported file is encrypted.</li>
+<li>Where it goes afterwards is your decision. If you save it to a cloud drive, that service's privacy</li>
+</ul>
+<p>policy applies to it.</p>
+<ul>
+<li>Android's automatic backup is disabled for this app, so your vault is not swept into a system</li>
+</ul>
+<p>backup without your knowledge.</p>
+<ul>
+<li><strong>Uninstalling the app removes your vault.</strong> Local data does not survive uninstall. Only an export</li>
+</ul>
+<p>you made yourself does.</p>
+<h2>14. File export and sharing</h2>
+<p>When you share a file out of the vault, the app decrypts a temporary copy and hands it to the app you picked, through a private, permission-scoped file provider.</p>
+<p>Once another app has that file, TrueVault has no control over it. What happens next is governed by that app's policy, not this one.</p>
+<h2>15. Privacy Leak Scanner</h2>
+<p>The scanner compares files in a folder <strong>you granted</strong> against your vault, using size, type and a content hash. It can tell you that another accessible copy exists.</p>
+<p>What it <strong>cannot</strong> see, and does not claim to:</p>
+<ul>
+<li>other apps' private storage</li>
+<li>messages, chats or anything already sent to another person</li>
+<li>cloud accounts and unsupported cloud locations</li>
+<li>locked system or manufacturer containers</li>
+<li>another device</li>
+<li>anything outside the access you granted</li>
+</ul>
+<p>A clean scan result means "nothing was found in what I was allowed to look at". It does not mean no copy exists.</p>
+<h2>16. Private Apps and Android profiles</h2>
+<p>On Android versions that support it, Android provides a Private Space — a separate profile with its own app installations and its own data. TrueVault can show and launch those apps when it is your home app and Android permits it.</p>
+<ul>
+<li>Private Space is managed by <strong>Android</strong>, not by TrueVault.</li>
+<li>TrueVault cannot read another app's private data, copy it, or clone an app.</li>
+<li>On older Android versions this feature does not exist, and the app says so rather than pretending.</li>
+<li>Manufacturer "private space" features are separate products outside TrueVault's control.</li>
+</ul>
+<p>To list launchable apps, the app uses Android's launcher API. It does <strong>not</strong> request permission to see every installed package, does not enumerate non-launchable apps, and never sends any of this information anywhere.</p>
+<h2>17. Device information</h2>
+<p>The app checks what the device can do — Android version, whether secure hardware is present, whether biometrics are enrolled, whether a private profile exists — so it can offer only features that actually work. These checks happen on the device, produce no stored record beyond the current session, and are not transmitted.</p>
+<p>The app does not access advertising identifiers, IMEI, phone number, SIM details or location.</p>
+<h2>18. Diagnostics and analytics</h2>
+<p><strong>There are none.</strong> The app contains no analytics SDK and no crash-reporting SDK. Nothing about how you use the app is recorded or sent.</p>
+<p>The app writes technical log lines only in developer builds, and even then a deliberate rule keeps file names, paths, search terms and content out of them.</p>
+<p>Because no optional data collection exists, the app does not show a "help us improve" consent screen. Showing one for something that does not exist would be theatre.</p>
+<h2>19. Third-party services</h2>
+<p>TrueVault uses open-source software libraries — Android's own AndroidX components, a dependency injection library, Kotlin runtime libraries, an image loader, a media player, and a cryptography library.</p>
+<p>These are code libraries that run inside the app on your device. None of them is a service, none receives data, and none communicates over a network in this app.</p>
+<p>There is no advertising SDK, no attribution SDK, no cloud SDK and no payment provider.</p>
+<h2>20. Data sharing</h2>
+<p>The developer shares nothing, because the developer receives nothing.</p>
+<p>Data leaves your device only when <strong>you</strong> cause it to: by sharing a file with another app, or by saving an exported backup somewhere.</p>
+<h2>21. Data retention</h2>
+<div class="table-scroll"><table><tr><th>Data</th><th>Kept until</th></tr><tr><td>Encrypted vault files</td><td>You delete them, or reset the app</td></tr><tr><td>File details for vault items</td><td>Same</td></tr><tr><td>Scanner findings</td><td>You resolve them, or reset the app</td></tr><tr><td>Temporary decrypted copies</td><td>Removed after use and at next start</td></tr><tr><td>Your legal-acceptance record</td><td>You reset the app</td></tr></table></div>
+<p>There is no server-side retention, because there is no server.</p>
+<h2>22. Deleting your data</h2>
+<p>You can:</p>
+<ul>
+<li>delete individual vault items</li>
+<li>delete all local vault data from <strong>Settings → Legal and Privacy → Delete Vault Data</strong></li>
+<li>reset the app completely, which removes vault files, thumbnails, the database, preferences and the</li>
+</ul>
+<p>locally wrapped keys</p>
+<ul>
+<li>uninstall, which removes all app-private storage</li>
+</ul>
+<p>None of these touch:</p>
+<ul>
+<li>files you kept outside the vault</li>
+<li>files you already shared with other apps</li>
+<li>backups you exported and saved elsewhere</li>
+</ul>
+<p>The app says this on screen after a reset, rather than implying a clean sweep it cannot perform.</p>
+<h2>23. Security protections</h2>
+<ul>
+<li>Per-file encryption keys, wrapped by a vault key derived with a slow key-derivation function</li>
+<li>A second sealing layer using your device's hardware-backed keystore, so the data is tied to this</li>
+</ul>
+<p>device</p>
+<ul>
+<li>Authenticated encryption: a modified or truncated container is refused rather than partially read</li>
+<li>A delay between failed unlock attempts, which grows with each failure</li>
+<li>No permanent-wipe-after-N-attempts rule, because that punishes people who mistype far more</li>
+</ul>
+<p>reliably than it stops an attacker</p>
+<ul>
+<li>Screen-content protection while the vault is open</li>
+<li>App-private storage; nothing in shared or external locations</li>
+</ul>
+<h2>24. Security limitations — stated plainly</h2>
+<p>TrueVault is not unbreakable, and this policy will not claim it is.</p>
+<ul>
+<li>It cannot protect data on a device that is already compromised.</li>
+<li>It cannot protect against someone who knows your password.</li>
+<li>It cannot protect against malware with system-level access.</li>
+<li>A short PIN is weaker than a long passphrase. The app tells you which is which before you choose.</li>
+<li>It cannot reach copies of your files that exist somewhere it has no access to.</li>
+<li>It cannot undo a file that has already been shared.</li>
+<li>No independent cryptographic audit has been performed on this app. The design is documented and</li>
+</ul>
+<p>tested; it has not been reviewed by a third party.</p>
+<h2>25. Rooted or compromised devices</h2>
+<p>On a rooted or modified device, the protections Android provides — and therefore the protections TrueVault depends on — can be bypassed. The app cannot reliably detect every such condition and does not claim to defend against it.</p>
+<h2>26. Children and age requirements</h2>
+<p>TrueVault is not directed at children. The minimum age to use it is [MINIMUM USER AGE REQUIRED], as required in [PRIMARY MARKETS REQUIRED]. The app does not knowingly collect information from anyone — of any age — because it collects nothing.</p>
+<h2>27. International data processing</h2>
+<p>All processing happens on your device. No personal data is transferred to the developer or to any other country by the app, so no international transfer mechanism is engaged.</p>
+<p>If a future version introduces a cloud feature, this section will be rewritten before that feature ships, and you will be asked separately.</p>
+<h2>28. Your rights</h2>
+<p>Data-protection law in your region may give you rights of access, correction, erasure, portability and objection.</p>
+<p>For TrueVault these are unusual in one respect: the developer holds none of your data, so there is nothing to disclose to you or to erase on your behalf. You exercise all of them directly:</p>
+<div class="table-scroll"><table><tr><th>Right</th><th>How</th></tr><tr><td>Access</td><td>Your data is on your device, in the app</td></tr><tr><td>Portability</td><td>Settings → export an encrypted backup</td></tr><tr><td>Erasure</td><td>Settings → Delete Vault Data, or uninstall</td></tr><tr><td>Correction</td><td>Edit or replace items in the app</td></tr><tr><td>Objection / restriction</td><td>Nothing is processed by the developer to object to</td></tr></table></div>
+<p>If you believe otherwise, contact [PRIVACY EMAIL REQUIRED]. You also have the right to complain to your local data-protection authority.</p>
+<h2>29. Changes to this policy</h2>
+<p>Substantive changes get a new version number, a new effective date, and a plain-language summary of what changed. If the change materially affects how your data is handled, the app asks you to review it — it does not update the stored acceptance quietly.</p>
+<p>Typographical and formatting corrections do not trigger a re-acceptance prompt, because interrupting people for a comma teaches them to dismiss the prompts that matter.</p>
+<p>Previous versions remain available at [PUBLIC ARCHIVE URL OPTIONAL].</p>
+<h2>30. Contact</h2>
+<div class="table-scroll"><table><tr><th></th><th></th></tr><tr><td>Privacy enquiries</td><td>[PRIVACY EMAIL REQUIRED]</td></tr><tr><td>Support</td><td>[SUPPORT EMAIL REQUIRED]</td></tr><tr><td>Developer</td><td>[LEGAL BUSINESS NAME REQUIRED]</td></tr><tr><td>Address</td><td>[BUSINESS ADDRESS REQUIRED WHERE LEGALLY MANDATED]</td></tr><tr><td>Website</td><td>[WEBSITE DOMAIN REQUIRED]</td></tr></table></div>
+</body>
+</html>

@@ -63,7 +63,7 @@
       "knowsAbout": ["Android development", "Kotlin", "Jetpack Compose", "Applied cryptography", "Mobile privacy"],
       "sameAs": [
         "https://vanshkashyap.lzworth.in/",
-        "https://github.com/Obitouchiha002"
+        "https://github.com/Obitouchiha002/truevault"
       ]
     },
     {
@@ -746,9 +746,9 @@ footer{padding:38px 0 68px; border-top:1px solid var(--line)}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3 7 9 6 9-6"/></svg>
             <div><span>Email &amp; support</span><b>grivaaseo@gmail.com</b></div>
           </a>
-          <a class="contact-card" href="https://github.com/Obitouchiha002" rel="noopener">
+          <a class="contact-card" href="https://github.com/Obitouchiha002/truevault" rel="noopener">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49l-.01-1.72c-2.78.62-3.37-1.37-3.37-1.37-.46-1.19-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.57 2.34 1.12 2.91.85.09-.66.35-1.12.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9l-.01 2.82c0 .27.18.6.69.49A10.03 10.03 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg>
-            <div><span>Source &amp; issues</span><b>@Obitouchiha002</b></div>
+            <div><span>Source &amp; issues</span><b>Obitouchiha002/truevault</b></div>
           </a>
           <a class="contact-card" href="mailto:grivaaseo@gmail.com?subject=TrueVault%20privacy%20question">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-4 7-10V6l-7-3-7 3v5c0 6 7 10 7 10z"/></svg>
@@ -827,7 +827,7 @@ footer{padding:38px 0 68px; border-top:1px solid var(--line)}
     </div>
 
     <div class="modal-actions">
-      <a class="btn btn-primary" id="dlLink" href="download/truevault-0.1.2.apk" download="truevault-0.1.2.apk">
+      <a class="btn btn-primary" id="dlLink" href="https://github.com/Obitouchiha002/truevault/releases/download/v0.1.2/truevault-0.1.2.apk" rel="noopener">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M4 21h16"/></svg>
         Download APK · 4.13 MB
       </a>
@@ -940,18 +940,8 @@ document.getElementById("dlClose").addEventListener("click", closeModal);
 modal.addEventListener("click", (e)=>{ if(e.target === modal) closeModal(); });
 addEventListener("keydown", (e)=>{ if(e.key === "Escape" && !modal.hidden) closeModal(); });
 
-/* If the APK is ever missing from web/download/, say so rather than handing the
-   visitor a 404 from a button that looked like it worked. */
 const dlLink = document.getElementById("dlLink");
-dlLink.addEventListener("click", async (e) => {
-  try {
-    const res = await fetch(dlLink.getAttribute("href"), { method: "HEAD" });
-    if (!res.ok) throw new Error(res.status);
-  } catch {
-    e.preventDefault();
-    alert("The APK is not on this server yet.\n\nBuild it with:  ./gradlew :app:assembleRelease\nthen copy it to  web/download/truevault-0.1.2.apk");
-  }
-});
+// Nothing to probe: the APK is a GitHub release asset, served from a different origin.
 
 /* Theme, sticky bar, reveals, mobile section spy */
 const root = document.documentElement;

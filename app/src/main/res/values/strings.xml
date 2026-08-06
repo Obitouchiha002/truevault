@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TrueVault</string>
+    <!-- What the phone shows everywhere: launcher, share sheet, recents, Settings. The
+         product is still TrueVault inside; the outside is a notes app, and the name has to
+         match or the cover is broken before it starts. -->
+    <string name="app_name">Notes</string>
 
     <string name="nav_home">Home</string>
     <string name="nav_home_description">Home, your privacy status</string>

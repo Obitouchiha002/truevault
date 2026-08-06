@@ -136,7 +136,12 @@ class SecuritySettingsViewModel @Inject constructor(
     private fun BiometricCapability.toProblem(): BiometricProblem = when (this) {
         BiometricCapability.NOT_ENROLLED -> BiometricProblem.NOT_ENROLLED
         BiometricCapability.TEMPORARILY_UNAVAILABLE -> BiometricProblem.TEMPORARILY_UNAVAILABLE
-        BiometricCapability.UNSUPPORTED -> BiometricProblem.UNSUPPORTED
+        // Both mean "cannot protect a key here", which is the same advice to give — but the
+        // sentence the user reads differs, and that is decided by summaryRes(), not here.
+        BiometricCapability.ONLY_WEAK_AVAILABLE,
+        BiometricCapability.SECURITY_UPDATE_REQUIRED,
+        BiometricCapability.UNSUPPORTED,
+        -> BiometricProblem.UNSUPPORTED
         BiometricCapability.AVAILABLE -> BiometricProblem.DEVICE_REFUSED
     }
 

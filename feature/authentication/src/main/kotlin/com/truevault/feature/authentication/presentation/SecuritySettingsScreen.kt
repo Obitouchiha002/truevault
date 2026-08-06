@@ -283,6 +283,8 @@ private fun BiometricCapability.summaryRes(): Int = when (this) {
     BiometricCapability.AVAILABLE -> R.string.security_biometric_available
     BiometricCapability.NOT_ENROLLED -> R.string.biometric_not_enrolled
     BiometricCapability.TEMPORARILY_UNAVAILABLE -> R.string.biometric_temporarily_unavailable
+    BiometricCapability.ONLY_WEAK_AVAILABLE -> R.string.biometric_only_weak
+    BiometricCapability.SECURITY_UPDATE_REQUIRED -> R.string.biometric_security_update
     BiometricCapability.UNSUPPORTED -> R.string.biometric_unsupported
 }
 

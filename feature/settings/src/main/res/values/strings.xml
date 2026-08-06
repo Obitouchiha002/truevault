@@ -85,4 +85,6 @@
          nobody can find is a feature that locks people out of their own files. -->
     <string name="settings_open_vault">Open Private Vault</string>
     <string name="settings_open_vault_summary">You can also open the vault by pressing and holding the Notes title. Either way, your password is required.</string>
+    <string name="capabilities_biometric_weak">Sensor present, but Class 2 — cannot hold a key</string>
+    <string name="capabilities_biometric_update">Blocked until a security update is installed</string>
 </resources>

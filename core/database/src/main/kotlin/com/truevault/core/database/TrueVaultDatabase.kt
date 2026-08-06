@@ -49,7 +49,7 @@ abstract class TrueVaultDatabase : RoomDatabase() {
     abstract fun activityEventDao(): ActivityEventDao
 
     companion object {
-        const val VERSION: Int = 2
+        const val VERSION: Int = 3
         const val NAME: String = "truevault.db"
     }
 }
@@ -74,9 +74,25 @@ private val MIGRATION_1_2 = object : Migration(1, 2) {
 }
 
 /**
+ * v2 → v3: vault deletion becomes reversible.
+ *
+ * Deleting an item used to remove the row and its encrypted container in one step. A mis-tap
+ * therefore destroyed a file permanently, in an app whose entire job is not losing the user's data.
+ * `trashed_at` turns delete into a move: the container stays on disk, the row stays in the table,
+ * and the item leaves every list until it is restored or the trash is emptied.
+ *
+ * Nullable with no backfill, so every existing row is — correctly — not in the trash.
+ */
+private val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE vault_items ADD COLUMN trashed_at INTEGER")
+    }
+}
+
+/**
  * Every migration this build knows about.
  *
  * Destructive migration is never enabled: dropping the table would destroy the vault index while
  * leaving the encrypted files orphaned on disk.
  */
-val TRUEVAULT_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2)
+val TRUEVAULT_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3)

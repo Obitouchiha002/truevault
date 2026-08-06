@@ -54,6 +54,17 @@ data class VaultItemEntity(
     @ColumnInfo(name = "original_size")
     val originalSize: Long,
 
+    /**
+     * When this item was moved to the trash, or null while it is in the vault.
+     *
+     * Deleting used to remove the row and the container in one step, which meant a mis-tap
+     * destroyed an encrypted file permanently — in an app whose entire job is not losing the
+     * user's data. Now deletion is reversible until the user empties the trash or the retention
+     * window passes.
+     */
+    @ColumnInfo(name = "trashed_at")
+    val trashedAt: Long? = null,
+
     @ColumnInfo(name = "created_at")
     val createdAt: Long,
 

@@ -232,6 +232,8 @@ private fun BiometricCapability.labelRes(): Int = when (this) {
     BiometricCapability.AVAILABLE -> R.string.capabilities_biometric_available
     BiometricCapability.NOT_ENROLLED -> R.string.capabilities_biometric_not_enrolled
     BiometricCapability.TEMPORARILY_UNAVAILABLE -> R.string.capabilities_biometric_unavailable
+    BiometricCapability.ONLY_WEAK_AVAILABLE -> R.string.capabilities_biometric_weak
+    BiometricCapability.SECURITY_UPDATE_REQUIRED -> R.string.capabilities_biometric_update
     BiometricCapability.UNSUPPORTED -> R.string.capabilities_biometric_unsupported
 }
 

@@ -21,7 +21,9 @@
     <string name="biometric_available">Your fingerprint or face unlocks a key held in this device\'s secure hardware. Your password still works, and still decides.</string>
     <string name="biometric_not_enrolled">No fingerprint or face is set up on this device yet. You can add one in system settings and turn this on later.</string>
     <string name="biometric_temporarily_unavailable">Biometric hardware is not responding right now. You can turn this on later from Settings.</string>
-    <string name="biometric_unsupported">This device has no strong biometric hardware, so TrueVault will use your password only.</string>
+    <string name="biometric_unsupported">This device has no biometric hardware, so TrueVault will use your password only.</string>
+    <string name="biometric_only_weak">Your fingerprint works for unlocking this phone, but Android rates this sensor as Class\u00A02, which cannot hold an encryption key. TrueVault will use your password instead — this is a limit of the hardware, not a fault in your fingerprint.</string>
+    <string name="biometric_security_update">Biometric unlock needs a pending Android security update on this device. Install it and this option will appear.</string>
     <string name="biometric_unavailable">Biometric unlock is not available right now.</string>
 
     <!-- Password strength -->

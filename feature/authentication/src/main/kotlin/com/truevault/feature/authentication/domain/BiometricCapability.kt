@@ -3,6 +3,7 @@ package com.truevault.feature.authentication.domain
 import android.content.Context
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,7 +25,19 @@ enum class BiometricCapability {
     /** Hardware exists but is currently unusable, e.g. locked out after failed attempts. */
     TEMPORARILY_UNAVAILABLE,
 
-    /** No strong biometric hardware, or a security update is required to trust it. */
+    /**
+     * The device has a working sensor, but only a weak (Class 2) one.
+     *
+     * It unlocks the phone and cannot hold a Keystore key. Saying "no biometric hardware" to
+     * someone whose fingerprint reader plainly works is not a limitation, it is wrong — and it
+     * makes the whole app look broken.
+     */
+    ONLY_WEAK_AVAILABLE,
+
+    /** Strong biometrics are blocked until a pending security update is installed. */
+    SECURITY_UPDATE_REQUIRED,
+
+    /** No biometric hardware at all. */
     UNSUPPORTED,
 }
 
@@ -38,12 +51,27 @@ enum class BiometricCapability {
 class BiometricCapabilityChecker @Inject constructor(
     @param:ApplicationContext private val context: Context,
 ) {
-    fun capability(): BiometricCapability =
-        when (BiometricManager.from(context).canAuthenticate(BIOMETRIC_STRONG)) {
+    fun capability(): BiometricCapability {
+        val manager = BiometricManager.from(context)
+
+        return when (manager.canAuthenticate(BIOMETRIC_STRONG)) {
             BiometricManager.BIOMETRIC_SUCCESS -> BiometricCapability.AVAILABLE
             BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> BiometricCapability.NOT_ENROLLED
-            BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> BiometricCapability.TEMPORARILY_UNAVAILABLE
-            BiometricManager.BIOMETRIC_STATUS_UNKNOWN -> BiometricCapability.TEMPORARILY_UNAVAILABLE
-            else -> BiometricCapability.UNSUPPORTED
+
+            BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE,
+            BiometricManager.BIOMETRIC_STATUS_UNKNOWN,
+            -> BiometricCapability.TEMPORARILY_UNAVAILABLE
+
+            BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED ->
+                BiometricCapability.SECURITY_UPDATE_REQUIRED
+
+            // "Not strong here" covers both no sensor and a Class 2 sensor. Which one it is
+            // decides whether the user reads a fact or a falsehood, so ask the second question.
+            else -> if (manager.canAuthenticate(BIOMETRIC_WEAK) != BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE) {
+                BiometricCapability.ONLY_WEAK_AVAILABLE
+            } else {
+                BiometricCapability.UNSUPPORTED
+            }
         }
+    }
 }

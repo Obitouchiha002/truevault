@@ -61,8 +61,8 @@
 
     <string name="appearance_vault_note">Your vault is protected by your password or biometric, not by the icon. Changing the appearance never changes what it takes to open the vault.</string>
 
-    <string name="appearance_truevault">TrueVault</string>
-    <string name="appearance_truevault_body">The app under its own name and icon.</string>
+    <string name="appearance_truevault">Notes</string>
+    <string name="appearance_truevault_body">The default. Opens to your notes, with the vault behind authentication.</string>
     <string name="appearance_nexa">Nexa</string>
     <string name="appearance_nexa_body">Opens to your personal notes. Your private vault stays behind authentication.</string>
     <string name="appearance_nexa_notes">Nexa Notes</string>

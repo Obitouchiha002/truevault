@@ -37,6 +37,7 @@ import com.truevault.app.navigation.TopLevelDestination
 import com.truevault.app.navigation.TrueVaultNavHost
 import com.truevault.core.crypto.session.VaultLockState
 import com.truevault.feature.authentication.navigation.UnlockRoute
+import com.truevault.feature.authentication.navigation.navigateToUnlock
 import com.truevault.core.designsystem.theme.TvMotion
 import com.truevault.feature.home.navigation.navigateToHome
 import com.truevault.feature.notes.navigation.NotesRoute
@@ -118,16 +119,26 @@ fun TrueVaultApp(
         }
     }
 
-    // A share that arrived while the vault was locked waits in memory; the moment there is a key to
-    // encrypt with, the import flow opens on its own. Requiring the user to unlock and then go find
-    // "Add to Vault" would make the share sheet a slower route than not using it.
+    /*
+     * A file shared into the app has to lead somewhere immediately.
+     *
+     * It used to land in a buffer and wait for an unlock that the user had no reason to perform:
+     * they shared a file, saw the notes list, and nothing appeared to happen. Sharing *is* the
+     * request, so the app now asks for the password straight away and opens the import as soon as
+     * it has a key. This reveals the vault exists, which is fine — the person doing it is the one
+     * who chose this app in the share sheet.
+     */
     val hasPendingShare by pendingShares.collectAsStateWithLifecycle()
     LaunchedEffect(hasPendingShare, lockState) {
-        if (hasPendingShare &&
-            lockState == VaultLockState.Unlocked &&
-            navController.currentDestination?.hasRoute(ImportSourceRoute::class) != true
-        ) {
-            navController.navigateToImport()
+        if (!hasPendingShare) return@LaunchedEffect
+
+        val onImport = navController.currentDestination?.hasRoute(ImportSourceRoute::class) == true
+        val onUnlock = navController.currentDestination?.hasRoute(UnlockRoute::class) == true
+
+        when {
+            lockState == VaultLockState.Unlocked && !onImport -> navController.navigateToImport()
+            lockState == VaultLockState.Locked && !onUnlock -> navController.navigateToUnlock()
+            else -> Unit
         }
     }
 

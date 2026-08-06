@@ -54,11 +54,36 @@ enum class PrivateAppsSupport {
     UNKNOWN,
 }
 
-/** Biometric hardware and enrolment state. Only strong biometrics can protect a Keystore key. */
+/**
+ * Biometric hardware and enrolment state.
+ *
+ * Only *strong* (Class 3) biometrics can be bound to a Keystore key, so only those can protect the
+ * vault. Plenty of phones ship a Class 2 sensor that unlocks the device perfectly well and cannot
+ * hold a key — and telling those users "no biometric hardware" is simply false, which is why
+ * [ONLY_WEAK_AVAILABLE] exists as its own value instead of collapsing into [UNSUPPORTED].
+ */
 enum class BiometricCapability {
+    /** Strong biometric, enrolled, ready. */
     AVAILABLE,
+
+    /** Strong hardware is present but nothing is enrolled yet. */
     NOT_ENROLLED,
+
+    /** Hardware exists and is busy or temporarily locked out. */
     TEMPORARILY_UNAVAILABLE,
+
+    /**
+     * The device has a working fingerprint or face sensor, but only a weak one.
+     *
+     * It unlocks the phone; it cannot protect the vault key. The user is told exactly that, rather
+     * than being shown a message implying their sensor does not exist.
+     */
+    ONLY_WEAK_AVAILABLE,
+
+    /** Strong biometrics need a pending security update before they can be used. */
+    SECURITY_UPDATE_REQUIRED,
+
+    /** No biometric hardware at all. */
     UNSUPPORTED,
 }
 

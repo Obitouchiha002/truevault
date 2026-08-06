@@ -31,6 +31,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.truevault.core.designsystem.component.TvBanner
+import com.truevault.core.designsystem.component.TvBannerTone
 import com.truevault.core.designsystem.component.TvCard
 import com.truevault.core.designsystem.component.TvPreviewSurface
 import com.truevault.core.designsystem.component.TvSectionHeader
@@ -212,6 +214,14 @@ internal fun SettingsContent(
                             },
                         )
                     }
+                }
+
+                if (uiState.isOverBudget) {
+                    Spacer(Modifier.height(TvSpacing.small))
+                    TvBanner(
+                        text = stringResource(R.string.settings_storage_over),
+                        tone = TvBannerTone.Warning,
+                    )
                 }
 
                 Spacer(Modifier.height(TvSpacing.small))

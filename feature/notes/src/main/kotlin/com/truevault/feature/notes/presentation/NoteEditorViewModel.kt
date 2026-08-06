@@ -134,7 +134,6 @@ class NoteEditorViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        super.onCleared()
         autosaveJob?.cancel()
     }
 }

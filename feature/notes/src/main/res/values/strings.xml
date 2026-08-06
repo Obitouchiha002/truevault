@@ -12,17 +12,10 @@
 
     <string name="notes_editor_title_hint">Title</string>
     <string name="notes_editor_body_hint">Write something…</string>
-    <string name="notes_editor_saved">Saved</string>
-    <string name="notes_editor_edited">Edited %1$s</string>
 
     <string name="notes_pin">Pin</string>
     <string name="notes_unpin">Unpin</string>
-    <string name="notes_pinned">Pinned</string>
-    <string name="notes_archive">Archive</string>
-    <string name="notes_unarchive">Move out of archive</string>
     <string name="notes_delete">Delete</string>
-    <string name="notes_deleted">Moved to trash</string>
-    <string name="notes_undo">Undo</string>
 
     <string name="notes_not_encrypted">Notes are not encrypted. For anything private, use the vault.</string>
 </resources>

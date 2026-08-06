@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -128,8 +129,9 @@ fun LegalGateScreen(
         if (uiState.unresolvedPlaceholders.isNotEmpty()) {
             TvBanner(
                 title = stringResource(R.string.legal_placeholders_title),
-                text = stringResource(
-                    R.string.legal_placeholders_body,
+                text = pluralStringResource(
+                    R.plurals.legal_placeholders_body,
+                    uiState.unresolvedPlaceholders.size,
                     uiState.unresolvedPlaceholders.size,
                 ),
                 tone = TvBannerTone.Warning,

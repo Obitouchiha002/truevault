@@ -2,6 +2,7 @@ package com.truevault.app
 
 import android.content.Intent
 import android.net.Uri
+import androidx.core.net.toUri
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.compose.setContent
@@ -73,6 +74,11 @@ class MainActivity : FragmentActivity() {
                 TrueVaultApp(
                     startDestination = state.startDestination(),
                     lockState = state.lockState(),
+                    // Declining the documents closes the app. Nothing was created, so there is
+                    // nothing to undo.
+                    onExitApp = { finishAndRemoveTask() },
+                    onOpenUrl = ::openExternally,
+                    onContactSupport = ::openPrivacyContact,
                 )
             }
         }
@@ -101,6 +107,30 @@ class MainActivity : FragmentActivity() {
         val uris = SharedIntentReader.read(intent)
         SharedIntentReader.takeReadPermission(intent, uris, contentResolver)
         pendingShares.offer(uris.map(Uri::toString))
+    }
+
+    /**
+     * Opens a link in the user's browser.
+     *
+     * The app has no network permission and no WebView for remote content, so anything online is
+     * handed to a browser rather than rendered here.
+     */
+    private fun openExternally(url: String) {
+        runCatching {
+            startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+        }.onFailure {
+            // No browser installed, or the URL was not configured. The in-app documents are the
+            // authoritative copy anyway, so there is nothing to recover from.
+        }
+    }
+
+    private fun openPrivacyContact() {
+        val address = getString(R.string.legal_privacy_contact_address)
+        if (address.startsWith("[")) return  // Still an unresolved placeholder.
+
+        runCatching {
+            startActivity(Intent(Intent.ACTION_SENDTO, "mailto:$address".toUri()))
+        }
     }
 
     private fun applyScreenshotProtection(enabled: Boolean) {

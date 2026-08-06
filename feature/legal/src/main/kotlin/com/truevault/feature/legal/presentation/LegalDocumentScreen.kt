@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -158,13 +159,18 @@ fun LegalDocumentScreen(
                     )
                 }
 
+                // Read from resources, not built in code: a screen reader speaking English into a
+                // Hindi UI is a bug that only the person relying on it ever hits.
+                val progressLabel = stringResource(
+                    R.string.legal_document_progress,
+                    (progress * 100).toInt(),
+                )
+
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .semantics {
-                            contentDescription = "Read ${(progress * 100).toInt()} percent"
-                        },
+                        .semantics { contentDescription = progressLabel },
                 )
             }
         },
@@ -216,8 +222,9 @@ fun LegalDocumentScreen(
                     } else if (uiState.query.isNotBlank()) {
                         item(key = "match-count") {
                             Text(
-                                text = stringResource(
-                                    R.string.legal_document_matches,
+                                text = pluralStringResource(
+                                    R.plurals.legal_document_matches,
+                                    uiState.visibleSections.size,
                                     uiState.visibleSections.size,
                                 ),
                                 style = MaterialTheme.typography.labelLarge,

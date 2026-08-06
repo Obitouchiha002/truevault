@@ -17,9 +17,19 @@ import kotlinx.coroutines.launch
 
 /** Where the app opens. Decided once, from state on disk plus the in-memory session. */
 enum class StartDestination {
+    /** Terms and Privacy Policy. Stands in front of everything, including onboarding. */
+    LEGAL,
     ONBOARDING,
     CREATE_LOCK,
-    UNLOCK,
+
+    /**
+     * Notes.
+     *
+     * The app opens here whenever the vault is locked. That is the cover: what someone sees when the
+     * phone is handed to them is a working notes app, and there is no unlock screen announcing that
+     * something is hidden. The vault is reached deliberately, and still needs the password.
+     */
+    NOTES,
     HOME,
 }
 
@@ -30,6 +40,7 @@ sealed interface MainActivityUiState {
     data class Ready(
         val preferences: UserPreferences,
         val lockState: VaultLockState,
+        val legalAccepted: Boolean,
     ) : MainActivityUiState
 
     /**
@@ -53,14 +64,22 @@ sealed interface MainActivityUiState {
     }
 
     fun startDestination(): StartDestination = when (this) {
-        Loading -> StartDestination.UNLOCK
+        // Notes while loading: it reveals nothing, and it is where a locked app belongs anyway.
+        Loading -> StartDestination.NOTES
         is Ready -> when {
+            // Nothing happens before the documents are accepted — no onboarding, no permission
+            // request, no vault, no file read.
+            !legalAccepted -> StartDestination.LEGAL
             !preferences.hasCompletedOnboarding -> StartDestination.ONBOARDING
             lockState == VaultLockState.NotConfigured -> StartDestination.CREATE_LOCK
-            lockState == VaultLockState.Locked -> StartDestination.UNLOCK
+            lockState == VaultLockState.Locked -> StartDestination.NOTES
             else -> StartDestination.HOME
         }
     }
+
+    /** True once the vault key is in memory. The vault destinations exist only then. */
+    val isUnlocked: Boolean
+        get() = this is Ready && lockState == VaultLockState.Unlocked
 }
 
 @HiltViewModel
@@ -68,13 +87,19 @@ class MainActivityViewModel @Inject constructor(
     userPreferencesDataSource: UserPreferencesDataSource,
     private val keyManager: VaultKeyManager,
     private val session: VaultSession,
+    legalRepository: com.truevault.core.legal.LegalRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<MainActivityUiState> = combine(
         userPreferencesDataSource.userPreferences,
         session.state,
-    ) { preferences, lockState ->
-        MainActivityUiState.Ready(preferences = preferences, lockState = lockState)
+        legalRepository.status(),
+    ) { preferences, lockState, legalStatus ->
+        MainActivityUiState.Ready(
+            preferences = preferences,
+            lockState = lockState,
+            legalAccepted = legalStatus.isSatisfied,
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,

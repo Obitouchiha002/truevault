@@ -39,6 +39,7 @@ import com.truevault.core.crypto.session.VaultLockState
 import com.truevault.feature.authentication.navigation.UnlockRoute
 import com.truevault.core.designsystem.theme.TvMotion
 import com.truevault.feature.home.navigation.navigateToHome
+import com.truevault.feature.notes.navigation.NotesRoute
 import com.truevault.feature.notes.navigation.navigateToNotes
 import com.truevault.feature.importfiles.navigation.ImportSourceRoute
 import com.truevault.feature.importfiles.navigation.navigateToImport
@@ -56,6 +57,9 @@ import com.truevault.feature.vault.navigation.navigateToVault
 fun TrueVaultApp(
     startDestination: StartDestination,
     lockState: VaultLockState,
+    onExitApp: () -> Unit,
+    onOpenUrl: (String) -> Unit,
+    onContactSupport: () -> Unit,
     modifier: Modifier = Modifier,
     shellViewModel: AppShellViewModel = hiltViewModel(),
 ) {
@@ -70,18 +74,44 @@ fun TrueVaultApp(
         }
     }
 
+    val isUnlocked = lockState == VaultLockState.Unlocked
+
+    /**
+     * While locked, the app is a notes app.
+     *
+     * The vault tabs and the "Add to Vault" button are not merely disabled — they are absent. A
+     * greyed-out Vault tab would tell anyone holding the phone exactly what this app is, which is
+     * the one thing the cover exists to prevent.
+     */
+    val visibleDestinations = remember(isUnlocked) {
+        if (isUnlocked) {
+            TopLevelDestination.entries.toList()
+        } else {
+            listOf(TopLevelDestination.NOTES, TopLevelDestination.SETTINGS)
+        }
+    }
+
     val showsChrome = currentTopLevel != null
+    val showsVaultAction = showsChrome && isUnlocked
 
     // The vault can lock at any moment — the app going to the background, the screen turning off, a
     // grace period expiring. Whenever that happens the whole back stack is replaced by the unlock
     // screen, so no already-rendered vault content can be reached with the back gesture.
     LaunchedEffect(lockState) {
+        // Auto-lock returns to Notes, not to an unlock screen. A phone that times out and then
+        // displays "Enter your vault password" tells whoever is holding it that there is a vault —
+        // which is the one thing the cover exists to avoid. The user reaches the vault again the
+        // same way they did the first time.
+        val onCoverAlready = navController.currentDestination?.hasRoute(NotesRoute::class) == true
+        val onUnlockScreen = navController.currentDestination?.hasRoute(UnlockRoute::class) == true
+
         if (lockState == VaultLockState.Locked &&
-            navController.currentDestination?.hasRoute(UnlockRoute::class) != true &&
+            !onCoverAlready && !onUnlockScreen &&
             startDestination != StartDestination.ONBOARDING &&
-            startDestination != StartDestination.CREATE_LOCK
+            startDestination != StartDestination.CREATE_LOCK &&
+            startDestination != StartDestination.LEGAL
         ) {
-            navController.navigate(UnlockRoute) {
+            navController.navigate(NotesRoute) {
                 popUpTo(navController.graph.id) { inclusive = true }
                 launchSingleTop = true
             }
@@ -112,6 +142,7 @@ fun TrueVaultApp(
                 exit = fadeOut(TvMotion.exitSpec()),
             ) {
                 TrueVaultBottomBar(
+                    destinations = visibleDestinations,
                     currentTopLevel = currentTopLevel,
                     onSelect = { destination ->
                         navController.navigateToTopLevel(destination)
@@ -121,7 +152,7 @@ fun TrueVaultApp(
         },
         floatingActionButton = {
             AnimatedVisibility(
-                visible = showsChrome,
+                visible = showsVaultAction,
                 enter = scaleIn(TvMotion.standardSpec()) + fadeIn(TvMotion.standardSpec()),
                 exit = scaleOut(TvMotion.exitSpec()) + fadeOut(TvMotion.exitSpec()),
             ) {
@@ -138,6 +169,9 @@ fun TrueVaultApp(
         TrueVaultNavHost(
             navController = navController,
             startDestination = startDestination,
+            onExitApp = onExitApp,
+            onOpenUrl = onOpenUrl,
+            onContactSupport = onContactSupport,
             modifier = Modifier.padding(innerPadding),
         )
     }
@@ -145,6 +179,7 @@ fun TrueVaultApp(
 
 @Composable
 private fun TrueVaultBottomBar(
+    destinations: List<TopLevelDestination>,
     currentTopLevel: TopLevelDestination?,
     onSelect: (TopLevelDestination) -> Unit,
 ) {
@@ -152,7 +187,7 @@ private fun TrueVaultBottomBar(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
     ) {
-        TopLevelDestination.entries.forEach { destination ->
+        destinations.forEach { destination ->
             val selected = destination == currentTopLevel
             NavigationBarItem(
                 selected = selected,

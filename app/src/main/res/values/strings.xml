@@ -19,4 +19,8 @@
     <string name="appearance_label_nexa_files">Nexa Files</string>
     <string name="nav_notes">Notes</string>
     <string name="nav_notes_description">Your notes</string>
+    <!-- Filled from legal/legal-config.json before release. The square brackets are how the app
+         detects that it is still a placeholder and stays silent rather than opening a broken
+         mail composer. -->
+    <string name="legal_privacy_contact_address" translatable="false">[PRIVACY EMAIL REQUIRED]</string>
 </resources>

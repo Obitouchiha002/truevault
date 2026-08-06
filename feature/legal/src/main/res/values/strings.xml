@@ -15,14 +15,12 @@
     <string name="legal_accept_continue">Accept and Continue</string>
     <string name="legal_decline_exit">Decline and Exit</string>
     <string name="legal_open_online">Open current version online</string>
-    <string name="legal_open_online_unavailable">A public web address has not been configured for this build. The full documents are available inside the app.</string>
 
     <string name="legal_offline_note">Both documents are stored inside the app, so you can read them without an internet connection.</string>
 
     <!-- Decline -->
     <string name="legal_decline_title">Nothing has been set up</string>
     <string name="legal_decline_body">No vault was created, no permission was requested, and none of your files were touched. You can still read both documents.</string>
-    <string name="legal_decline_read_again">Read the documents</string>
     <string name="legal_decline_exit_app">Close TrueVault</string>
     <string name="legal_decline_reconsider">Go back</string>
 
@@ -30,9 +28,7 @@
     <string name="legal_update_title">Our terms or privacy practices have changed</string>
     <string name="legal_update_previous">You accepted version %1$s</string>
     <string name="legal_update_new">New version %1$s, effective %2$s</string>
-    <string name="legal_update_review">Review Changes</string>
     <string name="legal_update_accept">Accept Updated Documents</string>
-    <string name="legal_update_decline">Decline</string>
     <string name="legal_update_summary_title">What changed</string>
 
     <!-- Document reader -->
@@ -40,20 +36,25 @@
     <string name="legal_document_search">Search</string>
     <string name="legal_document_close_search">Close search</string>
     <string name="legal_document_no_matches">No matches for “%1$s”.</string>
-    <string name="legal_document_matches">%1$d matching section(s)</string>
+    <plurals name="legal_document_matches">
+        <item quantity="one">%1$d matching section</item>
+        <item quantity="other">%1$d matching sections</item>
+    </plurals>
     <string name="legal_document_version">Version %1$s</string>
     <string name="legal_document_effective">Effective %1$s</string>
     <string name="legal_document_updated">Last updated %1$s</string>
     <string name="legal_document_text_smaller">Smaller text</string>
     <string name="legal_document_text_larger">Larger text</string>
-    <string name="legal_document_text_size">Text size: %1$d percent</string>
-    <string name="legal_document_progress">Read %1$d percent</string>
+    <string name="legal_document_progress">Read: %1$d%%</string>
     <string name="legal_document_contact">Contact us about this document</string>
     <string name="legal_document_unavailable">This document could not be opened.</string>
 
     <!-- Placeholder warning, debug builds only -->
     <string name="legal_placeholders_title">This build is not ready for release</string>
-    <string name="legal_placeholders_body">The legal documents still contain %1$d unresolved placeholder(s). Fill them in legal/legal-config.json and regenerate before publishing.</string>
+    <plurals name="legal_placeholders_body">
+        <item quantity="one">The legal documents still contain %1$d unresolved placeholder. Fill it in legal/legal-config.json and regenerate before publishing.</item>
+        <item quantity="other">The legal documents still contain %1$d unresolved placeholders. Fill them in legal/legal-config.json and regenerate before publishing.</item>
+    </plurals>
 
     <!-- Settings: Legal and Privacy -->
     <string name="legal_settings_title">Legal and Privacy</string>
@@ -105,7 +106,6 @@
     <string name="legal_data_crash">Crash diagnostics</string>
     <string name="legal_data_analytics">Performance analytics</string>
     <string name="legal_data_cloud_backup">Cloud backup</string>
-    <string name="legal_data_state_off">Off</string>
     <string name="legal_data_state_on_device_short">On this device</string>
     <string name="legal_data_state_not_present">Not present in this build</string>
     <string name="legal_data_state_not_configured">Not configured</string>
@@ -113,13 +113,9 @@
 
     <!-- Delete vault data -->
     <string name="legal_delete_title">Delete Vault Data</string>
-    <string name="legal_delete_option_selected">Delete selected vault items</string>
-    <string name="legal_delete_option_all">Delete all local vault data</string>
-    <string name="legal_delete_option_reset">Reset TrueVault</string>
 
     <string name="legal_delete_warning">This action permanently removes encrypted local vault files and cannot be undone without a valid backup.</string>
     <string name="legal_delete_affected_title">What will be removed</string>
-    <string name="legal_delete_affected_items">%1$d vault item(s)</string>
     <string name="legal_delete_affected_thumbnails">Encrypted thumbnails</string>
     <string name="legal_delete_affected_temp">Temporary files</string>
     <string name="legal_delete_affected_database">Vault database</string>
@@ -133,15 +129,11 @@
 
     <string name="legal_delete_backup_prompt">Have you exported a backup?</string>
     <string name="legal_delete_backup_export">Export a backup first</string>
-    <string name="legal_delete_backup_skip">Continue without a backup</string>
-    <string name="legal_delete_backup_last">Last backup exported %1$s</string>
     <string name="legal_delete_backup_never">No backup has ever been exported from this device</string>
 
-    <string name="legal_delete_authenticate">Confirm it is you</string>
     <string name="legal_delete_phrase_label">Type DELETE MY LOCAL VAULT to confirm</string>
     <string name="legal_delete_phrase">DELETE MY LOCAL VAULT</string>
     <string name="legal_delete_confirm">Delete permanently</string>
-    <string name="legal_delete_cancel">Cancel</string>
     <string name="legal_delete_in_progress">Removing local data…</string>
 
     <string name="legal_delete_done_title">Done</string>

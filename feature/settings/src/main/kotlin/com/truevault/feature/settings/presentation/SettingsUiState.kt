@@ -14,6 +14,7 @@ data class SettingsUiState(
     val blockScreenshots: Boolean = true,
     val appVersion: String = "",
     val capabilities: DeviceCapabilities = DeviceCapabilities.Unknown,
+    val isVaultUnlocked: Boolean = false,
     val storageBudget: StorageBudget = StorageBudget.DEFAULT,
     /** Bytes the vault currently occupies, measured from disk. */
     val vaultUsedBytes: Long = 0L,
@@ -44,6 +45,7 @@ sealed interface SettingsAction {
     data object DeviceCapabilitiesClicked : SettingsAction
     data object AdvancedPrivacyClicked : SettingsAction
     data object AppearanceClicked : SettingsAction
+    data object OpenVaultClicked : SettingsAction
     data object PrivateAppsClicked : SettingsAction
     data class StorageBudgetSelected(val budget: StorageBudget) : SettingsAction
 }
@@ -53,5 +55,6 @@ sealed interface SettingsEffect {
     data object NavigateToDeviceCapabilities : SettingsEffect
     data object NavigateToAdvancedPrivacy : SettingsEffect
     data object NavigateToAppearance : SettingsEffect
+    data object NavigateToUnlock : SettingsEffect
     data object NavigateToPrivateApps : SettingsEffect
 }

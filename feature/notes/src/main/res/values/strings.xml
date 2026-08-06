@@ -18,4 +18,5 @@
     <string name="notes_delete">Delete</string>
 
     <string name="notes_not_encrypted">Notes are not encrypted. For anything private, use the vault.</string>
+    <string name="notes_open_vault">Open private vault</string>
 </resources>

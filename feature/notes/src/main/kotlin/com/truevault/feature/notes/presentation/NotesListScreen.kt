@@ -1,5 +1,7 @@
 package com.truevault.feature.notes.presentation
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -51,9 +53,11 @@ import com.truevault.feature.notes.R
  * The banner stating that notes are **not** encrypted is deliberate and permanent. An app that
  * offers both a notes list and a vault must never let a user assume the wrong one protects them.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NotesListScreen(
     onOpenNote: (String?) -> Unit,
+    onVaultEntryRequested: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: NotesListViewModel = hiltViewModel(),
 ) {
@@ -64,6 +68,18 @@ fun NotesListScreen(
         topBar = {
             Column {
                 TvTopAppBar(
+                    // Long-pressing the title asks for the vault. It is a *trigger*, not
+                    // authentication: it navigates to the unlock screen and the password is still
+                    // required. A gesture that opened the vault by itself would mean anyone who
+                    // discovered it — or found it by accident — was already inside.
+                    //
+                    // There is also a visible route in Settings, so forgetting this never locks
+                    // anyone out of their own files.
+                    titleModifier = Modifier.combinedClickable(
+                        onClick = {},
+                        onLongClick = onVaultEntryRequested,
+                        onLongClickLabel = stringResource(R.string.notes_open_vault),
+                    ),
                     title = stringResource(R.string.notes_title),
                     actions = {
                         IconButton(

@@ -88,6 +88,8 @@ class SettingsViewModel @Inject constructor(
                 viewModelScope.launch { _effects.emit(SettingsEffect.NavigateToAdvancedPrivacy) }
             SettingsAction.AppearanceClicked ->
                 viewModelScope.launch { _effects.emit(SettingsEffect.NavigateToAppearance) }
+            SettingsAction.OpenVaultClicked ->
+                viewModelScope.launch { _effects.emit(SettingsEffect.NavigateToUnlock) }
             SettingsAction.PrivateAppsClicked ->
                 viewModelScope.launch { _effects.emit(SettingsEffect.NavigateToPrivateApps) }
             is SettingsAction.StorageBudgetSelected ->

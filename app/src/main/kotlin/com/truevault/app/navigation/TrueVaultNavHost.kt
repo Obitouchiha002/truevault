@@ -32,6 +32,14 @@ import com.truevault.feature.onboarding.navigation.onboardingScreen
 import com.truevault.feature.privateapps.navigation.navigateToPrivateApps
 import com.truevault.feature.privateapps.navigation.privateAppsScreen
 import com.truevault.feature.scanner.navigation.navigateToScanner
+import com.truevault.feature.authentication.navigation.navigateToUnlock
+import com.truevault.feature.legal.navigation.LegalGateRoute
+import com.truevault.feature.legal.navigation.legalGateScreen
+import com.truevault.feature.legal.navigation.legalScreens
+import com.truevault.feature.legal.navigation.navigateToDataAndPermissions
+import com.truevault.feature.legal.navigation.navigateToDeleteVaultData
+import com.truevault.feature.legal.navigation.navigateToLegalDocument
+import com.truevault.feature.notes.navigation.NotesRoute
 import com.truevault.feature.notes.navigation.navigateToNoteEditor
 import com.truevault.feature.notes.navigation.notesScreens
 import com.truevault.feature.scanner.navigation.scannerScreen
@@ -56,6 +64,9 @@ import com.truevault.feature.vault.navigation.vaultScreen
 fun TrueVaultNavHost(
     navController: NavHostController,
     startDestination: StartDestination,
+    onExitApp: () -> Unit,
+    onOpenUrl: (String) -> Unit,
+    onContactSupport: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val reducedMotion = LocalReducedMotion.current
@@ -131,10 +142,42 @@ fun TrueVaultNavHost(
             onNavigateBack = { navController.popBackStack() },
         )
 
+        // The gate, and the documents it links to. Placed first because everything else in this
+        // graph is unreachable until it reports acceptance.
+        legalGateScreen(
+            onAccepted = {
+                navController.navigate(OnboardingRoute) {
+                    popUpTo(navController.graph.id) { inclusive = true }
+                }
+            },
+            onExit = onExitApp,
+            onOpenDocument = { kind -> navController.navigateToLegalDocument(kind) },
+        )
+
+        legalScreens(
+            onNavigateBack = { navController.popBackStack() },
+            onOpenDocument = { kind -> navController.navigateToLegalDocument(kind) },
+            onOpenDataAndPermissions = { navController.navigateToDataAndPermissions() },
+            onOpenDeleteVaultData = { navController.navigateToDeleteVaultData() },
+            onOpenBackup = { navController.navigateToBackup() },
+            // No licences screen exists yet. Sending the user back to Settings would be a loop
+            // dressed up as navigation, so the row does nothing until the screen is built.
+            onOpenLicences = {},
+            onOpenOnline = onOpenUrl,
+            onContact = onContactSupport,
+            onResetComplete = {
+                navController.navigate(LegalGateRoute) {
+                    popUpTo(navController.graph.id) { inclusive = true }
+                }
+            },
+        )
+
         scannerScreen()
 
         notesScreens(
             onOpenNote = { noteId -> navController.navigateToNoteEditor(noteId) },
+            // The gesture navigates to the unlock screen. It does not unlock anything.
+            onVaultEntryRequested = { navController.navigateToUnlock() },
             onNavigateBack = { navController.popBackStack() },
         )
 
@@ -143,6 +186,7 @@ fun TrueVaultNavHost(
             onOpenDeviceCapabilities = { navController.navigateToDeviceCapabilities() },
             onOpenAdvancedPrivacy = { navController.navigateToAdvancedPrivacy() },
             onOpenAppearance = { navController.navigateToAppearance() },
+            onOpenVault = { navController.navigateToUnlock() },
             onOpenPrivateApps = { navController.navigateToPrivateApps() },
             onNavigateBack = { navController.popBackStack() },
         )
@@ -164,8 +208,9 @@ fun TrueVaultNavHost(
 }
 
 private fun StartDestination.toRoute(): Any = when (this) {
+    StartDestination.LEGAL -> LegalGateRoute
     StartDestination.ONBOARDING -> OnboardingRoute
     StartDestination.CREATE_LOCK -> CreateVaultLockRoute
-    StartDestination.UNLOCK -> UnlockRoute
+    StartDestination.NOTES -> NotesRoute
     StartDestination.HOME -> HomeRoute
 }

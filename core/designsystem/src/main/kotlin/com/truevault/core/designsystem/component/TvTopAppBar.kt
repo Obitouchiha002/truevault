@@ -23,6 +23,8 @@ import com.truevault.core.designsystem.R
 fun TvTopAppBar(
     title: String,
     modifier: Modifier = Modifier,
+    /** Applied to the title text only, so a screen can attach a gesture to it. */
+    titleModifier: Modifier = Modifier,
     onNavigateBack: (() -> Unit)? = null,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     actions: @Composable () -> Unit = {},
@@ -32,6 +34,7 @@ fun TvTopAppBar(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
+                modifier = titleModifier,
             )
         },
         modifier = modifier,

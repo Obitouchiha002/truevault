@@ -24,10 +24,14 @@ fun NavController.navigateToNoteEditor(noteId: String?, navOptions: NavOptions? 
 
 fun NavGraphBuilder.notesScreens(
     onOpenNote: (String?) -> Unit,
+    onVaultEntryRequested: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     composable<NotesRoute> {
-        NotesListScreen(onOpenNote = onOpenNote)
+        NotesListScreen(
+            onOpenNote = onOpenNote,
+            onVaultEntryRequested = onVaultEntryRequested,
+        )
     }
 
     composable<NoteEditorRoute> { entry ->

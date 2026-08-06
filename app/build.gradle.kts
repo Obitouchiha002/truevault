@@ -52,6 +52,8 @@ dependencies {
     implementation(projects.feature.importfiles)
     implementation(projects.feature.scanner)
     implementation(projects.feature.privateapps)
+    implementation(projects.core.legal)
+    implementation(projects.feature.legal)
     implementation(projects.feature.notes)
     implementation(projects.feature.settings)
     implementation(projects.feature.backup)

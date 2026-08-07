@@ -476,6 +476,15 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
 .stagger.seen > *:nth-child(5){animation-delay:.26s} .stagger.seen > *:nth-child(6){animation-delay:.32s}
 .stagger.seen > *:nth-child(7){animation-delay:.38s} .stagger.seen > *:nth-child(8){animation-delay:.44s}
 
+/* ---- headings rise a word at a time as they arrive --------------------------
+   Each word sits in its own overflow-hidden mask, so it climbs into view from
+   behind the line above rather than fading. The mask carries a little padding
+   and an equal negative margin: without it the hidden overflow clips the
+   descenders on g, y and p. */
+.rw { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .14em; margin-bottom: -.14em; }
+.rw > span { display: inline-block; transform: translateY(108%); transition: transform .9s cubic-bezier(.19,1,.22,1); }
+[data-reveal].shown .rw > span { transform: none; }
+
 .appnav { display: none; }
 .deck { display: none; }
 
@@ -1244,6 +1253,126 @@ const reveal = new IntersectionObserver((entries) => {
   });
 }, { rootMargin: "0px 0px -8% 0px" });
 document.querySelectorAll(".rise").forEach(el => reveal.observe(el));
+
+/* ---------------------------------------------------------------------------
+   Headings arrive a word at a time.
+
+   The splitter walks child nodes rather than rewriting innerHTML, so the <br>
+   and <em> inside these headings survive: a regex over markup would have eaten
+   them. Whitespace nodes are kept as-is so the words still wrap where they did.
+   --------------------------------------------------------------------------- */
+function splitWords(el) {
+  const walk = (node) => {
+    [...node.childNodes].forEach(child => {
+      if (child.nodeType === 3) {
+        if (!child.textContent.trim()) return;
+        const frag = document.createDocumentFragment();
+        child.textContent.split(/(\s+)/).forEach(part => {
+          if (!part) return;
+          if (!part.trim()) { frag.appendChild(document.createTextNode(part)); return; }
+          const mask = document.createElement("span");
+          const inner = document.createElement("span");
+          mask.className = "rw";
+          inner.textContent = part;
+          mask.appendChild(inner);
+          frag.appendChild(mask);
+        });
+        child.replaceWith(frag);
+      } else if (child.nodeType === 1 && child.tagName !== "BR") {
+        walk(child);
+      }
+    });
+  };
+  walk(el);
+  el.querySelectorAll(".rw > span").forEach((s, i) => { s.style.transitionDelay = (i * 0.045).toFixed(3) + "s"; });
+  el.setAttribute("data-reveal", "");
+  reveal2.observe(el);
+}
+const reveal2 = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) { entry.target.classList.add("shown"); reveal2.unobserve(entry.target); }
+  });
+}, { rootMargin: "0px 0px -12% 0px" });
+
+/* Desktop only. On a phone these sections are display:none until their tab is
+   opened, and a heading whose words are parked below a mask is one missed
+   observer callback away from being invisible — the tab shell already animates
+   its own entrance, so there is nothing to gain for that risk. */
+if (!reduced && !isPhoneWidth()) {
+  document.querySelectorAll(".band .head h2, #get .display").forEach(splitWords);
+}
+
+/* ---------------------------------------------------------------------------
+   Smooth scrolling with inertia — the glide the reference site has.
+
+   The wheel no longer moves the page directly. It moves a target, and a rAF
+   loop eases the real scroll position towards it, so a flick keeps travelling
+   after your fingers stop. The depth engine is driven from the same loop rather
+   than from a scroll listener, so the two can never disagree by a frame.
+
+   Deliberately desktop-only. A phone's own touch scrolling already has momentum
+   tuned by the platform, and replacing it is the classic way to make a mobile
+   site feel broken. It is also off entirely under reduced-motion, where the
+   whole point of the setting is that the page goes exactly where you put it.
+   --------------------------------------------------------------------------- */
+const canSmooth = !reduced && matchMedia("(pointer: fine)").matches && !isPhoneWidth();
+function isPhoneWidth() { return matchMedia("(max-width: 900px)").matches; }
+
+if (canSmooth) {
+  document.documentElement.style.scrollBehavior = "auto";
+
+  const EASE = 0.105;          // per frame; lower is heavier
+  const STEP = 1.0;            // wheel multiplier
+  let target = scrollY, now = scrollY, applied = scrollY, running = false;
+
+  const limit = () => Math.max(0, document.documentElement.scrollHeight - innerHeight);
+  const clamp = (v) => Math.max(0, Math.min(limit(), v));
+
+  function frame() {
+    // Anything that moved the page without going through us — a scrollbar drag,
+    // the keyboard, a browser find — wins. Adopt its position instead of
+    // yanking the reader back to where we thought they were.
+    if (Math.abs(scrollY - applied) > 2) { now = target = scrollY; }
+
+    now += (target - now) * EASE;
+    if (Math.abs(target - now) < 0.35) now = target;
+
+    scrollTo(0, now);
+    applied = scrollY;
+    measureDepth();
+
+    if (now !== target) requestAnimationFrame(frame);
+    else running = false;
+  }
+  function kick() { if (!running) { running = true; requestAnimationFrame(frame); } }
+
+  addEventListener("wheel", (e) => {
+    if (!modal.hidden) return;                       // the dialog owns the wheel
+    if (e.ctrlKey) return;                           // pinch-zoom is not scrolling
+    e.preventDefault();
+    // While the loop is idle the page can move without us — space bar, arrow
+    // keys, a scrollbar drag, find-in-page. Adopt wherever it actually is before
+    // adding this gesture, or the first wheel notch snaps back to a stale target.
+    // `applied` has to move with it: the loop's own adopt-check compares against
+    // it, and a stale value made the first frame overwrite the target we just set.
+    if (!running) { now = target = applied = scrollY; }
+    target = clamp(target + e.deltaY * STEP);
+    kick();
+  }, { passive: false });
+
+  // Anchors ease through the same engine, so one motion model governs the page.
+  document.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener("click", (e) => {
+    if (isPhoneWidth()) return;                      // the tab shell handles these
+    const el = document.getElementById(a.getAttribute("href").slice(1));
+    if (!el) return;
+    e.preventDefault();
+    if (!running) { now = applied = scrollY; }
+    target = clamp(scrollY + el.getBoundingClientRect().top);
+    kick();
+  }));
+
+  addEventListener("resize", () => { target = clamp(target); });
+}
 
 /* ---------------------------------------------------------------------------
    Mobile: five tabs. Home is a swipeable deck; the rest stay pages, because they

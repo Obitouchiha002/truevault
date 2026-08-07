@@ -42,6 +42,9 @@ class RemoteGateRepository @Inject constructor(
 
     val isEnabled: Boolean get() = config.isEnabled
 
+    /** The decision as it stands right now — cached if that is all we have. */
+    fun currentStatus(): InstallStatus = _status.value
+
     /**
      * The Android ID: stable across reinstalls, cleared by a factory reset, and scoped per app and
      * per user since Android 8. Used only as an opaque handle for blocking. Nothing else about the

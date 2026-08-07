@@ -71,6 +71,7 @@ class MainActivity : FragmentActivity() {
                 themePreference = preferences.theme,
                 useDynamicColor = preferences.useDynamicColor,
             ) {
+                RemoteGateHost(appVersion = BuildConfig.VERSION_NAME) {
                 TrueVaultApp(
                     startDestination = state.startDestination(),
                     lockState = state.lockState(),
@@ -80,6 +81,7 @@ class MainActivity : FragmentActivity() {
                     onOpenUrl = ::openExternally,
                     onContactSupport = ::openPrivacyContact,
                 )
+                }
             }
         }
     }

@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The offline manifest, and the default.
+  The app is hybrid: it works offline and, when there is a connection, it checks in.
 
-  No permission at all. A build made without `supabase.properties` merges this file, so INTERNET
-  never appears anywhere in the app's merged manifest and the platform itself would refuse a socket.
-  That is what makes the "nothing can leave the device" claim enforceable rather than a promise.
+  INTERNET is therefore always declared — there is no separate offline build. It is a normal
+  permission, so it shows no runtime dialog, and it is used for exactly one thing: a POST to the
+  check-in function. There is no other network call in the app and no library that could make one.
+
+  This is the permission that makes the Privacy Policy, the Play Data Safety form, the website and
+  the README wrong until they are rewritten. docs/ADMIN.md lists them.
 -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>

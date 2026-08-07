@@ -28,17 +28,6 @@ android {
         buildConfig = true
     }
 
-    // `tools:node` is resolved before manifest placeholders are substituted, so the permission
-    // cannot be switched with a placeholder. Swapping the whole manifest is the mechanism that
-    // actually works, and it keeps the two states readable as two files.
-    sourceSets {
-        getByName("main") {
-            manifest.srcFile(
-                if (supabase != null) "src/online/AndroidManifest.xml" else "src/main/AndroidManifest.xml",
-            )
-        }
-    }
-
     defaultConfig {
         buildConfigField("String", "SUPABASE_URL", "\"${supabase?.getProperty("supabaseUrl").orEmpty()}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${supabase?.getProperty("supabaseAnonKey").orEmpty()}\"")

@@ -514,43 +514,98 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
   .modal { border-radius: var(--r-lg) var(--r-lg) 0 0; align-self: end; max-height: 92vh; }
   .veil { padding: 0; place-items: end center; }
 
-  /* ---- the deck ---- */
+  /* ---- the deck ----------------------------------------------------------
+     Centred, mark-first, tight vertical rhythm: the shape a phone app actually
+     uses. Each slide scrolls inside itself when a short screen cannot hold it,
+     so the page never scrolls but nothing is ever cut off either. */
   .deck { display: none; position: absolute; inset: 0; overflow: hidden; }
   .deck.on { display: block; }
   .track { display: flex; height: 100%; transition: transform .46s cubic-bezier(.22,.9,.28,1.02); will-change: transform; }
   .slide {
-    flex: 0 0 100%; height: 100%; padding: 26px 22px calc(96px + env(safe-area-inset-bottom));
-    display: flex; flex-direction: column; justify-content: center; gap: 17px;
-    overflow: hidden; perspective: 900px;
+    flex: 0 0 100%; height: 100%;
+    padding: 30px 24px calc(92px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center; gap: 15px;
+    overflow-y: auto; -webkit-overflow-scrolling: touch; perspective: 900px;
   }
-  .slide > * { opacity: 0; transform: translateY(22px) scale(.97); }
+  .slide > * { opacity: 0; transform: translateY(20px) scale(.98); flex: none; width: 100%; max-width: 460px; }
   .slide.live > * { animation: slidein .55s cubic-bezier(.16,.84,.28,1) forwards; }
-  .slide.live > *:nth-child(1){animation-delay:.06s} .slide.live > *:nth-child(2){animation-delay:.13s}
-  .slide.live > *:nth-child(3){animation-delay:.2s}  .slide.live > *:nth-child(4){animation-delay:.27s}
-  .slide.live > *:nth-child(5){animation-delay:.34s}
+  .slide.live > *:nth-child(1){animation-delay:.05s} .slide.live > *:nth-child(2){animation-delay:.11s}
+  .slide.live > *:nth-child(3){animation-delay:.17s} .slide.live > *:nth-child(4){animation-delay:.23s}
+  .slide.live > *:nth-child(5){animation-delay:.29s} .slide.live > *:nth-child(6){animation-delay:.35s}
+  .slide.live > *:nth-child(7){animation-delay:.41s}
   @keyframes slidein { to { opacity: 1; transform: none } }
-  .slide h2 { font-size: clamp(2rem, 10.5vw, 2.9rem); line-height: .98; }
-  .slide .lede { font-size: 1rem; }
+
+  .slide h2 { font-size: clamp(1.8rem, 8.2vw, 2.45rem); line-height: 1.05; letter-spacing: -.035em; }
+  .slide .lede { font-size: .97rem; line-height: 1.55; max-width: 34ch; margin-inline: auto; }
+  .slide .small { font-size: .82rem; }
+  .slide .btn { width: 100%; padding: 16px 24px; font-size: 1rem; }
   .slide.dark { background: var(--night); color: var(--night-ink); }
   .slide.paper { background: var(--paper); color: var(--paper-ink); }
-  .slide.paper .lede { color: var(--paper-soft); }
+  .slide.paper .lede, .slide.paper .small { color: var(--paper-soft); }
   .slide.paper .eyebrow { color: #0E8F6B; }
   .slide.paper .btn-solid { background: var(--paper-ink); color: var(--paper); }
-  .slide .phone { width: min(192px, 45vw); }
-  .slide .phone-stage { animation: none; }
+  .slide.paper .btn-ghost { border-color: rgba(20,32,28,.24); color: var(--paper-ink); }
+  /* The stage carries its own entrance animation, which would otherwise win over
+     the slide's and leave the phone stuck at opacity 0 — which is exactly what
+     it did. Overridden explicitly rather than by source order, so a later edit
+     cannot silently break it again. */
+  .slide .phone-stage {
+    position: relative; height: 372px; --scale: .63;
+    animation: none; opacity: 0; transform: translateY(20px) scale(.98);
+  }
+  .slide.live .phone-stage { animation: slidein .6s cubic-bezier(.16,.84,.28,1) .16s forwards; }
 
-  .deck-dots { position: absolute; top: 9px; left: 0; right: 0; z-index: 4; display: flex; justify-content: center; gap: 6px; }
-  .deck-dots i { width: 20px; height: 3px; border-radius: var(--r-pill); background: currentColor; opacity: .22; transition: opacity .3s, width .3s; display: block; }
-  .deck-dots i.on { opacity: 1; width: 32px; }
+  /* The mockup keeps its full 282px layout and is scaled as a whole rather than
+     narrowed: narrowing left the note cards at desktop type sizes inside a
+     186px screen, so every card clipped its own text. */
+  .slide .phone-stage .phone {
+    position: absolute; top: 50%; left: 50%; width: 282px;
+    transform: translate(-50%, -50%) scale(var(--scale));
+  }
+  @media (max-height: 790px) { .slide .phone-stage { height: 310px; --scale: .527; } }
+  @media (max-height: 690px) { .slide .phone-stage { height: 252px; --scale: .428; } }
 
-  .deck-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .deck-mini div { border-top: 2px solid currentColor; padding-top: 9px; font-size: .78rem; line-height: 1.35; opacity: .8; }
-  .deck-mini b { display: block; font-weight: 700; font-size: .84rem; opacity: 1; }
-  .deck-marks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-  .deck-marks div b { display: block; font-family: var(--display); font-size: 1.9rem; font-weight: 800; letter-spacing: -.04em; color: var(--accent-lit); }
-  .deck-marks div span { font-size: .78rem; opacity: .72; }
-  .deck-swipe { font-size: .76rem; opacity: .55; display: flex; align-items: center; gap: 8px; }
-  .deck-swipe svg { width: 15px; height: 15px; animation: nudge 1.6s ease-in-out infinite; }
+  /* The dots sit on the deck, not on a slide, so they inherit the page colour
+     and would disappear over a paper slide. */
+  .deck { color: var(--night-ink); }
+  .deck.on-paper { color: var(--paper-ink); }
+
+  .deck-icon { width: 66px; height: 66px; border-radius: 21px; display: grid; place-items: center; margin-inline: auto; background: linear-gradient(150deg, var(--accent-lit), var(--accent)); box-shadow: 0 14px 34px rgba(18,184,134,.3); }
+  .slide.paper .deck-icon { box-shadow: 0 14px 34px rgba(14,143,107,.22); }
+  .deck-icon svg { width: 31px; height: 31px; }
+  .deck-badge { display: inline-flex; align-items: center; gap: 8px; width: auto !important; margin-inline: auto; padding: 8px 17px; border-radius: var(--r-pill); border: 1px solid color-mix(in srgb, currentColor 22%, transparent); font-family: var(--mono); font-size: .66rem; letter-spacing: .17em; text-transform: uppercase; color: var(--accent-lit); }
+  .slide.paper .deck-badge { color: #0E8F6B; }
+
+  .deck-dots { position: absolute; top: 10px; left: 0; right: 0; z-index: 4; display: flex; justify-content: center; gap: 6px; }
+  .deck-dots i { width: 18px; height: 3px; border-radius: var(--r-pill); background: currentColor; opacity: .2; transition: opacity .3s, width .3s; display: block; }
+  .deck-dots i.on { opacity: 1; width: 30px; }
+
+  .deck-marks { display: flex; justify-content: center; gap: 24px; }
+  .deck-marks div b { display: block; font-family: var(--display); font-size: 1.5rem; font-weight: 800; letter-spacing: -.04em; color: var(--accent-lit); }
+  .slide.paper .deck-marks div b { color: #0E8F6B; }
+  .deck-marks div span { font-size: .72rem; opacity: .66; }
+
+  .deck-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; }
+  .deck-cards div { border: 1px solid color-mix(in srgb, currentColor 15%, transparent); border-radius: 16px; padding: 13px 14px; background: color-mix(in srgb, currentColor 5%, transparent); }
+  .deck-cards b { display: block; font-size: .83rem; font-weight: 700; margin-bottom: 3px; }
+  .deck-cards span { display: block; font-size: .73rem; line-height: 1.4; opacity: .66; }
+  .deck-cards .ic { width: 27px; height: 27px; border-radius: 9px; display: grid; place-items: center; margin-bottom: 9px; background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent-lit); }
+  .slide.paper .deck-cards .ic { color: #0E8F6B; }
+  .deck-cards .ic svg { width: 15px; height: 15px; }
+
+  .deck-list { text-align: left; display: flex; flex-direction: column; }
+  .deck-list div { display: flex; gap: 11px; padding: 10px 0; border-bottom: 1px solid color-mix(in srgb, currentColor 13%, transparent); font-size: .81rem; line-height: 1.45; opacity: .76; }
+  .deck-list div:first-child { border-top: 1px solid color-mix(in srgb, currentColor 13%, transparent); }
+  .deck-list s { font-family: var(--mono); font-size: .69rem; color: var(--clay); text-decoration: none; flex: none; padding-top: 2px; }
+
+  .deck-by { display: flex; align-items: center; justify-content: center; gap: 11px; text-decoration: none; padding: 12px 15px; border-radius: var(--r-md); border: 1px solid color-mix(in srgb, currentColor 16%, transparent); }
+  .deck-by i { width: 34px; height: 34px; border-radius: 11px; flex: none; display: grid; place-items: center; font-family: var(--display); font-style: normal; font-size: .86rem; font-weight: 800; letter-spacing: -.03em; background: linear-gradient(150deg, var(--accent-lit), var(--accent)); color: #08110E; }
+  .deck-by u { text-decoration: none; text-align: left; font-size: .76rem; line-height: 1.35; opacity: .68; }
+  .deck-by u b { display: block; font-size: .86rem; font-weight: 680; opacity: 1; }
+
+  .deck-swipe { font-size: .74rem; opacity: .5; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .deck-swipe svg { width: 14px; height: 14px; animation: nudge 1.6s ease-in-out infinite; }
   @keyframes nudge { 0%,100% { transform: translateX(0) } 50% { transform: translateX(5px) } }
 
   .appnav {
@@ -602,24 +657,32 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
   <div class="track" id="track">
 
     <section class="slide dark">
-      <span class="eyebrow">Android · Free · No account</span>
+      <span class="deck-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#08110E" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
+      <span class="deck-badge">Private file vault</span>
       <h2>Nobody looks twice at a <em style="font-style:normal;color:var(--accent-lit)">notes app.</em></h2>
-      <div class="phone-stage"><div class="phone" data-demo><div class="press-ring"></div><div class="screen"></div></div></div>
+      <p class="lede">Real notes on the outside. An encrypted vault behind a long press. No account,
+        no analytics, no internet permission at all.</p>
+      <button class="btn btn-solid js-dl" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M4 21h16"/></svg>
+        Download for Android
+      </button>
+      <div class="deck-marks">
+        <div><b>0</b><span>data collected</span></div>
+        <div><b>1</b><span>permission</span></div>
+        <div><b>4.13<span style="font-size:.6em"> MB</span></b><span>download</span></div>
+      </div>
       <p class="deck-swipe">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></svg>
-        Hold the title · swipe to continue
+        Swipe to see it open
       </p>
     </section>
 
     <section class="slide paper">
-      <span class="eyebrow">The cover</span>
+      <span class="eyebrow">Try it — hold the title</span>
       <h2>Locked, there is nothing to find.</h2>
-      <p class="lede">While the vault is closed the vault tabs are not greyed out — they are gone. A
-        disabled tab would tell whoever is holding your phone exactly what this app is.</p>
-      <div class="deck-mini">
-        <div><b>Hold the title</b>Opens the password screen, never the vault</div>
-        <div><b>Or Settings</b>A visible route, so a gesture can't lock you out</div>
-      </div>
+      <div class="phone-stage"><div class="phone" data-demo><div class="press-ring"></div><div class="screen"></div></div></div>
+      <p class="lede">While the vault is closed its tabs are not greyed out — they are gone. A disabled
+        tab would tell whoever is holding your phone exactly what this app is.</p>
     </section>
 
     <section class="slide paper">
@@ -627,36 +690,45 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
       <h2>Delete it from your gallery.</h2>
       <p class="lede">The vault keeps its own encrypted copy — a different file, not a shortcut. Your
         original stays where you left it, and nothing in the app can remove it.</p>
-      <div class="deck-mini">
-        <div><b>Encrypt</b>Streams into a sealed container</div>
-        <div><b>Verify</b>Read back, every tag checked</div>
-        <div><b>Commit</b>One atomic rename</div>
-        <div><b>Done</b>Original untouched</div>
+      <div class="deck-cards">
+        <div><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><b>Encrypt</b><span>Streams into a sealed container</span></div>
+        <div><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.4 12.2 2.4 2.4 4.8-4.8"/></svg></span><b>Verify</b><span>Read back, every tag checked</span></div>
+        <div><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span><b>Commit</b><span>One atomic rename</span></div>
+        <div><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-4 7-10V6l-7-3-7 3v5c0 6 7 10 7 10z"/></svg></span><b>Done</b><span>Your original untouched</span></div>
       </div>
     </section>
 
     <section class="slide dark">
-      <span class="eyebrow">What it costs you</span>
-      <h2>One permission. Zero data.</h2>
-      <div class="deck-marks">
-        <div><b>0</b><span>data collected</span></div>
-        <div><b>0</b><span>ads or trackers</span></div>
-        <div><b>1</b><span>permission — biometric</span></div>
-        <div><b>4.13<span style="font-size:.55em;font-weight:700"> MB</span></b><span>download</span></div>
+      <span class="eyebrow">Under the hood</span>
+      <h2>Real cryptography, not a hidden folder.</h2>
+      <div class="deck-cards">
+        <div><b>AES-256-GCM</b><span>Chunked, a separate key per file, every chunk bound to its position</span></div>
+        <div><b>Argon2id</b><span>32 MiB, 4 passes, per-vault salt</span></div>
+        <div><b>Sealed twice</b><span>By your password and by the hardware keystore</span></div>
+        <div><b>6-digit PIN</b><span>≈ 28 years to guess against the built-in delay</span></div>
       </div>
-      <p class="lede">No internet permission at all, so there is no way for anything to leave your phone.</p>
+      <div class="deck-list">
+        <div><s>01</s>It cannot make the app invisible — Android Settings still lists it.</div>
+        <div><s>02</s>Lose the password and the recovery key and the vault is gone. Nobody can reset it.</div>
+        <div><s>03</s>No independent security audit has been performed.</div>
+      </div>
     </section>
 
     <section class="slide dark">
       <span class="eyebrow">Free · Works offline</span>
       <h2>Put it on your phone.</h2>
-      <p class="lede">Install it, write a note, and hold the title when you are ready.</p>
+      <p class="lede">v0.1.2 · 4.13 MB · Android 8.0 and newer · no ads, no purchases, nothing to sign up for.</p>
       <button class="btn btn-solid js-dl" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M4 21h16"/></svg>
         Download the APK
       </button>
-      <p class="small" style="color:var(--night-soft)">v0.1.2 · 4.13 MB · Android 8.0+ · Made in New Delhi by
-        <a href="/developer" style="color:var(--accent-lit);font-weight:640">Vansh Kashyap</a></p>
+      <a class="deck-by" href="/developer">
+        <i>VK</i>
+        <u><b>Vansh Kashyap</b>Co-founder, LZ Worth · New Delhi · 8 products shipped</u>
+      </a>
+      <p class="small" style="color:var(--night-soft)">Open source ·
+        <a href="privacy-policy.html" style="color:var(--accent-lit)">Privacy Policy</a> ·
+        <a href="mailto:vk1234888i@gmail.com" style="color:var(--accent-lit)">vk1234888i@gmail.com</a></p>
     </section>
 
   </div>
@@ -860,11 +932,19 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
       <div class="avatar">VK</div>
       <div>
         <h3>Vansh Kashyap</h3>
-        <p class="small" style="margin-top:8px">Web, mobile and AI automation developer in New Delhi, India, and
-          co-founder of <a href="https://lzworth.in/" rel="noopener" style="color:var(--accent);font-weight:640">LZ Worth</a>.
-          He has shipped eight products since 2023 — StreamGarden, JanamJyot, Hisaabi and others — and builds
-          TrueVault solo: the architecture, the cryptography, the wording of every warning. There is no funding to
-          answer to, which is exactly why the app can afford a page listing what it cannot do.</p>
+        <p class="small" style="margin-top:6px;color:var(--accent);font-weight:620">Co-founder, LZ Worth · Web, Mobile &amp; AI Automation Developer · New Delhi, India</p>
+        <p class="small" style="margin-top:10px">Building and shipping since 2023, with eight products live across Android,
+          Windows and the web — StreamGarden, JanamJyot, Hisaabi, RealtyResolve and others. He works full time at
+          Grivaa Capital and co-founded <a href="https://lzworth.in/" rel="noopener" style="color:var(--accent);font-weight:640">LZ Worth</a>,
+          which builds websites, React applications and n8n automation systems for founders, creators and service businesses.</p>
+        <p class="small" style="margin-top:10px">TrueVault is built solo: the architecture, the cryptography, and the wording of
+          every warning. There is no funding to answer to, which is exactly why the app can afford a page listing what it cannot do.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:14px">
+          <span class="dl-meta"><span>Kotlin</span></span><span class="dl-meta"><span>Jetpack Compose</span></span>
+          <span class="dl-meta"><span>React</span></span><span class="dl-meta"><span>Next.js</span></span>
+          <span class="dl-meta"><span>TypeScript</span></span><span class="dl-meta"><span>Supabase</span></span>
+          <span class="dl-meta"><span>n8n</span></span><span class="dl-meta"><span>Technical SEO</span></span>
+        </div>
         <div class="links">
           <a class="link" href="/developer">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
@@ -882,9 +962,9 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49l-.01-1.72c-2.78.62-3.37-1.37-3.37-1.37-.46-1.19-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.57 2.34 1.12 2.91.85.09-.66.35-1.12.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9l-.01 2.82c0 .27.18.6.69.49A10.03 10.03 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg>
             <div><span>Source</span><b>Obitouchiha002/truevault</b></div>
           </a>
-          <a class="link" href="mailto:grivaaseo@gmail.com">
+          <a class="link" href="mailto:vk1234888i@gmail.com">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3 7 9 6 9-6"/></svg>
-            <div><span>Privacy contact</span><b>grivaaseo@gmail.com</b></div>
+            <div><span>Email &amp; privacy contact</span><b>vk1234888i@gmail.com</b></div>
           </a>
         </div>
       </div>
@@ -1188,9 +1268,14 @@ let slideAt = 0;
 function showSlide(i, tapped) {
   slideAt = Math.max(0, Math.min(slides.length - 1, i));
   track.style.transform = `translate3d(${-slideAt * 100}%,0,0)`;
-  slides.forEach((s, n) => s.classList.toggle("live", n === slideAt));
+  slides.forEach((s, n) => {
+    s.classList.toggle("live", n === slideAt);
+    if (n !== slideAt) s.scrollTop = 0;
+  });
   dots.forEach((d, n) => d.classList.toggle("on", n === slideAt));
-  paintChrome(slides[slideAt].classList.contains("paper"));
+  const paper = slides[slideAt].classList.contains("paper");
+  deck.classList.toggle("on-paper", paper);
+  paintChrome(paper);
   if (tapped && navigator.vibrate) navigator.vibrate(6);
 }
 

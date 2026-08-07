@@ -171,8 +171,14 @@ export default async function handler(req, res) {
       try {
         await rpc("admin_web_set_srv", { p_pin: body.pin || "", p_hash: hash });
       } catch (e) {
-        // The PIN was wrong. Counted like any other failed authentication so setup cannot be used
-        // as an unlimited oracle for guessing the PIN.
+        // Only a genuine `unauthorized` from the function means the PIN was wrong. Treating every
+        // failure as a wrong PIN hid a real one: a missing EXECUTE grant reported itself as "that
+        // PIN is not right", which sends you looking at the PIN for something that was never about
+        // the PIN. An infrastructure failure has to look like an infrastructure failure.
+        const wrongPin = typeof e.detail === "string" && e.detail.includes("unauthorized");
+        if (!wrongPin) throw e;
+        // Counted like any other failed authentication, so setup cannot be used as an unlimited
+        // oracle for guessing the PIN.
         noteFailure(ip);
         return res.status(401).json({ error: "Not authorised" });
       }

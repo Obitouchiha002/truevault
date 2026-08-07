@@ -104,6 +104,25 @@ function passwordTooWeak(password) {
   return typeof password !== "string" || password.length < 12;
 }
 
+/**
+ * Unwraps whatever shape PostgREST chose for a single value.
+ *
+ * A function returning `boolean` or `text` comes back as the bare value — `false`, `null`, a string
+ * — not as a row. A function returning a row or a set comes back as an array of objects. Array
+ * destructuring handles the second and throws on the first, which is what produced a 502 here:
+ * `const [x] = false` is a TypeError, and it happened before any Supabase error could occur, so the
+ * upstream status was null and the failure looked like it came from the database when it did not.
+ */
+function scalar(value) {
+  if (Array.isArray(value)) {
+    const first = value[0];
+    if (first && typeof first === "object") return Object.values(first)[0];
+    return first;
+  }
+  if (value && typeof value === "object") return Object.values(value)[0];
+  return value;
+}
+
 async function rpc(fn, args) {
   const response = await fetch(`${process.env.SUPABASE_URL}/rest/v1/rpc/${fn}`, {
     method: "POST",
@@ -157,8 +176,8 @@ export default async function handler(req, res) {
     // to draw. It returns one boolean and nothing else — knowing that a password exists helps an
     // attacker not at all, and hiding it would just make the first-run page impossible to build.
     if (body.action === "status") {
-      const [configured] = await rpc("admin_web_configured_srv", {});
-      return res.status(200).json({ configured: Boolean(configured?.admin_web_configured_srv ?? configured) });
+      const configured = scalar(await rpc("admin_web_configured_srv", {}));
+      return res.status(200).json({ configured: Boolean(configured) });
     }
 
     // First-run and password change. Authorised by the admin PIN already in the database, not by
@@ -185,8 +204,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
-    const [row] = await rpc("admin_web_hash_srv", {});
-    const stored = row?.admin_web_hash_srv ?? row;
+    const stored = scalar(await rpc("admin_web_hash_srv", {}));
     if (!(await verifyPassword(body.password, stored))) {
       noteFailure(ip);
       return res.status(401).json({ error: "Not authorised" });
@@ -222,6 +240,14 @@ export default async function handler(req, res) {
     // Detail to the server log, a correlation id to the browser. The client is told enough to
     // report the failure and nothing about the database, the query or the deployment.
     console.error(`admin ${correlationId}: ${error.status || ""} ${error.detail || error.message}`);
-    return res.status(502).json({ error: "The request could not be completed", correlationId });
+    // The upstream status code is returned; the upstream body still is not. A status is not
+    // sensitive — it does not echo the request the way a PostgREST error message does — and
+    // without it a 404 "no such function" and a 403 "permission denied" are indistinguishable
+    // from the outside, which is exactly the wall this hit.
+    return res.status(502).json({
+      error: "The request could not be completed",
+      correlationId,
+      upstreamStatus: error.status || null,
+    });
   }
 }

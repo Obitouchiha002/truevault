@@ -1,5 +1,6 @@
 package com.truevault.feature.admin.presentation
 
+import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.truevault.core.remote.InstallRecord
@@ -108,32 +109,59 @@ class AdminViewModel @Inject constructor(
 
     fun onPinChanged(value: String) = _uiState.update { it.copy(pin = value.take(64)) }
 
+    private var wrongAttempts = 0
+    private var lockedUntil = 0L
+
     /**
      * A wrong PIN produces no message at all — the screen simply stays where it is. Anything that
      * distinguishes "wrong PIN" from "no panel here" turns a hidden door into a discovered one.
+     *
+     * Three wrong tries then a growing wait. Be clear about what this does and does not buy: it
+     * stops someone holding the phone from sitting there guessing, and nothing more. An attacker
+     * with the anon key extracted from the APK is not using this screen at all — they POST to the
+     * endpoint directly, and no amount of client-side counting touches them. The limit that
+     * actually protects the PIN is the one in `docs/PIN-RATE-LIMIT.sql`, which lives in the
+     * database beside the comparison itself.
      */
     fun unlock() {
         if (!_uiState.value.canSubmitPin) return
+        if (SystemClock.elapsedRealtime() < lockedUntil) return
         refresh(firstUnlock = true)
+    }
+
+    private fun noteWrongPin() {
+        wrongAttempts++
+        if (wrongAttempts >= 3) {
+            // 8s, 16s, 32s … capped, so a long session cannot lock the owner out permanently.
+            val backoff = (8_000L shl (wrongAttempts - 3).coerceAtMost(4))
+            lockedUntil = SystemClock.elapsedRealtime() + backoff
+        }
     }
 
     fun refresh(firstUnlock: Boolean = false) {
         _uiState.update { it.copy(isBusy = true, message = null) }
         viewModelScope.launch {
             when (val result = gate.adminInstalls(_uiState.value.pin)) {
-                is RemoteResult.Ok -> _uiState.update {
+                is RemoteResult.Ok -> {
+                    wrongAttempts = 0
+                    lockedUntil = 0L
                     // StreamGarden's rows live in the same table and belong to different people.
                     // Showing them here would invite acting on the wrong install.
-                    it.copy(
-                        isBusy = false,
-                        authorised = true,
-                        installs = gate.ownInstalls(result.value),
-                        suspendedAll = gate.ownInstalls(result.value)
-                            .let { own -> own.isNotEmpty() && own.all(InstallRecord::blocked) },
-                    )
+                    val own = gate.ownInstalls(result.value)
+                    _uiState.update {
+                        it.copy(
+                            isBusy = false,
+                            authorised = true,
+                            installs = own,
+                            suspendedAll = own.isNotEmpty() && own.all(InstallRecord::blocked),
+                        )
+                    }
                 }
-                is RemoteResult.Refused -> _uiState.update {
-                    it.copy(isBusy = false, message = if (firstUnlock) null else "Refused")
+                is RemoteResult.Refused -> {
+                    if (firstUnlock) noteWrongPin()
+                    _uiState.update {
+                        it.copy(isBusy = false, message = if (firstUnlock) null else "Refused")
+                    }
                 }
                 RemoteResult.Unreachable -> _uiState.update {
                     it.copy(isBusy = false, message = "No connection")

@@ -65,6 +65,32 @@ android {
     }
 }
 
+/**
+ * A release build must match the documents it ships with.
+ *
+ * The Privacy Policy, the Play Data Safety form and the website now all state that the app checks
+ * in with a backend. A release built without `supabase.properties` would ship those claims while
+ * doing nothing of the sort — describing collection that does not happen is a smaller harm than the
+ * reverse, but it is still a false document, and it means an install that can never be suspended.
+ *
+ * Debug builds are unaffected: developing without a backend is normal and the check-in is simply
+ * inert.
+ */
+// Resolved at configuration time, on purpose. Reaching for `rootProject` inside `doFirst` captures
+// the Project object in the task action, which the configuration cache cannot serialise — it fails
+// the whole build, including the debug one.
+val backendConfigured = rootProject.file("supabase.properties").exists()
+
+// Checked at configuration time. A `doFirst` lambda in the Kotlin DSL captures a script object
+// reference, which the configuration cache cannot serialise, and that failed the whole build.
+if (gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) } && !backendConfigured) {
+    throw GradleException(
+        "Release build has no supabase.properties, but the shipped Privacy Policy and Data Safety " +
+            "form describe a backend check-in. Either add the file (see docs/ADMIN.md) or revert " +
+            "those documents first.",
+    )
+}
+
 dependencies {
     implementation(projects.core.remote)
     implementation(projects.feature.admin)

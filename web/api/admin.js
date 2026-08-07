@@ -99,9 +99,16 @@ async function verifyPassword(given, stored) {
   return timingSafeEqual(actual, expected);
 }
 
-/** A password worth the scrypt cost. Twelve characters is the floor, not a recommendation. */
+/**
+ * Ten characters is the floor, not a recommendation.
+ *
+ * It is a defensible floor only because of what sits behind it: scrypt at N=16384 makes each guess
+ * cost tens of milliseconds, and this endpoint rate-limits. Ten characters against a plain hash
+ * would be poor. Use the generator if you have no reason not to — it produces 24.
+ */
+const MIN_PASSWORD = 10;
 function passwordTooWeak(password) {
-  return typeof password !== "string" || password.length < 12;
+  return typeof password !== "string" || password.length < MIN_PASSWORD;
 }
 
 /**
@@ -142,7 +149,13 @@ async function rpc(fn, args) {
     error.detail = detail;
     throw error;
   }
-  return response.json();
+  // A function returning `void` answers 204 with no body, and JSON.parse of nothing throws. That
+  // threw *after* a successful call, so the failure carried no upstream status and looked like the
+  // database had rejected something it had in fact just done. Same shape as the scalar bug: the
+  // response was fine, my assumption about its shape was not.
+  if (response.status === 204) return null;
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
 }
 
 export default async function handler(req, res) {
@@ -184,7 +197,7 @@ export default async function handler(req, res) {
     // the web password — that is the point, since on first run there is no web password yet.
     if (body.action === "setup") {
       if (passwordTooWeak(body.newPassword)) {
-        return res.status(400).json({ error: "Password must be at least 12 characters" });
+        return res.status(400).json({ error: `Password must be at least ${MIN_PASSWORD} characters` });
       }
       const hash = await hashPassword(body.newPassword);
       try {

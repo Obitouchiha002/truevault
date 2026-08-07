@@ -50,7 +50,7 @@ button.sm{padding:8px 14px;font-size:.85rem}
     </p>
     <div class="row" style="flex-direction:column;align-items:stretch">
       <input id="pin" type="password" placeholder="Existing StreamGarden admin PIN" autocomplete="off">
-      <input id="np1" type="password" placeholder="New admin password (12+ characters)" autocomplete="new-password">
+      <input id="np1" type="password" placeholder="New admin password (10+ characters)" autocomplete="new-password">
       <input id="np2" type="password" placeholder="Repeat the new password" autocomplete="new-password">
       <div class="row">
         <button id="save">Set password</button>
@@ -190,7 +190,7 @@ $("gen").addEventListener("click", () => {
 $("save").addEventListener("click", async () => {
   $("msgs").textContent = "";
   if ($("np1").value !== $("np2").value) { $("msgs").textContent = "The two passwords do not match."; return; }
-  if ($("np1").value.length < 12) { $("msgs").textContent = "Use at least 12 characters."; return; }
+  if ($("np1").value.length < 10) { $("msgs").textContent = "Use at least 10 characters."; return; }
   $("save").disabled = true;
   try {
     await call("setup", { pin: $("pin").value, newPassword: $("np1").value });

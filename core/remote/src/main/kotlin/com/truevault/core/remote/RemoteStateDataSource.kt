@@ -53,12 +53,37 @@ class RemoteStateDataSource @Inject constructor(
     }
 
     suspend fun cacheStatus(status: InstallStatus) = write { prefs ->
+        prefs[Keys.EVER_CHECKED_IN] = true
         prefs[Keys.BLOCKED] = status.blocked
         prefs[Keys.PREMIUM] = status.premium
         status.reason?.let { prefs[Keys.REASON] = it } ?: prefs.remove(Keys.REASON)
         status.code?.let { prefs[Keys.CODE] = it } ?: prefs.remove(Keys.CODE)
         status.until?.let { prefs[Keys.UNTIL] = it } ?: prefs.remove(Keys.UNTIL)
     }
+
+    /**
+     * A stable id for the few devices whose `ANDROID_ID` is null or the known-duplicate value.
+     *
+     * Generated once and kept. It does not survive an uninstall — nothing an app can store without
+     * a permission does — so on those devices a ban can be shed by reinstalling. That is a real
+     * gap and it is stated rather than papered over; what it replaces was worse, because every such
+     * device shared a single row.
+     */
+    suspend fun fallbackInstallId(): String {
+        read(Keys.FALLBACK_ID)?.takeIf { it.isNotBlank() }?.let { return it }
+        val generated = "fb-" + java.util.UUID.randomUUID().toString()
+        write { it[Keys.FALLBACK_ID] = generated }
+        return generated
+    }
+
+    /**
+     * Whether this install has ever had an answer from the backend.
+     *
+     * A fresh install has no cached decision, so "no decision" and "not blocked" look identical.
+     * They are not: the first is unknown, the second is known. This tells them apart.
+     */
+    suspend fun hasEverCheckedIn(): Boolean =
+        runCatching { store.data.first()[Keys.EVER_CHECKED_IN] }.getOrNull() == true
 
     /** Called by the delete-everything flow. */
     suspend fun clear() = write { it.clear() }
@@ -78,6 +103,8 @@ class RemoteStateDataSource @Inject constructor(
 
     private object Keys {
         val NAME = stringPreferencesKey("display_name")
+        val FALLBACK_ID = stringPreferencesKey("fallback_install_id")
+        val EVER_CHECKED_IN = booleanPreferencesKey("ever_checked_in")
         val BLOCKED = booleanPreferencesKey("blocked")
         val PREMIUM = booleanPreferencesKey("premium")
         val REASON = stringPreferencesKey("block_reason")

@@ -1,6 +1,7 @@
 package com.truevault.app
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -12,10 +13,12 @@ import com.truevault.feature.admin.presentation.NamePromptScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * What the gate has decided about this launch.
@@ -36,6 +39,15 @@ class RemoteGateViewModel @Inject constructor(
     private val gate: RemoteGateRepository,
 ) : ViewModel() {
 
+    /**
+     * The version, supplied by the host on its first composition.
+     *
+     * A `Deferred` rather than a plain field because `init` runs at construction, before any
+     * composable can set anything — a plain field would have sent the very first check-in, the one
+     * that registers the install, with an empty version string.
+     */
+    private val appVersion = CompletableDeferred<String>()
+
     private val _state = MutableStateFlow<GateState>(GateState.Deciding)
     val state: StateFlow<GateState> = _state.asStateFlow()
 
@@ -48,6 +60,19 @@ class RemoteGateViewModel @Inject constructor(
             // last answer the backend gave is on disk, so the decision is instant and identical
             // whether or not there is a connection right now.
             gate.restore()
+
+            // A reinstall wipes app-private storage, so a blocked device comes back with an empty
+            // cache and "no decision" looks exactly like "not blocked". Opening straight away would
+            // hand it a working app until the background check-in landed — and forever, if it
+            // stayed offline. So the first launch of an install waits for a real answer.
+            //
+            // With a timeout, and then it opens anyway. A genuine new user on a train must not be
+            // shut out of an app that works offline; the trade is a few seconds of access for a
+            // blocked device that reinstalls, against never locking out someone who did nothing.
+            if (gate.isEnabled && !gate.hasEverCheckedIn()) {
+                withTimeoutOrNull(FIRST_CHECK_IN_TIMEOUT_MS) { gate.checkIn(appVersion.await()) }
+            }
+
             _state.value = decide(gate.currentStatus(), gate.hasDisplayName())
         }
         viewModelScope.launch {
@@ -76,6 +101,8 @@ class RemoteGateViewModel @Inject constructor(
         }
     }
 
+    fun setAppVersion(version: String) { appVersion.complete(version) }
+
     private fun decide(status: InstallStatus, hasName: Boolean): GateState = when {
         !gate.isEnabled -> GateState.Open
         status.blocked -> GateState.Blocked
@@ -100,6 +127,9 @@ fun RemoteGateHost(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    // Handed over before anything is drawn, which is what releases the first check-in.
+    LaunchedEffect(appVersion) { viewModel.setAppVersion(appVersion) }
+
     when (state) {
         // Nothing is drawn for the frame it takes to read a cached boolean. Drawing the app and
         // then snatching it away would be worse than a blank frame.
@@ -109,3 +139,6 @@ fun RemoteGateHost(
         GateState.Open -> content()
     }
 }
+
+/** Long enough for a slow connection, short enough not to look like a hang. */
+private const val FIRST_CHECK_IN_TIMEOUT_MS = 6_000L

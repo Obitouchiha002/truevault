@@ -1,3 +1,5 @@
+<!doctype html>
+<html lang="en">
 <meta charset="utf-8">
 <title>Notes — a private file vault hiding inside a notes app | by Vansh Kashyap</title>
 
@@ -454,7 +456,11 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
 .dl-table { width: 100%; border-collapse: collapse; font-size: .87rem; margin-bottom: 17px; }
 .dl-table th, .dl-table td { padding: 10px 2px; border-bottom: 1px solid var(--paper-line); text-align: left; }
 .dl-table th { color: var(--paper-soft); font-weight: 520; width: 42%; }
-.dl-table td { font-weight: 580; font-variant-numeric: tabular-nums; }
+/* Stated rather than inherited. This page was missing its doctype, and in quirks
+   mode a table ignores its parent's colour and takes the body's — which here is
+   near-white, so every value in this dialog was invisible against the white
+   card. The doctype is the real fix; this makes the intent hold without it. */
+.dl-table td { color: var(--paper-ink); font-weight: 580; font-variant-numeric: tabular-nums; }
 .dl-table td.mono { font-family: var(--mono); font-size: .78rem; }
 .modal-warn { background: var(--clay-wash); color: var(--clay); border-radius: var(--r-md); padding: 13px 15px; font-size: .82rem; line-height: 1.5; margin-bottom: 15px; }
 .modal .btn-solid { background: var(--paper-ink); color: var(--paper); width: 100%; }
@@ -1376,3 +1382,4 @@ syncMode();
 addEventListener("resize", () => { syncMode(); queueDepth(); });
 queueDepth();
 </script>
+</html>

@@ -17,6 +17,20 @@
 import { timingSafeEqual, randomUUID } from "node:crypto";
 
 /**
+ * The platform tag each app sends on check-in, mapped to a readable name.
+ *
+ * One shared `devices` table holds every app's installs, and this column is the only thing that
+ * tells them apart. A tag with no entry here is shown as-is rather than hidden: an unknown app
+ * appearing in the list is information, and silently dropping it would be the wrong default.
+ */
+const APPS = {
+  "android": "StreamGarden",
+  "truevault-android": "TrueVault",
+  "copyeye-android": "CopyEye",
+};
+const appOf = (platform) => APPS[platform] || (platform || "unknown");
+
+/**
  * In-memory, per-instance, and deliberately so.
  *
  * A serverless instance is recycled, so this is not a durable lock — an attacker who spreads guesses
@@ -114,10 +128,10 @@ export default async function handler(req, res) {
     switch (body.action) {
       case "list": {
         const rows = await rpc("admin_devices_srv", {});
-        // Only this app's installs. StreamGarden shares the table and its users are different
-        // people; filtering here means the browser never receives their rows at all.
-        const own = rows.filter((r) => r.platform === "truevault-android");
-        return res.status(200).json({ installs: own });
+        // Every app in one list, tagged. The platform column is the only thing separating them,
+        // so an app that has never checked in simply has no rows and no group — which is the
+        // honest representation of "not wired up yet" rather than an empty section implying it is.
+        return res.status(200).json({ installs: rows.map((r) => ({ ...r, app: appOf(r.platform) })) });
       }
 
       case "block":

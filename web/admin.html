@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>TrueVault admin</title>
+<title>Master admin — all apps</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive">
 <style>
@@ -29,13 +29,17 @@ button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink
 .pill.on{border-color:var(--clay);color:var(--clay)}
 .pill.prem{border-color:var(--accent);color:var(--accent)}
 .msg{color:var(--clay);font-size:.88rem;min-height:1.3em}
+.group{margin-bottom:26px}
+.group h2{font-size:1.05rem;margin:0 0 10px;letter-spacing:-.02em}
+button.sm{padding:8px 14px;font-size:.85rem}
 .hint{color:var(--soft);font-size:.8rem;margin-top:22px;border-top:1px solid var(--line);padding-top:14px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>TrueVault admin</h1>
-  <p class="sub">Installs of TrueVault only. StreamGarden's rows are filtered out on the server.</p>
+  <h1>Master admin</h1>
+  <p class="sub">Every app that checks in to this database, in one place. An app with no rows has
+  not been wired up to check in yet.</p>
 
   <div id="gate">
     <div class="row">
@@ -48,11 +52,7 @@ button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink
   <div id="panel" hidden>
     <div class="row" style="justify-content:space-between;margin-bottom:16px">
       <strong id="count"></strong>
-      <div class="row">
-        <button class="ghost" id="refresh">Refresh</button>
-        <button class="ghost" id="suspendAll">Suspend all</button>
-        <button class="ghost" id="restoreAll">Restore all</button>
-      </div>
+      <button class="ghost" id="refresh">Refresh</button>
     </div>
     <div id="list"></div>
     <p class="msg" id="msg2"></p>
@@ -88,28 +88,55 @@ async function call(action, extra = {}) {
 
 async function load() {
   const { installs } = await call("list");
-  $("count").textContent = `${installs.length} install${installs.length === 1 ? "" : "s"}`;
-  $("list").innerHTML = installs.map((i) => `
-    <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <div>
-          <h3>${esc(i.name && i.name.trim() ? i.name : "(no name)")}</h3>
-          <div class="meta">v${esc(i.version || "?")} · last seen ${esc((i.last_seen || "").slice(0, 16) || "—")}</div>
-        </div>
+
+  /* Grouped by app rather than listed flat. Three products' users in one column would make it far
+     too easy to suspend the wrong person's install — the grouping is a safety measure, not a
+     layout preference. */
+  const groups = new Map();
+  for (const i of installs) {
+    if (!groups.has(i.app)) groups.set(i.app, []);
+    groups.get(i.app).push(i);
+  }
+
+  $("count").textContent =
+    `${installs.length} install${installs.length === 1 ? "" : "s"} across ${groups.size} app${groups.size === 1 ? "" : "s"}`;
+
+  $("list").innerHTML = [...groups.entries()].sort().map(([app, rows]) => {
+    const blocked = rows.filter((r) => r.blocked).length;
+    return `
+    <section class="group">
+      <div class="row" style="justify-content:space-between;align-items:baseline">
+        <h2>${esc(app)}</h2>
         <div class="row">
-          ${i.blocked ? '<span class="pill on">suspended</span>' : ""}
-          ${i.premium ? '<span class="pill prem">premium</span>' : ""}
+          <span class="meta">${rows.length} install${rows.length === 1 ? "" : "s"}${blocked ? ` · ${blocked} suspended` : ""}</span>
+          <button class="ghost sm" data-all="${esc(app)}" data-to="1">Suspend all</button>
+          <button class="ghost sm" data-all="${esc(app)}" data-to="0">Restore all</button>
         </div>
       </div>
-      <div class="row" style="margin-top:12px">
-        <button class="ghost" data-block="${esc(i.id)}" data-to="${i.blocked ? "0" : "1"}">
-          ${i.blocked ? "Restore" : "Suspend"}
-        </button>
-        <button class="ghost" data-prem="${esc(i.id)}" data-to="${i.premium ? "0" : "1"}">
-          ${i.premium ? "Remove premium" : "Give premium"}
-        </button>
-      </div>
-    </div>`).join("") || '<p class="sub">No installs have checked in yet.</p>';
+      ${rows.map((i) => `
+        <div class="card">
+          <div class="row" style="justify-content:space-between">
+            <div>
+              <h3>${esc(i.name && i.name.trim() ? i.name : "(no name)")}</h3>
+              <div class="meta">v${esc(i.version || "?")} · last seen ${esc((i.last_seen || "").slice(0, 16) || "—")}</div>
+            </div>
+            <div class="row">
+              ${i.blocked ? '<span class="pill on">suspended</span>' : ""}
+              ${i.premium ? '<span class="pill prem">premium</span>' : ""}
+            </div>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="ghost sm" data-block="${esc(i.id)}" data-to="${i.blocked ? "0" : "1"}">
+              ${i.blocked ? "Restore" : "Suspend"}
+            </button>
+            <button class="ghost sm" data-prem="${esc(i.id)}" data-to="${i.premium ? "0" : "1"}">
+              ${i.premium ? "Remove premium" : "Give premium"}
+            </button>
+          </div>
+        </div>`).join("")}
+    </section>`;
+  }).join("") || '<p class="sub">Nothing has checked in yet.</p>';
+
   return installs;
 }
 
@@ -150,16 +177,22 @@ $("list").addEventListener("click", (e) => {
   });
 });
 
-for (const [id, blocked, label] of [["suspendAll", true, "Suspend"], ["restoreAll", false, "Restore"]]) {
-  $(id).addEventListener("click", () => guard(async () => {
+$("list").addEventListener("click", (e) => {
+  const all = e.target.closest("[data-all]");
+  if (!all) return;
+  const app = all.dataset.all;
+  const blocked = all.dataset.to === "1";
+  guard(async () => {
     const installs = await call("list").then((d) => d.installs);
-    const targets = installs.filter((i) => Boolean(i.blocked) !== blocked);
+    const targets = installs.filter((i) => i.app === app && Boolean(i.blocked) !== blocked);
     if (!targets.length) { $("msg2").textContent = "Nothing to change."; return; }
-    if (!confirm(`${label} ${targets.length} install(s)?`)) return;
+    // Named in the prompt. "Suspend all" with three apps on screen is exactly the click where a
+    // generic confirmation would let you take down the wrong product's users.
+    if (!confirm(`${blocked ? "Suspend" : "Restore"} ${targets.length} ${app} install(s)?`)) return;
     for (const i of targets) await call("block", { id: i.id, blocked });
     await load();
-  }));
-}
+  });
+});
 </script>
 </body>
 </html>

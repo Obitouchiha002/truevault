@@ -25,9 +25,9 @@ button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink
 
 /* A row is a row until you touch it. Every install used to carry two visible buttons, so six
    installs meant twelve destructive controls competing for attention and nothing reading as a
-   list. Actions now belong to the one row you chose. */
+   list. Actions belong to the one row you chose. */
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:8px;
-  overflow:hidden;transition:border-color .18s,background .18s}
+  overflow:hidden;transition:border-color .18s}
 .card:hover{border-color:#33423D}
 .card.open{border-color:var(--accent)}
 .head{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;
@@ -38,8 +38,19 @@ button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink
 .who span{display:block;color:var(--soft);font-size:.76rem;font-family:var(--m);margin-top:2px}
 .chev{color:var(--soft);flex:none;transition:transform .2s}
 .card.open .chev{transform:rotate(90deg)}
-.acts{display:none;gap:8px;padding:0 16px 14px;flex-wrap:wrap}
-.card.open .acts{display:flex}
+.acts{display:none;padding:0 16px 14px}
+.card.open .acts{display:block}
+
+/* Reason first, then how long. A duration with no reason is a block the person on the other end
+   cannot act on, and the block screen shows them both. */
+.lbl{font-family:var(--m);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--soft);padding:12px 0 8px;border-top:1px solid var(--line)}
+.reason{display:flex;align-items:center;gap:12px;padding:7px 0}
+.reason span{flex:1;font-size:.88rem;color:var(--ink)}
+.reason span i{font-style:normal;font-family:var(--m);font-size:.76rem;color:var(--soft);margin-right:8px}
+select{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);
+  color:var(--ink);font:inherit;font-size:.82rem;cursor:pointer;min-width:120px}
+.foot{display:flex;gap:8px;flex-wrap:wrap;padding-top:14px;margin-top:8px;border-top:1px solid var(--line)}
 
 .pill{font-size:.68rem;font-family:var(--m);padding:3px 9px;border-radius:999px;
   border:1px solid var(--line);color:var(--soft);flex:none}
@@ -47,7 +58,16 @@ button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink
 .pill.prem{border-color:var(--accent);color:var(--accent)}
 .msg{color:var(--clay);font-size:.88rem;min-height:1.3em}
 
-/* App headers earn a rule above them so two groups never blur into one another. */
+/* Filter chips. The count is on the chip because "which app has the most installs" is the first
+   question you have when you open this. */
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;
+  border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;
+  font-size:.86rem;font-weight:560;cursor:pointer}
+.chip b{font-family:var(--m);font-size:.78rem;color:var(--soft);font-weight:400}
+.chip.on{background:var(--accent);color:#08110E;border-color:var(--accent)}
+.chip.on b{color:#08110E;opacity:.7}
+
 .group{margin-bottom:30px}
 .ghead{display:flex;align-items:center;gap:12px;padding:0 0 12px;margin-bottom:12px;
   border-bottom:1px solid var(--line)}
@@ -56,6 +76,7 @@ button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink
 button.sm{padding:8px 14px;font-size:.83rem}
 button.danger{border-color:#4a2a22;color:var(--clay)}
 button.danger:hover{background:#1d1412}
+button.gold{background:#B4863F;color:#150E04;border:0}
 .hint{color:var(--soft);font-size:.8rem;margin-top:22px;border-top:1px solid var(--line);padding-top:14px}
 </style>
 </head>
@@ -97,6 +118,7 @@ button.danger:hover{background:#1d1412}
       <strong id="count"></strong>
       <button class="ghost" id="refresh">Refresh</button>
     </div>
+    <div class="chips" id="chips"></div>
     <div id="list"></div>
     <p class="msg" id="msg2"></p>
     <p class="hint">
@@ -120,6 +142,42 @@ let openId = null;
 /** A short tick on anything that changes state. Absent on desktop, and that is fine. */
 const tap = (ms = 8) => navigator.vibrate?.(ms);
 
+/* Which app the chips are filtering to. null means all. */
+let appFilter = null;
+let lastInstalls = [];
+
+/**
+ * Preset block reasons, with the code the blocked person sees on their screen.
+ *
+ * Presets rather than a free-text box on purpose: a reason typed in anger reaches a real person,
+ * and these are the ones worth sending. The code gives them something to quote if they write back.
+ */
+const REASONS = [
+  ["411", "Suspicious activity detected"],
+  ["403", "Terms of service violation"],
+  ["429", "Unusual usage detected"],
+  ["423", "Account under review"],
+  ["451", "Unauthorized distribution"],
+  ["419", "Security verification failed"],
+];
+
+const DURATIONS = [
+  ["60", "1 hour"], ["1440", "1 day"], ["10080", "7 days"],
+  ["43200", "30 days"], ["", "Permanent"],
+];
+
+/** "51m ago" reads faster than a timestamp when you are scanning for who is still active. */
+function ago(iso) {
+  if (!iso) return "never";
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return days < 30 ? `${days}d ago` : new Date(iso).toISOString().slice(0, 10);
+}
+
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -137,18 +195,33 @@ async function call(action, extra = {}) {
 
 async function load() {
   const { installs } = await call("list");
+  lastInstalls = installs;
+  render();
+  return installs;
+}
 
-  /* Grouped by app rather than listed flat. Three products' users in one column would make it far
-     too easy to suspend the wrong person's install — the grouping is a safety measure, not a
-     layout preference. */
+function render() {
+  const installs = lastInstalls;
+
+  // Chips are built from every install, not the filtered set — a filter that hides its own way
+  // back is a trap.
+  const counts = new Map();
+  for (const i of installs) counts.set(i.app, (counts.get(i.app) || 0) + 1);
+  $("chips").innerHTML =
+    `<button class="chip ${appFilter ? "" : "on"}" data-app="">All apps <b>${installs.length}</b></button>` +
+    [...counts.entries()].sort().map(([app, n]) =>
+      `<button class="chip ${appFilter === app ? "on" : ""}" data-app="${esc(app)}">${esc(app)} <b>${n}</b></button>`).join("");
+
+  const shown = appFilter ? installs.filter((i) => i.app === appFilter) : installs;
+
   const groups = new Map();
-  for (const i of installs) {
+  for (const i of shown) {
     if (!groups.has(i.app)) groups.set(i.app, []);
     groups.get(i.app).push(i);
   }
 
   $("count").textContent =
-    `${installs.length} install${installs.length === 1 ? "" : "s"} across ${groups.size} app${groups.size === 1 ? "" : "s"}`;
+    `${shown.length} install${shown.length === 1 ? "" : "s"}${appFilter ? "" : ` across ${groups.size} app${groups.size === 1 ? "" : "s"}`}`;
 
   $("list").innerHTML = [...groups.entries()].sort().map(([app, rows]) => {
     const suspended = rows.filter((r) => r.blocked).length;
@@ -165,29 +238,39 @@ async function load() {
           <div class="head" data-toggle="${esc(i.id)}">
             <div class="who">
               <b>${esc(i.name && i.name.trim() ? i.name : "(no name)")}</b>
-              <span>v${esc(i.version || "?")} · ${esc((i.last_seen || "").replace("T", " ").slice(0, 16) || "never")}</span>
+              <span>${esc(i.app)} · v${esc(i.version || "?")} · ${esc(ago(i.last_seen))}</span>
             </div>
             ${i.blocked ? '<span class="pill on">suspended</span>' : ""}
             ${i.premium ? '<span class="pill prem">premium</span>' : ""}
             <span class="chev">›</span>
           </div>
           <div class="acts">
-            <button class="ghost sm ${i.blocked ? "" : "danger"}" data-block="${esc(i.id)}" data-to="${i.blocked ? "0" : "1"}">
-              ${i.blocked ? "Restore access" : "Suspend"}
-            </button>
-            <button class="ghost sm" data-prem="${esc(i.id)}" data-to="${i.premium ? "0" : "1"}">
-              ${i.premium ? "Remove premium" : "Give premium"}
-            </button>
+            ${i.blocked ? `
+              <div class="lbl">Currently suspended${i.block_code ? ` · code ${esc(i.block_code)}` : ""}</div>
+              <p class="sub" style="margin:0 0 12px">${esc(i.block_reason || "No reason recorded.")}</p>
+              <button class="sm" data-block="${esc(i.id)}" data-to="0">Restore access</button>
+            ` : `
+              <div class="lbl">Block — reason, then duration</div>
+              ${REASONS.map(([code, text]) => `
+                <div class="reason">
+                  <span><i>${code}</i>${esc(text)}</span>
+                  <select data-ban="${esc(i.id)}" data-code="${code}" data-reason="${esc(text)}">
+                    <option value="">Ban…</option>
+                    ${DURATIONS.map(([m, label]) => `<option value="${m}">${label}</option>`).join("")}
+                  </select>
+                </div>`).join("")}
+            `}
+            <div class="foot">
+              <button class="sm ${i.premium ? "ghost" : "gold"}" data-prem="${esc(i.id)}" data-to="${i.premium ? "0" : "1"}">
+                ${i.premium ? "Remove premium" : "Give premium"}
+              </button>
+            </div>
           </div>
         </div>`).join("")}
     </section>`;
   }).join("") || '<p class="sub">Nothing has checked in yet.</p>';
 
-  // Whatever was expanded stays expanded across a refresh — collapsing the row you just acted on
-  // hides the result of the action you just took.
   if (openId) document.querySelector(`[data-card="${CSS.escape(openId)}"]`)?.classList.add("open");
-
-  return installs;
 }
 
 async function guard(fn) {
@@ -254,6 +337,34 @@ $("go").addEventListener("click", async () => {
 $("pw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("go").click(); });
 
 $("refresh").addEventListener("click", () => guard(load));
+
+$("chips").addEventListener("click", (e) => {
+  const chip = e.target.closest("[data-app]");
+  if (!chip) return;
+  appFilter = chip.dataset.app || null;
+  tap(6);
+  render();
+});
+
+/* A duration picked on a reason row is the whole action — reason, code and length in one gesture,
+   with a confirmation naming all three, because this is the control that reaches a real person. */
+$("list").addEventListener("change", (e) => {
+  const sel = e.target.closest("[data-ban]");
+  if (!sel || !sel.value && sel.value !== "") return;
+  const minutes = sel.value === "" ? null : Number(sel.value);
+  const label = sel.options[sel.selectedIndex].text;
+  if (sel.selectedIndex === 0) return;
+  const { reason, code } = sel.dataset;
+  if (!confirm(`Suspend this install for ${label.toLowerCase()}?\n\n${code} · ${reason}`)) {
+    sel.selectedIndex = 0;
+    return;
+  }
+  guard(async () => {
+    tap(20);
+    await call("block", { id: sel.dataset.ban, blocked: true, reason, code, minutes });
+    await load();
+  });
+});
 
 $("list").addEventListener("click", (e) => {
   const toggle = e.target.closest("[data-toggle]");

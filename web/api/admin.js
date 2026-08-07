@@ -29,6 +29,9 @@ import { timingSafeEqual, randomUUID, scrypt, randomBytes } from "node:crypto";
 const APPS = {
   "android": "StreamGarden",
   "truevault-android": "TrueVault",
+  // CopyEye sends "copyeye", not the "-android" suffix I guessed. Guessing a tag an app has not
+  // shipped yet is how you get a group labelled with a raw platform string in production.
+  "copyeye": "CopyEye",
   "copyeye-android": "CopyEye",
 };
 const appOf = (platform) => APPS[platform] || (platform || "unknown");

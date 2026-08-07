@@ -22,16 +22,40 @@ button{padding:12px 20px;border-radius:999px;border:0;background:var(--accent);c
 button:disabled{opacity:.5;cursor:default}
 button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:10px}
-.card h3{margin:0 0 2px;font-size:1rem}
-.meta{color:var(--soft);font-size:.8rem;font-family:var(--m)}
-.pill{font-size:.7rem;font-family:var(--m);padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--soft)}
+
+/* A row is a row until you touch it. Every install used to carry two visible buttons, so six
+   installs meant twelve destructive controls competing for attention and nothing reading as a
+   list. Actions now belong to the one row you chose. */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:8px;
+  overflow:hidden;transition:border-color .18s,background .18s}
+.card:hover{border-color:#33423D}
+.card.open{border-color:var(--accent)}
+.head{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;user-select:none}
+.head:active{background:#161f1c}
+.who{min-width:0;flex:1}
+.who b{display:block;font-size:.95rem;font-weight:620;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who span{display:block;color:var(--soft);font-size:.76rem;font-family:var(--m);margin-top:2px}
+.chev{color:var(--soft);flex:none;transition:transform .2s}
+.card.open .chev{transform:rotate(90deg)}
+.acts{display:none;gap:8px;padding:0 16px 14px;flex-wrap:wrap}
+.card.open .acts{display:flex}
+
+.pill{font-size:.68rem;font-family:var(--m);padding:3px 9px;border-radius:999px;
+  border:1px solid var(--line);color:var(--soft);flex:none}
 .pill.on{border-color:var(--clay);color:var(--clay)}
 .pill.prem{border-color:var(--accent);color:var(--accent)}
 .msg{color:var(--clay);font-size:.88rem;min-height:1.3em}
-.group{margin-bottom:26px}
-.group h2{font-size:1.05rem;margin:0 0 10px;letter-spacing:-.02em}
-button.sm{padding:8px 14px;font-size:.85rem}
+
+/* App headers earn a rule above them so two groups never blur into one another. */
+.group{margin-bottom:30px}
+.ghead{display:flex;align-items:center;gap:12px;padding:0 0 12px;margin-bottom:12px;
+  border-bottom:1px solid var(--line)}
+.ghead h2{font-size:1.02rem;margin:0;letter-spacing:-.02em;flex:1}
+.ghead .meta{font-size:.75rem}
+button.sm{padding:8px 14px;font-size:.83rem}
+button.danger{border-color:#4a2a22;color:var(--clay)}
+button.danger:hover{background:#1d1412}
 .hint{color:var(--soft);font-size:.8rem;margin-top:22px;border-top:1px solid var(--line);padding-top:14px}
 </style>
 </head>
@@ -89,6 +113,12 @@ button.sm{padding:8px 14px;font-size:.85rem}
    cookie: this page has no session to resume, and a stored admin password on a shared machine is a
    worse problem than typing it again. */
 let password = "";
+/* Which row is expanded. One at a time: two open rows next to each other is how you press Suspend
+   on the wrong install. */
+let openId = null;
+
+/** A short tick on anything that changes state. Absent on desktop, and that is fine. */
+const tap = (ms = 8) => navigator.vibrate?.(ms);
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
@@ -121,32 +151,29 @@ async function load() {
     `${installs.length} install${installs.length === 1 ? "" : "s"} across ${groups.size} app${groups.size === 1 ? "" : "s"}`;
 
   $("list").innerHTML = [...groups.entries()].sort().map(([app, rows]) => {
-    const blocked = rows.filter((r) => r.blocked).length;
+    const suspended = rows.filter((r) => r.blocked).length;
     return `
     <section class="group">
-      <div class="row" style="justify-content:space-between;align-items:baseline">
+      <div class="ghead">
         <h2>${esc(app)}</h2>
-        <div class="row">
-          <span class="meta">${rows.length} install${rows.length === 1 ? "" : "s"}${blocked ? ` · ${blocked} suspended` : ""}</span>
-          <button class="ghost sm" data-all="${esc(app)}" data-to="1">Suspend all</button>
-          <button class="ghost sm" data-all="${esc(app)}" data-to="0">Restore all</button>
-        </div>
+        <span class="meta">${rows.length} install${rows.length === 1 ? "" : "s"}${suspended ? ` · ${suspended} suspended` : ""}</span>
+        <button class="ghost sm danger" data-all="${esc(app)}" data-to="1">Suspend all</button>
+        <button class="ghost sm" data-all="${esc(app)}" data-to="0">Restore all</button>
       </div>
       ${rows.map((i) => `
-        <div class="card">
-          <div class="row" style="justify-content:space-between">
-            <div>
-              <h3>${esc(i.name && i.name.trim() ? i.name : "(no name)")}</h3>
-              <div class="meta">v${esc(i.version || "?")} · last seen ${esc((i.last_seen || "").slice(0, 16) || "—")}</div>
+        <div class="card" data-card="${esc(i.id)}">
+          <div class="head" data-toggle="${esc(i.id)}">
+            <div class="who">
+              <b>${esc(i.name && i.name.trim() ? i.name : "(no name)")}</b>
+              <span>v${esc(i.version || "?")} · ${esc((i.last_seen || "").replace("T", " ").slice(0, 16) || "never")}</span>
             </div>
-            <div class="row">
-              ${i.blocked ? '<span class="pill on">suspended</span>' : ""}
-              ${i.premium ? '<span class="pill prem">premium</span>' : ""}
-            </div>
+            ${i.blocked ? '<span class="pill on">suspended</span>' : ""}
+            ${i.premium ? '<span class="pill prem">premium</span>' : ""}
+            <span class="chev">›</span>
           </div>
-          <div class="row" style="margin-top:12px">
-            <button class="ghost sm" data-block="${esc(i.id)}" data-to="${i.blocked ? "0" : "1"}">
-              ${i.blocked ? "Restore" : "Suspend"}
+          <div class="acts">
+            <button class="ghost sm ${i.blocked ? "" : "danger"}" data-block="${esc(i.id)}" data-to="${i.blocked ? "0" : "1"}">
+              ${i.blocked ? "Restore access" : "Suspend"}
             </button>
             <button class="ghost sm" data-prem="${esc(i.id)}" data-to="${i.premium ? "0" : "1"}">
               ${i.premium ? "Remove premium" : "Give premium"}
@@ -155,6 +182,10 @@ async function load() {
         </div>`).join("")}
     </section>`;
   }).join("") || '<p class="sub">Nothing has checked in yet.</p>';
+
+  // Whatever was expanded stays expanded across a refresh — collapsing the row you just acted on
+  // hides the result of the action you just took.
+  if (openId) document.querySelector(`[data-card="${CSS.escape(openId)}"]`)?.classList.add("open");
 
   return installs;
 }
@@ -225,13 +256,25 @@ $("pw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("go").clic
 $("refresh").addEventListener("click", () => guard(load));
 
 $("list").addEventListener("click", (e) => {
+  const toggle = e.target.closest("[data-toggle]");
+  if (toggle) {
+    const id = toggle.dataset.toggle;
+    openId = openId === id ? null : id;
+    document.querySelectorAll(".card").forEach((c) =>
+      c.classList.toggle("open", c.dataset.card === openId));
+    tap(6);
+    return;
+  }
+
   const block = e.target.closest("[data-block]");
   const prem = e.target.closest("[data-prem]");
   if (block) guard(async () => {
+    tap(12);
     await call("block", { id: block.dataset.block, blocked: block.dataset.to === "1" });
     await load();
   });
   if (prem) guard(async () => {
+    tap(12);
     await call("premium", { id: prem.dataset.prem, premium: prem.dataset.to === "1" });
     await load();
   });
@@ -249,6 +292,7 @@ $("list").addEventListener("click", (e) => {
     // Named in the prompt. "Suspend all" with three apps on screen is exactly the click where a
     // generic confirmation would let you take down the wrong product's users.
     if (!confirm(`${blocked ? "Suspend" : "Restore"} ${targets.length} ${app} install(s)?`)) return;
+    tap(20);
     for (const i of targets) await call("block", { id: i.id, blocked });
     await load();
   });

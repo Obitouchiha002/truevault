@@ -41,7 +41,26 @@ button.sm{padding:8px 14px;font-size:.85rem}
   <p class="sub">Every app that checks in to this database, in one place. An app with no rows has
   not been wired up to check in yet.</p>
 
-  <div id="gate">
+  <div id="loading"><p class="sub">Checking…</p></div>
+
+  <div id="setup" hidden>
+    <p class="sub" style="margin-bottom:14px">
+      No admin password has been set yet. Choose one now. To prove this panel is yours, enter the
+      admin PIN you already use for StreamGarden — it is only needed this once.
+    </p>
+    <div class="row" style="flex-direction:column;align-items:stretch">
+      <input id="pin" type="password" placeholder="Existing StreamGarden admin PIN" autocomplete="off">
+      <input id="np1" type="password" placeholder="New admin password (12+ characters)" autocomplete="new-password">
+      <input id="np2" type="password" placeholder="Repeat the new password" autocomplete="new-password">
+      <div class="row">
+        <button id="save">Set password</button>
+        <button class="ghost sm" id="gen" type="button">Suggest a strong one</button>
+      </div>
+    </div>
+    <p class="msg" id="msgs"></p>
+  </div>
+
+  <div id="gate" hidden>
     <div class="row">
       <input id="pw" type="password" placeholder="Admin password" autocomplete="current-password">
       <button id="go">Enter</button>
@@ -144,6 +163,47 @@ async function guard(fn) {
   $("msg2").textContent = "";
   try { await fn(); } catch (e) { $("msg2").textContent = e.message; }
 }
+
+/* Which screen to show is decided by the server, not guessed here. */
+(async () => {
+  try {
+    const { configured } = await call("status");
+    $("loading").hidden = true;
+    $(configured ? "gate" : "setup").hidden = false;
+    if (configured) $("pw").focus(); else $("pin").focus();
+  } catch (e) {
+    $("loading").innerHTML = `<p class="msg">${esc(e.message)}</p>`;
+  }
+})();
+
+$("gen").addEventListener("click", () => {
+  // Generated in the browser with the platform CSPRNG, so it exists only on this machine until
+  // you submit it. Shown in the field rather than copied silently — you need to save it somewhere.
+  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  const pw = btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, "").slice(0, 24);
+  $("np1").value = pw;
+  $("np2").value = pw;
+  $("np1").type = "text";
+  $("msgs").textContent = "Save this somewhere before you continue — it cannot be recovered.";
+});
+
+$("save").addEventListener("click", async () => {
+  $("msgs").textContent = "";
+  if ($("np1").value !== $("np2").value) { $("msgs").textContent = "The two passwords do not match."; return; }
+  if ($("np1").value.length < 12) { $("msgs").textContent = "Use at least 12 characters."; return; }
+  $("save").disabled = true;
+  try {
+    await call("setup", { pin: $("pin").value, newPassword: $("np1").value });
+    password = $("np1").value;
+    await load();
+    $("setup").hidden = true;
+    $("panel").hidden = false;
+  } catch (e) {
+    $("msgs").textContent = e.message === "Not authorised" ? "That PIN is not right." : e.message;
+  } finally {
+    $("save").disabled = false;
+  }
+});
 
 $("go").addEventListener("click", async () => {
   password = $("pw").value;

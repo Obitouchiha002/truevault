@@ -11,10 +11,13 @@
  * Required environment variables (set with `vercel env add`, never in the repo):
  *   SUPABASE_URL                 https://<project>.supabase.co
  *   SUPABASE_SERVICE_ROLE_KEY    Project Settings -> API -> service_role. Server-side only.
- *   ADMIN_PASSWORD               What you type on /admin. Long and random.
+ *
+ * The admin password is NOT an environment variable. It is set from the browser on first visit,
+ * authorised by the admin PIN already in the database, and stored there as a scrypt hash. That
+ * keeps the whole setup to two values pasted into the Vercel dashboard, with no command line.
  */
 
-import { timingSafeEqual, randomUUID } from "node:crypto";
+import { timingSafeEqual, randomUUID, scrypt, randomBytes } from "node:crypto";
 
 /**
  * The platform tag each app sends on check-in, mapped to a readable name.
@@ -35,8 +38,8 @@ const appOf = (platform) => APPS[platform] || (platform || "unknown");
  *
  * A serverless instance is recycled, so this is not a durable lock — an attacker who spreads guesses
  * across cold starts gets more than ten. It is still worth having: it stops the trivial single-loop
- * attack, which is the one that actually happens. The durable protection is that ADMIN_PASSWORD is
- * long and random, not that this map is perfect, and pretending otherwise would be the mistake.
+ * attack, which is the one that actually happens. The durable protection is scrypt over a
+ * password you chose to be long, not that this map is perfect, and pretending otherwise would be the mistake.
  */
 const attempts = new Map();
 const WINDOW_MS = 15 * 60 * 1000;
@@ -61,13 +64,44 @@ function noteFailure(ip) {
   }
 }
 
-/** Constant-time, and length-safe: comparing different lengths would leak through the exception. */
-function passwordMatches(given, expected) {
-  if (typeof given !== "string" || typeof expected !== "string") return false;
-  const a = Buffer.from(given);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+/**
+ * scrypt, with the salt stored alongside the hash.
+ *
+ * N=16384 is the Node default and takes tens of milliseconds — deliberate, because this is the one
+ * thing standing between a public URL and every install record. A plain SHA of the password would
+ * be verified in microseconds, which is exactly what makes offline guessing cheap.
+ */
+const SCRYPT_N = 16384;
+const KEY_LEN = 64;
+
+function derive(password, salt) {
+  return new Promise((resolve, reject) => {
+    scrypt(password, salt, KEY_LEN, { N: SCRYPT_N }, (err, key) =>
+      err ? reject(err) : resolve(key));
+  });
+}
+
+async function hashPassword(password) {
+  const salt = randomBytes(16).toString("hex");
+  const key = await derive(password, salt);
+  return `scrypt$${SCRYPT_N}$${salt}$${key.toString("hex")}`;
+}
+
+/** Constant-time. A malformed or absent stored hash fails closed rather than throwing. */
+async function verifyPassword(given, stored) {
+  if (typeof given !== "string" || typeof stored !== "string") return false;
+  const [scheme, n, salt, hex] = stored.split("$");
+  if (scheme !== "scrypt" || !n || !salt || !hex) return false;
+  const expected = Buffer.from(hex, "hex");
+  const actual = await new Promise((resolve) =>
+    scrypt(given, salt, expected.length, { N: Number(n) }, (err, key) => resolve(err ? null : key)));
+  if (!actual || actual.length !== expected.length) return false;
+  return timingSafeEqual(actual, expected);
+}
+
+/** A password worth the scrypt cost. Twelve characters is the floor, not a recommendation. */
+function passwordTooWeak(password) {
+  return typeof password !== "string" || password.length < 12;
 }
 
 async function rpc(fn, args) {
@@ -100,7 +134,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const missing = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "ADMIN_PASSWORD"]
+  const missing = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]
     .filter((name) => !process.env[name]);
   if (missing.length) {
     // Names only. Printing which variable is set and which is not is fine; printing a value is not.
@@ -116,15 +150,42 @@ export default async function handler(req, res) {
   }
 
   const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-
-  if (!passwordMatches(body.password, process.env.ADMIN_PASSWORD)) {
-    noteFailure(ip);
-    return res.status(401).json({ error: "Not authorised" });
-  }
-
   const correlationId = randomUUID();
 
   try {
+    // Answered before any password check, because its whole job is to tell the page which screen
+    // to draw. It returns one boolean and nothing else — knowing that a password exists helps an
+    // attacker not at all, and hiding it would just make the first-run page impossible to build.
+    if (body.action === "status") {
+      const [configured] = await rpc("admin_web_configured_srv", {});
+      return res.status(200).json({ configured: Boolean(configured?.admin_web_configured_srv ?? configured) });
+    }
+
+    // First-run and password change. Authorised by the admin PIN already in the database, not by
+    // the web password — that is the point, since on first run there is no web password yet.
+    if (body.action === "setup") {
+      if (passwordTooWeak(body.newPassword)) {
+        return res.status(400).json({ error: "Password must be at least 12 characters" });
+      }
+      const hash = await hashPassword(body.newPassword);
+      try {
+        await rpc("admin_web_set_srv", { p_pin: body.pin || "", p_hash: hash });
+      } catch (e) {
+        // The PIN was wrong. Counted like any other failed authentication so setup cannot be used
+        // as an unlimited oracle for guessing the PIN.
+        noteFailure(ip);
+        return res.status(401).json({ error: "Not authorised" });
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+    const [row] = await rpc("admin_web_hash_srv", {});
+    const stored = row?.admin_web_hash_srv ?? row;
+    if (!(await verifyPassword(body.password, stored))) {
+      noteFailure(ip);
+      return res.status(401).json({ error: "Not authorised" });
+    }
+
     switch (body.action) {
       case "list": {
         const rows = await rpc("admin_devices_srv", {});

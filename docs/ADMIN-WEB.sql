@@ -84,3 +84,45 @@ join pg_namespace n on n.oid = p.pronamespace
 where n.nspname = 'public'
   and has_function_privilege('anon', p.oid, 'execute')
 order by p.proname;
+
+-- ------------------------------------------------------------------------------------------------
+-- 5. Web admin password, set from the browser instead of the command line.
+--
+-- Stored as a scrypt hash, never as the password. The salt and parameters travel with it in one
+-- string, so verification needs nothing else.
+--
+-- First-run claim is the interesting problem here: /admin is a public URL, so "the first visitor
+-- sets the password" would hand the panel to whoever found it first. Instead the first setup is
+-- authorised by the admin PIN you already use for StreamGarden — you know it, a stranger does not,
+-- and it needs no command line. After that the PIN is irrelevant to this panel.
+-- ------------------------------------------------------------------------------------------------
+
+alter table app_config add column if not exists admin_web_hash text;
+
+-- Is a web password set yet? No PIN needed: the answer is a single boolean and reveals nothing.
+create or replace function admin_web_configured_srv()
+returns boolean
+language sql security definer set search_path = public as $$
+  select coalesce(admin_web_hash, '') <> '' from app_config where id = 1;
+$$;
+
+create or replace function admin_web_hash_srv()
+returns text
+language sql security definer set search_path = public as $$
+  select admin_web_hash from app_config where id = 1;
+$$;
+
+-- Setting or changing it requires the existing admin PIN, checked here rather than by the caller.
+create or replace function admin_web_set_srv(p_pin text, p_hash text)
+returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if p_pin <> (select admin_pin from app_config where id = 1) then
+    raise exception 'unauthorized';
+  end if;
+  update app_config set admin_web_hash = p_hash where id = 1;
+end $$;
+
+revoke all on function admin_web_configured_srv() from anon, public;
+revoke all on function admin_web_hash_srv()       from anon, public;
+revoke all on function admin_web_set_srv(text,text) from anon, public;

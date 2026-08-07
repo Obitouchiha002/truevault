@@ -148,6 +148,48 @@ class RemoteGateRepository @Inject constructor(
             ).unit()
         }
 
+    /**
+     * Suspends or restores every TrueVault install, and only those.
+     *
+     * `app_config.kill` is a single row shared with StreamGarden, so using it here would suspend
+     * that app's users too — different people, different app, no reason. This does the same job by
+     * blocking each of this app's own rows instead, which needs no schema change and cannot reach
+     * anything tagged `android`.
+     *
+     * The honest limitation: it acts on installs that exist right now. Someone who installs
+     * afterwards checks in clean and is not caught, so run it again if that matters.
+     *
+     * @return how many installs were changed, or the first failure.
+     */
+    suspend fun adminSuspendAll(pin: String, suspended: Boolean): RemoteResult<Int> =
+        withContext(Dispatchers.IO) {
+            when (val listed = adminInstalls(pin)) {
+                is RemoteResult.Refused -> listed
+                RemoteResult.Unreachable -> RemoteResult.Unreachable
+                is RemoteResult.Ok -> {
+                    val mine = listed.value.filter { it.platform == PLATFORM }
+                    var changed = 0
+                    for (install in mine) {
+                        if (install.blocked == suspended) continue
+                        val result = adminBlock(
+                            pin = pin,
+                            id = install.id,
+                            blocked = suspended,
+                            reason = if (suspended) "Service temporarily unavailable." else null,
+                            minutes = null,
+                            code = if (suspended) "503" else null,
+                        )
+                        if (result is RemoteResult.Ok) changed++ else return@withContext RemoteResult.Refused(0)
+                    }
+                    RemoteResult.Ok(changed)
+                }
+            }
+        }
+
+    /** Only this app's rows. The table is shared; the list a TrueVault admin wants is not. */
+    fun ownInstalls(all: List<InstallRecord>): List<InstallRecord> =
+        all.filter { it.platform == PLATFORM }
+
     suspend fun adminConfig(
         pin: String,
         kill: Boolean,

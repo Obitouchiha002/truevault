@@ -187,12 +187,14 @@ fun AdminPanelScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("${state.installs.size} install(s)", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "${state.installs.size} TrueVault install(s)",
+                    style = MaterialTheme.typography.titleMedium,
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Named for what it does. On a backend shared with StreamGarden this flag lives in one
-                    // `app_config` row, so flipping it here suspends that app's users too.
-                    Text("Kill ALL apps", style = MaterialTheme.typography.labelMedium)
-                    Switch(checked = state.killSwitch, onCheckedChange = viewModel::setKillSwitch)
+                    // Scoped to TrueVault. StreamGarden shares this backend but not its users.
+                    Text("Suspend all", style = MaterialTheme.typography.labelMedium)
+                    Switch(checked = state.suspendedAll, onCheckedChange = viewModel::setSuspendAll)
                     TextButton(onClick = onClose) { Text("Close") }
                 }
             }

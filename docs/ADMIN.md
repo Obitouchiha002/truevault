@@ -71,14 +71,18 @@ update app_config set admin_pin = 'a-long-random-string' where id = 1;
 
 ### Two things to know about sharing one backend
 
-**Both apps appear in one list.** They share the `devices` table. TrueVault check-ins are tagged
-`truevault-android` in the platform column and StreamGarden's are tagged `android`, and the panel
-shows that tag on every row — so you can tell them apart, but you will see both.
+**The two apps' users stay separate.** They share the `devices` table, but TrueVault check-ins are
+tagged `truevault-android` in the platform column against StreamGarden's `android`, and the panel
+filters on that tag. You see TrueVault installs only, and every control acts on those rows alone.
 
-**The kill switch is global.** `app_config.kill` is a single row shared by both apps, so turning it
-on in TrueVault's panel suspends every StreamGarden user at the same time. The switch is labelled
-"Kill ALL apps" in the panel for that reason. Per-install blocking is unaffected and only ever
-touches the one install you tapped.
+**"Suspend all" is scoped too, and does not use `app_config.kill`.** That flag is one row shared by
+both apps, so using it would take StreamGarden's users down at the same time — different people,
+different app. Instead the switch blocks each TrueVault row individually, which needs no schema
+change and cannot reach across.
+
+One honest limitation of doing it that way: it acts on the installs that exist when you flip it.
+Someone who installs afterwards checks in clean and is not caught, so flip it again if that matters.
+The global flag would have covered future installs — at the cost of taking StreamGarden with it.
 
 ### Optional: premium
 

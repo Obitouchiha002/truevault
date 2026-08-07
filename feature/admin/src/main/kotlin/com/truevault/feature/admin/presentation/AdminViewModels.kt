@@ -90,7 +90,8 @@ data class AdminUiState(
     val installs: List<InstallRecord> = emptyList(),
     val isBusy: Boolean = false,
     val message: String? = null,
-    val killSwitch: Boolean = false,
+    /** True when every TrueVault install currently on the backend is blocked. */
+    val suspendedAll: Boolean = false,
     /** False on a backend without the `admin_premium` function — StreamGarden's, for instance. */
     val premiumSupported: Boolean = true,
 ) {
@@ -121,7 +122,15 @@ class AdminViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = gate.adminInstalls(_uiState.value.pin)) {
                 is RemoteResult.Ok -> _uiState.update {
-                    it.copy(isBusy = false, authorised = true, installs = result.value)
+                    // StreamGarden's rows live in the same table and belong to different people.
+                    // Showing them here would invite acting on the wrong install.
+                    it.copy(
+                        isBusy = false,
+                        authorised = true,
+                        installs = gate.ownInstalls(result.value),
+                        suspendedAll = gate.ownInstalls(result.value)
+                            .let { own -> own.isNotEmpty() && own.all(InstallRecord::blocked) },
+                    )
                 }
                 is RemoteResult.Refused -> _uiState.update {
                     it.copy(isBusy = false, message = if (firstUnlock) null else "Refused")
@@ -153,9 +162,28 @@ class AdminViewModel @Inject constructor(
         }
     }
 
-    fun setKillSwitch(enabled: Boolean) {
-        _uiState.update { it.copy(killSwitch = enabled) }
-        act { gate.adminConfig(_uiState.value.pin, enabled, null, null, null) }
+    /**
+     * Suspends every TrueVault install and nothing else.
+     *
+     * Not the global `app_config.kill` flag: that row is shared with StreamGarden, whose users are
+     * different people using a different app. This blocks this app's own rows one by one instead —
+     * no schema change, and no way for it to reach across.
+     */
+    fun setSuspendAll(enabled: Boolean) {
+        _uiState.update { it.copy(isBusy = true, suspendedAll = enabled) }
+        viewModelScope.launch {
+            when (val result = gate.adminSuspendAll(_uiState.value.pin, enabled)) {
+                is RemoteResult.Ok -> {
+                    _uiState.update {
+                        it.copy(message = "${result.value} install(s) updated")
+                    }
+                    refresh()
+                }
+                else -> _uiState.update {
+                    it.copy(isBusy = false, suspendedAll = !enabled, message = "That did not go through")
+                }
+            }
+        }
     }
 
     private fun act(block: suspend () -> RemoteResult<Unit>) {

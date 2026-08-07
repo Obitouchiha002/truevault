@@ -140,6 +140,21 @@ val NOTES_MIGRATIONS: Array<Migration> = arrayOf(NOTES_MIGRATION_1_2)
 abstract class NotesDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
 
+    /**
+     * Empties the database for the "delete all my data" flow.
+     *
+     * Of the three stores this is the one that matters most. Notes are held as plaintext title and
+     * body — deliberately, because they are the cover and have to work before any unlock — so this
+     * file is the only place in the app where content the user typed sits unencrypted on disk.
+     *
+     * `clearAllTables` issues a DELETE, which unlinks rows but leaves their bytes in the file's free
+     * pages; `VACUUM` rewrites the file without them, and that is what actually removes the text.
+     */
+    fun wipe() {
+        clearAllTables()
+        openHelper.writableDatabase.execSQL("VACUUM")
+    }
+
     companion object {
         /** Its own file. The vault database is `truevault.db`, and the two never meet. */
         const val NAME = "nexa-notes.db"

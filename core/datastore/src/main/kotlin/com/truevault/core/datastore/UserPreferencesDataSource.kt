@@ -78,6 +78,16 @@ class UserPreferencesDataSource @Inject constructor(
     suspend fun setLastBackupAt(timestampMillis: Long) =
         edit { it[Keys.LAST_BACKUP_AT] = timestampMillis }
 
+    /**
+     * Removes every stored preference, for the "delete all my data" flow.
+     *
+     * None of these are secrets, but several describe the user: which apps they chose to hide from
+     * the launcher, whether they configured a recovery key, when they last exported a backup, which
+     * disguise the launcher icon wears. Leaving them behind after the user asked for everything to
+     * go would make the screen's promise untrue.
+     */
+    suspend fun clear() = edit { it.clear() }
+
     private suspend fun edit(block: (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {
         try {
             dataStore.edit(block)

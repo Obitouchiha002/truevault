@@ -40,6 +40,26 @@ import com.truevault.core.database.entity.VaultItemEntity
 )
 abstract class TrueVaultDatabase : RoomDatabase() {
 
+    /**
+     * Empties the database for the "delete all my data" flow.
+     *
+     * `clearAllTables` issues a DELETE, which unlinks rows but leaves their bytes in the file's free
+     * pages, still readable by anyone holding the file. `VACUUM` rewrites the database without those
+     * pages, and that is what actually removes the content.
+     *
+     * These rows hold encrypted metadata, but their sizes, timestamps and count are plaintext —
+     * enough to establish that a vault existed, roughly how much was in it and when it was last
+     * used. Worth removing on its own.
+     *
+     * This is the limit of what an app can promise. Below SQLite sits a flash translation layer that
+     * may keep the old blocks alive regardless: deleting the data is in our control, erasing the
+     * medium is not.
+     */
+    fun wipe() {
+        clearAllTables()
+        openHelper.writableDatabase.execSQL("VACUUM")
+    }
+
     abstract fun vaultItemDao(): VaultItemDao
 
     abstract fun importTransactionDao(): ImportTransactionDao

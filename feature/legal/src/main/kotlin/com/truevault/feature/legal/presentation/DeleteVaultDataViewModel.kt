@@ -2,9 +2,13 @@ package com.truevault.feature.legal.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.truevault.core.database.VaultDatabaseReset
 import com.truevault.core.legal.LegalRepository
+import com.truevault.core.notes.NotesDatabaseReset
 import com.truevault.core.storage.VaultFileSystemReset
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -55,6 +59,8 @@ class DeleteVaultDataViewModel @Inject constructor(
     private val preferences: com.truevault.core.datastore.UserPreferencesDataSource,
     private val fileSystem: com.truevault.core.storage.VaultFileSystem,
     private val lockStore: com.truevault.core.datastore.VaultLockDataSource,
+    private val vaultDatabaseReset: VaultDatabaseReset,
+    private val notesDatabaseReset: NotesDatabaseReset,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DeleteVaultDataUiState())
@@ -91,6 +97,17 @@ class DeleteVaultDataViewModel @Inject constructor(
             // nor gone, occupying space the user thinks they reclaimed.
             val report = fileSystemReset.deleteEverything()
 
+            // The two databases live in the standard `databases/` directory, which the file-system
+            // reset does not walk — it is deliberately scoped to the vault's own folders so it can
+            // never reach outside them. They therefore have to be cleared by name, and both matter:
+            // the notes database holds titles and bodies in plaintext by design, and the vault
+            // database holds sizes, timestamps and item counts even though the metadata inside it
+            // is encrypted. Leaving either behind would let someone reconstruct that a vault
+            // existed, how much was in it and when it was used.
+            runCatching { withContext(Dispatchers.IO) { notesDatabaseReset.deleteEverything() } }
+            runCatching { withContext(Dispatchers.IO) { vaultDatabaseReset.deleteEverything() } }
+
+            runCatching { preferences.clear() }
             runCatching { lockStore.clear() }
             runCatching { legalRepository.clearAcceptance() }
 
@@ -103,4 +120,5 @@ class DeleteVaultDataViewModel @Inject constructor(
             }
         }
     }
+
 }

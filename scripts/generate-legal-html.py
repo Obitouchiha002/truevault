@@ -176,7 +176,15 @@ def to_html(md: str) -> str:
     return "\n".join(out)
 
 
-def page(title: str, body: str) -> str:
+SITE = "https://truevault.lzworth.in"
+
+
+def page(title: str, body: str, slug: str = "") -> str:
+    # The canonical points at the clean URL (/privacy-policy, no .html) so that the two paths that
+    # serve this content — with and without the extension — consolidate to one in search results
+    # instead of competing as duplicates. Empty slug (should not happen) omits it rather than
+    # emitting a canonical to the site root, which would be wrong.
+    canonical = f'<link rel="canonical" href="{SITE}/{slug}">\n' if slug else ""
     return (
         "<!doctype html>\n"
         '<html lang="en">\n<head>\n'
@@ -184,6 +192,7 @@ def page(title: str, body: str) -> str:
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
         '<meta name="robots" content="index, follow">\n'
         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n'
+        f"{canonical}"
         f"<title>{html.escape(title)} — TrueVault</title>\n"
         f"<style>\n{PAGE_CSS}\n</style>\n"
         "</head>\n<body>\n"
@@ -220,7 +229,7 @@ def main() -> int:
     for slug, (title, path) in sources.items():
         md = path.read_text(encoding="utf-8")
         version, effective = read_version(md)
-        rendered = page(title, to_html(md))
+        rendered = page(title, to_html(md), slug)
 
         (PUBLIC / f"{slug}.html").write_text(rendered, encoding="utf-8")
 

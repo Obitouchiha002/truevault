@@ -91,6 +91,8 @@ data class AdminUiState(
     val isBusy: Boolean = false,
     val message: String? = null,
     val killSwitch: Boolean = false,
+    /** False on a backend without the `admin_premium` function — StreamGarden's, for instance. */
+    val premiumSupported: Boolean = true,
 ) {
     val canSubmitPin: Boolean get() = pin.length >= 4 && !isBusy
 }
@@ -134,8 +136,22 @@ class AdminViewModel @Inject constructor(
     fun setBlocked(id: String, blocked: Boolean, reason: String?, minutes: Int?, code: String?) =
         act { gate.adminBlock(_uiState.value.pin, id, blocked, reason, minutes, code) }
 
-    fun setPremium(id: String, premium: Boolean) =
-        act { gate.adminPremium(_uiState.value.pin, id, premium) }
+    fun setPremium(id: String, premium: Boolean) {
+        _uiState.update { it.copy(isBusy = true) }
+        viewModelScope.launch {
+            when (gate.adminPremium(_uiState.value.pin, id, premium)) {
+                is RemoteResult.Ok -> refresh()
+                // The function does not exist on this backend. Hide the control rather than
+                // leaving a switch that silently does nothing every time it is touched.
+                is RemoteResult.Refused -> _uiState.update {
+                    it.copy(isBusy = false, premiumSupported = false)
+                }
+                RemoteResult.Unreachable -> _uiState.update {
+                    it.copy(isBusy = false, message = "No connection")
+                }
+            }
+        }
+    }
 
     fun setKillSwitch(enabled: Boolean) {
         _uiState.update { it.copy(killSwitch = enabled) }

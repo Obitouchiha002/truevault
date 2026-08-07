@@ -71,6 +71,10 @@ class RemoteGateRepository @Inject constructor(
                 put("p_id", JsonPrimitive(installId))
                 put("p_name", JsonPrimitive(name))
                 put("p_version", JsonPrimitive(version))
+                // StreamGarden's `checkin` takes a platform, and its table is shared with this app.
+                // This value is what separates the two in one list: StreamGarden sends "android",
+                // so anything tagged here is unmistakably a TrueVault install.
+                put("p_platform", JsonPrimitive(PLATFORM))
             },
         )
 
@@ -96,7 +100,7 @@ class RemoteGateRepository @Inject constructor(
     // ---- admin ------------------------------------------------------------------------------
 
     suspend fun adminInstalls(pin: String): RemoteResult<List<InstallRecord>> = withContext(Dispatchers.IO) {
-        when (val r = rpc.call("admin_installs", buildJsonObject { put("p_pin", JsonPrimitive(pin)) })) {
+        when (val r = rpc.call("admin_devices", buildJsonObject { put("p_pin", JsonPrimitive(pin)) })) {
             is RemoteResult.Ok -> RemoteResult.Ok(
                 (r.value as? JsonArray)?.map { rpc.json.decodeFromJsonElement(InstallRecord.serializer(), it) }
                     ?: emptyList(),
@@ -127,6 +131,11 @@ class RemoteGateRepository @Inject constructor(
         ).unit()
     }
 
+    /**
+     * Optional. StreamGarden's schema has no `premium` column, so on a backend shared with it this
+     * call comes back [RemoteResult.Refused] and the panel simply hides the toggle. Adding the
+     * column and this one function turns it on; nothing else has to change.
+     */
     suspend fun adminPremium(pin: String, id: String, premium: Boolean): RemoteResult<Unit> =
         withContext(Dispatchers.IO) {
             rpc.call(
@@ -162,6 +171,14 @@ class RemoteGateRepository @Inject constructor(
         is RemoteResult.Ok -> RemoteResult.Ok(Unit)
         is RemoteResult.Refused -> this
         RemoteResult.Unreachable -> RemoteResult.Unreachable
+    }
+
+    private companion object {
+        /**
+         * Tags this app's rows in a table it may share with StreamGarden. Changing it orphans every
+         * existing row from this app's point of view, so it is a constant rather than a setting.
+         */
+        const val PLATFORM = "truevault-android"
     }
 
     /** `checkin` returns a one-row set, so PostgREST sends an array of one object. */

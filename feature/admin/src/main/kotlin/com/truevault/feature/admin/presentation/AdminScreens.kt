@@ -189,7 +189,9 @@ fun AdminPanelScreen(
             ) {
                 Text("${state.installs.size} install(s)", style = MaterialTheme.typography.titleMedium)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Kill switch", style = MaterialTheme.typography.labelMedium)
+                    // Named for what it does. On a backend shared with StreamGarden this flag lives in one
+                    // `app_config` row, so flipping it here suspends that app's users too.
+                    Text("Kill ALL apps", style = MaterialTheme.typography.labelMedium)
                     Switch(checked = state.killSwitch, onCheckedChange = viewModel::setKillSwitch)
                     TextButton(onClick = onClose) { Text("Close") }
                 }
@@ -211,6 +213,7 @@ fun AdminPanelScreen(
                             )
                         },
                         onPremiumToggle = { viewModel.setPremium(install.id, it) },
+                        showPremium = state.premiumSupported,
                     )
                 }
             }
@@ -223,6 +226,7 @@ private fun InstallCard(
     install: InstallRecord,
     onBlockToggle: (Boolean) -> Unit,
     onPremiumToggle: (Boolean) -> Unit,
+    showPremium: Boolean,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp)) {
@@ -231,7 +235,7 @@ private fun InstallCard(
                 style = MaterialTheme.typography.titleSmall,
             )
             Text(
-                "v${install.version ?: "?"} · last seen ${install.lastSeen?.take(16) ?: "—"}",
+                "${install.platform ?: "?"} · v${install.version ?: "?"} · last seen ${install.lastSeen?.take(16) ?: "—"}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -245,9 +249,11 @@ private fun InstallCard(
                     Text("Blocked", style = MaterialTheme.typography.labelMedium)
                     Switch(checked = install.blocked, onCheckedChange = onBlockToggle)
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Premium", style = MaterialTheme.typography.labelMedium)
-                    Switch(checked = install.premium, onCheckedChange = onPremiumToggle)
+                if (showPremium) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Premium", style = MaterialTheme.typography.labelMedium)
+                        Switch(checked = install.premium, onCheckedChange = onPremiumToggle)
+                    }
                 }
             }
         }

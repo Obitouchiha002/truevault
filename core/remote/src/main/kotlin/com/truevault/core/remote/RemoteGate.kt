@@ -34,6 +34,7 @@ data class InstallRecord(
     val id: String,
     val name: String? = null,
     val version: String? = null,
+    val platform: String? = null,
     val blocked: Boolean = false,
     @SerialName("block_reason") val blockReason: String? = null,
     @SerialName("block_code") val blockCode: String? = null,

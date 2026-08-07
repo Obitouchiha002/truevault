@@ -1,22 +1,22 @@
 # Admin backend — install list, block, premium, kill switch
 
-This is the same design StreamGarden uses, ported to TrueVault, with a `premium` flag added.
+The same design StreamGarden uses, speaking the same API, so the two can share one backend.
 
-**Read this section before setting it up.** It changes what the app is.
+**Read this before setting it up.** It changes what the app is.
 
-Without a backend, TrueVault declares no internet permission, contains no network code, and collects
-nothing — and the website, the Play Data Safety form and the privacy policy all say so. Turning this
-on makes every one of those statements false until they are rewritten, and they have to be rewritten
-before the build ships. A privacy app whose privacy policy is out of date is worse than one that
-never claimed anything.
+The app is hybrid: it works fully offline and checks in when there is a connection. `INTERNET` is
+therefore always declared, and the privacy policy, the Play Data Safety form, the website and the
+README have all been rewritten to say what is collected — an install identifier, the name typed on
+first launch, and the app version. Nothing about the vault is ever sent. If you change what is sent,
+those four documents change in the same commit; a privacy app whose policy is out of date is worse
+than one that never claimed anything.
 
-It also means you can lock a person out of their own encrypted files. The vault is on their device
-and the data is never destroyed by a block, but the app that opens it will refuse to run. Decide
-deliberately that you want that power before you enable this.
+It also means you can lock a person out of their own encrypted files. Their data is never destroyed
+by a block — the vault stays on their device and opens again if the block is lifted — but the app
+that opens it will refuse to run. Decide deliberately that you want that power.
 
-The build is unaffected until you create `supabase.properties`. With no such file the network code
-is compiled out, `INTERNET` is stripped from the merged manifest, and the app behaves exactly as it
-does today. That is the default.
+With no `supabase.properties`, the check-in is inert: nothing is sent, and the app is simply the
+offline vault. That is the default for a fresh clone.
 
 > **This controls the app, not the device.** It can stop *this app* from running and show a message.
 > It cannot read files, see the vault contents, track location, or use the camera or microphone —
@@ -43,6 +43,73 @@ inside each SQL function. The app ships with the *public* anon key only — neve
 
 No visible button. Tap the **top-left corner of the notes screen 5 times**, then enter the PIN. A
 wrong PIN does nothing at all — no error, no shake, no hint that a panel exists.
+
+## Setup — reuse the StreamGarden backend (no SQL)
+
+TrueVault now speaks StreamGarden's existing API exactly: the same `checkin`, `admin_devices`,
+`admin_block` and `admin_config` functions, with the same argument names. If you already run
+StreamGarden's Supabase project, there is **nothing to create and no SQL to run**.
+
+1. Open StreamGarden's `.env` (or its GitHub Actions secrets) and copy `VITE_SUPABASE_URL` and
+   `VITE_SUPABASE_ANON_KEY`.
+2. Put them in `supabase.properties` at this repository's root:
+
+   ```properties
+   supabaseUrl=https://YOUR-PROJECT.supabase.co
+   supabaseAnonKey=eyJhbGciOi...
+   ```
+
+3. Build. That is all.
+
+**The admin PIN is already set** — it is the same PIN you use in StreamGarden, because it lives in
+the `app_config` row of that same project. Nothing to configure here. To change it, run one
+statement in the Supabase SQL editor, and note that it changes the PIN for both apps:
+
+```sql
+update app_config set admin_pin = 'a-long-random-string' where id = 1;
+```
+
+### Two things to know about sharing one backend
+
+**Both apps appear in one list.** They share the `devices` table. TrueVault check-ins are tagged
+`truevault-android` in the platform column and StreamGarden's are tagged `android`, and the panel
+shows that tag on every row — so you can tell them apart, but you will see both.
+
+**The kill switch is global.** `app_config.kill` is a single row shared by both apps, so turning it
+on in TrueVault's panel suspends every StreamGarden user at the same time. The switch is labelled
+"Kill ALL apps" in the panel for that reason. Per-install blocking is unaffected and only ever
+touches the one install you tapped.
+
+### Optional: premium
+
+StreamGarden's schema has no premium flag, so the premium toggle hides itself when the backend does
+not support it. Two statements add it, and nothing else has to change:
+
+```sql
+alter table devices add column if not exists premium boolean not null default false;
+
+create or replace function admin_premium(p_pin text, p_id text, p_premium boolean)
+returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if p_pin <> (select admin_pin from app_config where id = 1) then
+    raise exception 'unauthorized';
+  end if;
+  update devices set premium = p_premium where id = p_id;
+end $$;
+
+grant execute on function admin_premium(text,text,boolean) to anon;
+```
+
+The `checkin` function also has to return the new column for the app to read it, so replace it with
+the version in the next section if you want premium to reach the device.
+
+## Setup — a fresh project instead
+
+Only needed if you do **not** want to share StreamGarden's backend. Note that the schema below names
+the table `installs`, while the app calls `admin_devices` and expects `devices` — so if you take this
+route, rename the table and the functions to match, or change the two function names in
+`RemoteGateRepository`.
 
 ## One-time setup
 

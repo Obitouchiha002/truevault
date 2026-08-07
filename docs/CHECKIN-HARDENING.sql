@@ -58,6 +58,7 @@ create function checkin(p_id text, p_name text, p_version text, p_platform text)
 returns table (blocked boolean, reason text, code text, until timestamptz,
                premium boolean, latest_version text, update_url text, update_note text)
 language plpgsql security definer set search_path = public as $$
+#variable_conflict use_column
 declare
   cfg      app_config;
   dev      devices;

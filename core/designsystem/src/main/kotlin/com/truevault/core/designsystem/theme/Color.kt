@@ -213,3 +213,43 @@ internal val LightStatusColors = TvStatusColors(
 )
 
 val LocalTvStatusColors = staticCompositionLocalOf { DarkStatusColors }
+
+/**
+ * Note card tints.
+ *
+ * Deliberately not the Material container roles. Those carry meaning in this app — primary is the
+ * safe action, error is a failure — and a note tinted "error red" reads as a problem rather than a
+ * colour someone picked. They are also far more saturated than a card full of body text can carry.
+ *
+ * These are near-neutral washes: barely-there in light, barely-lifted in dark, so the text keeps its
+ * contrast against the background either way and the colour reads as a label rather than a
+ * highlight.
+ */
+object TvNoteColors {
+
+    private val light = listOf(
+        Color(0xFFFFFFFF), // default — plain card
+        Color(0xFFFFF3D6), // sand
+        Color(0xFFE2F3E7), // sage
+        Color(0xFFE3EFFA), // sky
+        Color(0xFFF6E6F0), // orchid
+        Color(0xFFFFE7E0), // clay
+    )
+
+    private val dark = listOf(
+        Color(0xFF161E28), // default — plain card
+        Color(0xFF33291A), // sand
+        Color(0xFF1B2E23), // sage
+        Color(0xFF1B2836), // sky
+        Color(0xFF2C1F2A), // orchid
+        Color(0xFF33221C), // clay
+    )
+
+    val count: Int get() = light.size
+
+    /** Falls back to the plain card for an index a future version wrote and this one does not know. */
+    fun tint(index: Int, darkTheme: Boolean): Color {
+        val palette = if (darkTheme) dark else light
+        return palette.getOrElse(index) { palette.first() }
+    }
+}

@@ -19,14 +19,6 @@
     <string name="import_continue">Continue</string>
     <string name="import_cancel">Cancel</string>
 
-    <string name="import_mode_question">How would you like to secure these files?</string>
-    <string name="import_mode_copy_title">Secure Copy</string>
-    <string name="import_mode_copy_body">An encrypted copy will be saved in TrueVault. The original file will remain in its current location.</string>
-    <string name="import_mode_move_title">Secure Move</string>
-    <string name="import_mode_move_body">An encrypted and verified copy will be saved first. TrueVault will then ask permission to remove the original.</string>
-    <string name="import_remember_choice">Remember my choice for this file type</string>
-    <string name="import_secure_copy">Secure Copy</string>
-    <string name="import_secure_move">Secure Move</string>
 
     <string name="import_running_title">Securing your files</string>
     <string name="import_running_files">File %1$d of %2$d</string>
@@ -41,12 +33,6 @@
     <string name="import_result_original">Original file</string>
     <string name="import_done">Done</string>
 
-    <string name="import_awaiting_deletion">Waiting for your answer about the original files.</string>
-    <string name="import_vault_copy_safe_title">Your vault copy is safe</string>
-    <string name="import_vault_copy_safe_body">You cancelled removal of the original, so it may still be visible.</string>
-    <string name="import_original_may_remain">Your file is secured in TrueVault, but the original may still be visible.</string>
-    <string name="import_copy_original_remains">Encrypted copy created. The original file is still available outside TrueVault.</string>
-    <string name="import_move_complete">Encrypted copy verified and the original was removed.</string>
     <string name="import_generic_error">That step could not be completed. Nothing outside TrueVault was changed.</string>
 
     <string name="deletion_removed">Removed</string>
@@ -78,4 +64,6 @@
     <string name="import_device_full_body">TrueVault needs about %1$s more free space. Nothing was imported, and your files are untouched.</string>
     <string name="import_budget_full_title">Vault storage limit reached</string>
     <string name="import_budget_full_body">You set a %1$s limit for the vault. Nothing was imported and nothing was removed — raise the limit in Settings to add more.</string>
+    <string name="import_result_original_kept">Still where you left it</string>
+    <string name="import_copy_original_remains">Your original file has not been touched. Deleting it from your gallery later will not affect the encrypted copy in your vault.</string>
 </resources>

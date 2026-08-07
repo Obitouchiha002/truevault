@@ -63,15 +63,8 @@ class ImportViewModel @Inject constructor(
     val effects: SharedFlow<ImportEffect> = _effects.asSharedFlow()
 
     private var importJob: Job? = null
-    private var pendingDeletionItemIds: List<String> = emptyList()
-    private var pendingDeletionTokens: List<String> = emptyList()
 
     init {
-        viewModelScope.launch {
-            val prefs = preferences.userPreferences.first()
-            _uiState.update { it.copy(modePreference = prefs.importModePreference) }
-        }
-
         // Files shared into TrueVault from another app skip the picker entirely — the user already
         // chose them, in the gallery or wherever they came from, and asking again would be asking
         // the same question twice. They are consumed here so a second visit to this screen does not
@@ -89,11 +82,7 @@ class ImportViewModel @Inject constructor(
             is ImportAction.SourcesPicked -> onSourcesPicked(action.uriTokens, action.fromPhotoPicker)
             ImportAction.PickCancelled -> emit(ImportEffect.Close)
             ImportAction.ReviewConfirmed -> onReviewConfirmed()
-            is ImportAction.ModeChosen -> onModeChosen(action.mode, action.remember)
-            is ImportAction.RememberToggled -> onRememberToggled(action.remember)
             ImportAction.CancelImport -> cancelImport()
-            is ImportAction.DeletionResultReceived -> onDeletionResult(action.approved)
-            ImportAction.SkipDeletion -> onDeletionResult(approved = false)
             ImportAction.Done -> {
                 (uiState.value.stage as? ImportStage.Finished)?.result?.sessionId
                     ?.let(sessionStore::discard)
@@ -150,47 +139,14 @@ class ImportViewModel @Inject constructor(
             return
         }
 
-        val remembered = when (uiState.value.modePreference) {
-            ImportModePreference.ALWAYS_COPY -> ImportMode.SECURE_COPY
-            ImportModePreference.ALWAYS_MOVE -> ImportMode.SECURE_MOVE
-            ImportModePreference.ALWAYS_ASK -> null
-        }
-
-        if (remembered != null) {
-            startImport(reviewing.sessionId, remembered)
-        } else {
-            _uiState.update {
-                it.copy(
-                    stage = ImportStage.ChoosingMode(
-                        sessionId = reviewing.sessionId,
-                        review = reviewing.review,
-                        defaultMode = null,
-                    ),
-                )
-            }
-        }
-    }
-
-    private fun onRememberToggled(remember: Boolean) {
-        val stage = uiState.value.stage as? ImportStage.ChoosingMode ?: return
-        _uiState.update { it.copy(stage = stage.copy(rememberChoice = remember)) }
-    }
-
-    private fun onModeChosen(mode: ImportMode, remember: Boolean) {
-        val stage = uiState.value.stage as? ImportStage.ChoosingMode ?: return
-
-        if (remember) {
-            viewModelScope.launch {
-                preferences.setImportModePreference(
-                    when (mode) {
-                        ImportMode.SECURE_COPY -> ImportModePreference.ALWAYS_COPY
-                        ImportMode.SECURE_MOVE -> ImportModePreference.ALWAYS_MOVE
-                    },
-                )
-            }
-        }
-
-        startImport(stage.sessionId, mode)
+        // One way in, and it never deletes anything.
+        //
+        // There used to be a choice here — Secure Copy or Secure Move — and Move asked Android to
+        // delete the original afterwards. Two names for what a user thinks of as "add this file"
+        // meant a question in the middle of the flow, and the answer they might pick in a hurry was
+        // the one that destroys a file. The app now always copies: your original stays exactly
+        // where it is, and nothing in this flow can remove it.
+        startImport(reviewing.sessionId, ImportMode.SECURE_COPY)
     }
 
     private fun startImport(sessionId: String, mode: ImportMode) {
@@ -210,59 +166,10 @@ class ImportViewModel @Inject constructor(
     }
 
     private suspend fun onImportFinished(step: ImportStep.Finished) {
-        val result = step.result
-        val secured = result.outcomes.filterIsInstance<ImportOutcome.Secured>()
-        val pending = secured.filter { it.deletionPending }
-
-        if (pending.isEmpty()) {
-            _uiState.update { it.copy(stage = ImportStage.Finished(result)) }
-            return
-        }
-
-        pendingDeletionItemIds = pending.map { it.vaultItemId }
-        pendingDeletionTokens = pending.map { it.source.uriToken }
-
-        // Step 10: only now, with every container verified and committed, is the original discussed.
-        when (val request = coordinator.planOriginalDeletion(pendingDeletionTokens)) {
-            is OriginalDeletionRequest.NeedsUserConfirmation -> {
-                _uiState.update {
-                    it.copy(
-                        stage = ImportStage.Finished(result, awaitingDeletionConfirmation = true),
-                    )
-                }
-                _effects.emit(ImportEffect.RequestOriginalDeletion(request.intentSender))
-            }
-
-            is OriginalDeletionRequest.Resolved -> {
-                // The vault copy is safe either way. The result screen says what really happened
-                // rather than implying the original is gone.
-                importEngine.recordDeletionOutcome(pendingDeletionItemIds, request.outcome)
-                _uiState.update {
-                    it.copy(stage = ImportStage.Finished(result, deletionOutcome = request.outcome))
-                }
-            }
-        }
-    }
-
-    private fun onDeletionResult(approved: Boolean) {
-        val stage = uiState.value.stage as? ImportStage.Finished ?: return
-
-        viewModelScope.launch {
-            // "Approved" only means the dialog was accepted. What actually happened is confirmed
-            // by re-checking the URIs.
-            val outcome = coordinator.confirmDeletion(pendingDeletionTokens, approved)
-
-            importEngine.recordDeletionOutcome(pendingDeletionItemIds, outcome)
-
-            _uiState.update {
-                it.copy(
-                    stage = stage.copy(
-                        deletionOutcome = outcome,
-                        awaitingDeletionConfirmation = false,
-                    ),
-                )
-            }
-        }
+        // Every import is a copy, so there is never an original awaiting a decision. The whole
+        // deletion conversation — plan it, show the system dialog, re-check the URIs, record what
+        // actually happened — is gone with the feature that needed it.
+        _uiState.update { it.copy(stage = ImportStage.Finished(step.result)) }
     }
 
     private fun cancelImport() {

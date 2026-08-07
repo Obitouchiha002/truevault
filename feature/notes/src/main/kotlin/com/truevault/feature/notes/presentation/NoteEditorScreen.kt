@@ -41,6 +41,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.truevault.core.designsystem.component.TvTopAppBar
+import com.truevault.core.designsystem.theme.TrueVaultTheme
+import com.truevault.core.designsystem.theme.TvNoteColors
 import com.truevault.core.designsystem.theme.TvSpacing
 import com.truevault.feature.notes.R
 
@@ -141,15 +143,9 @@ fun NoteEditorScreen(
                     .semantics { contentDescription = colourLabel },
                 horizontalArrangement = Arrangement.spacedBy(TvSpacing.small),
             ) {
-                (0..4).forEach { index ->
+                (0 until TvNoteColors.count).forEach { index ->
                     val scheme = MaterialTheme.colorScheme
-                    val swatch = when (index) {
-                        1 -> scheme.primaryContainer
-                        2 -> scheme.secondaryContainer
-                        3 -> scheme.tertiaryContainer
-                        4 -> scheme.errorContainer
-                        else -> scheme.surfaceContainer
-                    }
+                    val swatch = TrueVaultTheme.noteTint(index)
                     Box(
                         modifier = Modifier
                             .size(32.dp)

@@ -88,23 +88,9 @@ fun ImportScreen(
         )
     }
 
-    val deletionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartIntentSenderForResult(),
-    ) { result ->
-        viewModel.onAction(
-            ImportAction.DeletionResultReceived(
-                approved = result.resultCode == android.app.Activity.RESULT_OK,
-            ),
-        )
-    }
-
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                is ImportEffect.RequestOriginalDeletion -> deletionLauncher.launch(
-                    IntentSenderRequest.Builder(effect.intentSender).build(),
-                )
-
                 ImportEffect.Close -> onClose()
             }
         }
@@ -170,11 +156,6 @@ internal fun ImportContent(
                         review = stage.review,
                         onConfirm = { onAction(ImportAction.ReviewConfirmed) },
                         onCancel = onClose,
-                    )
-
-                    is ImportStage.ChoosingMode -> ModeStage(
-                        stage = stage,
-                        onAction = onAction,
                     )
 
                     is ImportStage.Running -> RunningStage(
@@ -316,70 +297,6 @@ private fun ReviewStage(review: ImportReview, onConfirm: () -> Unit, onCancel: (
 }
 
 @Composable
-private fun ModeStage(stage: ImportStage.ChoosingMode, onAction: (ImportAction) -> Unit) {
-    TvSectionHeader(title = stringResource(R.string.import_mode_question))
-
-    TvCard {
-        Text(
-            text = stringResource(R.string.import_mode_copy_title),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Text(
-            text = stringResource(R.string.import_mode_copy_body),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = TvSpacing.xs),
-        )
-    }
-
-    TvCard {
-        Text(
-            text = stringResource(R.string.import_mode_move_title),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Text(
-            text = stringResource(R.string.import_mode_move_body),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = TvSpacing.xs),
-        )
-    }
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TvSpacing.small),
-    ) {
-        Checkbox(
-            checked = stage.rememberChoice,
-            onCheckedChange = { onAction(ImportAction.RememberToggled(it)) },
-        )
-        Text(
-            text = stringResource(R.string.import_remember_choice),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-    }
-
-    TvPrimaryButton(
-        text = stringResource(R.string.import_secure_copy),
-        onClick = {
-            onAction(ImportAction.ModeChosen(ImportMode.SECURE_COPY, stage.rememberChoice))
-        },
-        modifier = Modifier.fillMaxWidth(),
-    )
-    TvSecondaryButton(
-        text = stringResource(R.string.import_secure_move),
-        onClick = {
-            onAction(ImportAction.ModeChosen(ImportMode.SECURE_MOVE, stage.rememberChoice))
-        },
-        modifier = Modifier.fillMaxWidth(),
-    )
-}
-
-@Composable
 private fun RunningStage(stage: ImportStage.Running, onCancel: () -> Unit) {
     val progress = stage.progress
 
@@ -445,40 +362,17 @@ private fun FinishedStage(stage: ImportStage.Finished, onDone: () -> Unit) {
 
         SummaryRow(
             label = stringResource(R.string.import_result_original),
-            value = stringResource(stage.deletionOutcome.labelRes(result.mode)),
+            value = stringResource(R.string.import_result_original_kept),
         )
     }
 
-    when {
-        stage.awaitingDeletionConfirmation -> TvBanner(
-            text = stringResource(R.string.import_awaiting_deletion),
-            tone = TvBannerTone.Info,
-        )
-
-        // The two honest statements the specification calls for, chosen by what actually happened.
-        stage.deletionOutcome == DeletionOutcome.USER_CANCELLED -> TvBanner(
-            title = stringResource(R.string.import_vault_copy_safe_title),
-            text = stringResource(R.string.import_vault_copy_safe_body),
-            tone = TvBannerTone.Warning,
-        )
-
-        result.mode == ImportMode.SECURE_MOVE &&
-            stage.deletionOutcome != DeletionOutcome.DELETED &&
-            stage.deletionOutcome != DeletionOutcome.ALREADY_MISSING -> TvBanner(
-            text = stringResource(R.string.import_original_may_remain),
-            tone = TvBannerTone.Warning,
-        )
-
-        result.mode == ImportMode.SECURE_COPY -> TvBanner(
-            text = stringResource(R.string.import_copy_original_remains),
-            tone = TvBannerTone.Info,
-        )
-
-        else -> TvBanner(
-            text = stringResource(R.string.import_move_complete),
-            tone = TvBannerTone.Success,
-        )
-    }
+    // One sentence, and it is always true: the vault holds an encrypted copy and the file you
+    // picked is exactly where you left it. Nothing in this flow can remove it, so there is no
+    // outcome to report and no case where this line could be wrong.
+    TvBanner(
+        text = stringResource(R.string.import_copy_original_remains),
+        tone = TvBannerTone.Info,
+    )
 
     if (result.failedCount > 0) {
         TvBanner(

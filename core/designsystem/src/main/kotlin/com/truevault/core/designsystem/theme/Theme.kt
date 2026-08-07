@@ -7,6 +7,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalContext
 import com.truevault.core.model.ThemePreference
@@ -45,6 +46,9 @@ fun TrueVaultTheme(
     CompositionLocalProvider(
         LocalTvStatusColors provides statusColors,
         LocalReducedMotion provides rememberReducedMotion(),
+        // Note tints need to know which theme is live, and the colour scheme alone cannot say:
+        // a dynamic scheme is not reliably light or dark by inspection.
+        LocalTvDarkTheme provides darkTheme,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
@@ -55,10 +59,24 @@ fun TrueVaultTheme(
     }
 }
 
+/** Whether the dark palette is in use, for colours Material cannot express. */
+val LocalTvDarkTheme = staticCompositionLocalOf { false }
+
 /** Status colours that Material 3 has no slot for. */
 object TrueVaultTheme {
     val statusColors: TvStatusColors
         @Composable
         @ReadOnlyComposable
         get() = LocalTvStatusColors.current
+
+    val isDark: Boolean
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalTvDarkTheme.current
+
+    /** The tint for a note's stored colour index. */
+    @Composable
+    @ReadOnlyComposable
+    fun noteTint(index: Int): androidx.compose.ui.graphics.Color =
+        TvNoteColors.tint(index, LocalTvDarkTheme.current)
 }

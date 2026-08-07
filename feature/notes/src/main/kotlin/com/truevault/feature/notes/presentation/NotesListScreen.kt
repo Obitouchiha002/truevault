@@ -49,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.truevault.core.designsystem.component.TvCard
 import com.truevault.core.designsystem.component.TvEmptyState
 import com.truevault.core.designsystem.component.TvTopAppBar
+import com.truevault.core.designsystem.theme.TrueVaultTheme
 import com.truevault.core.designsystem.theme.TvSpacing
 import com.truevault.core.notes.Note
 import com.truevault.feature.notes.R
@@ -199,7 +200,7 @@ private fun NoteCard(
 ) {
     TvCard(
         onClick = onOpen,
-        containerColor = noteColour(note.colour),
+        containerColor = TrueVaultTheme.noteTint(note.colour),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(verticalAlignment = Alignment.Top) {
@@ -279,20 +280,4 @@ private fun NoteCard(
 
 private const val CHECKLIST_PREVIEW = 4
 
-/**
- * The note palette.
- *
- * Tints of the surface rather than saturated blocks: a wall of full-strength colour makes text
- * harder to read and dates the app instantly, and these have to work in dark mode too.
- */
-@Composable
-private fun noteColour(index: Int): Color {
-    val scheme = MaterialTheme.colorScheme
-    return when (index) {
-        1 -> scheme.primaryContainer
-        2 -> scheme.secondaryContainer
-        3 -> scheme.tertiaryContainer
-        4 -> scheme.errorContainer
-        else -> scheme.surfaceContainer
-    }
-}
+

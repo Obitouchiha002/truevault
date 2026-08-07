@@ -183,6 +183,7 @@ def page(title: str, body: str) -> str:
         '<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
         '<meta name="robots" content="index, follow">\n'
+        '<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n'
         f"<title>{html.escape(title)} — TrueVault</title>\n"
         f"<style>\n{PAGE_CSS}\n</style>\n"
         "</head>\n<body>\n"

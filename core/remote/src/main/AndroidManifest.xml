@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The offline manifest, and the default.
+
+  No permission at all. A build made without `supabase.properties` merges this file, so INTERNET
+  never appears anywhere in the app's merged manifest and the platform itself would refuse a socket.
+  That is what makes the "nothing can leave the device" claim enforceable rather than a promise.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" />

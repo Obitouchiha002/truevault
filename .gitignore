@@ -16,6 +16,8 @@ captures/
 *.keystore
 *.jks
 keystore.properties
+# Backend config for the optional admin gate. The example file is the committed one.
+supabase.properties
 release/
 /build-logic/build/
 /build-logic/.gradle/

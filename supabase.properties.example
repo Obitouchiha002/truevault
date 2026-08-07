@@ -1,0 +1,13 @@
+# Admin backend — copy to `supabase.properties` to enable it. See docs/ADMIN.md.
+#
+# With no `supabase.properties`, these are empty, the check-in code never runs, INTERNET stays
+# out of the merged manifest, and the app is the fully offline one the privacy policy describes.
+# That is the default, and it is the build you should ship unless you have rewritten the policy,
+# the Play Data Safety form and the website claims to match.
+#
+# The anon key is public by design — it ships inside every APK. It is safe ONLY because row-level
+# security is enabled with no policies, so it cannot read or write the tables directly. The admin
+# PIN is the real secret and it lives only in your Supabase database, never here and never in the app.
+
+supabaseUrl=https://YOUR-PROJECT.supabase.co
+supabaseAnonKey=PASTE_ANON_PUBLIC_KEY

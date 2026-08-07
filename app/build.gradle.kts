@@ -66,6 +66,8 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.remote)
+    implementation(projects.feature.admin)
     implementation(projects.core.model)
     implementation(projects.core.common)
     implementation(projects.core.designsystem)

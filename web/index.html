@@ -902,7 +902,9 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
   <div class="shell">
     <div class="head rise" data-3d><span class="eyebrow">Questions</span><h2>Straight answers.</h2></div>
     <div class="faq rise" data-3d="soft">
-      <details open><summary>If I delete a photo from my gallery, does it vanish from the vault?</summary>
+      <details open><summary>I downloaded TrueVault but it installed as “Notes”. Is that a scam?</summary>
+        <p>No — that is exactly how it is meant to work. TrueVault disguises itself as an ordinary notes app, so on your phone the icon and name say <b>Notes</b>, not TrueVault. That is the whole idea: anyone glancing at your phone sees a notes app. Open it, write a note if you like, then <b>press and hold the title for two seconds</b> to reach the password screen and your vault. The package name is <code>com.truevault.app</code>, which you can confirm in Android Settings.</p></details>
+      <details><summary>If I delete a photo from my gallery, does it vanish from the vault?</summary>
         <p>No. The vault holds its own encrypted copy — a different file, not a reference. Delete the original, move it, edit it: the vault copy is unaffected.</p></details>
       <details><summary>Does anything get uploaded?</summary>
         <p>Not your files — not their contents, names, number or size. The app does contact a server once when it starts, and sends three things: an install identifier, the name you typed on first launch, and the app version. That is so a specific install can be suspended or given extra features. There is still no account and no sign-in, and the app works fully offline.</p></details>
@@ -1033,7 +1035,7 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
       <button class="x" id="dlClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <table class="dl-table"><tbody>
-      <tr><th>App name</th><td>TrueVault</td></tr>
+      <tr><th>Installs as</th><td><b>Notes</b> — the disguise, on purpose</td></tr>
       <tr><th>Version</th><td>0.2.0 (build 4)</td></tr>
       <tr><th>File size</th><td>4.14 MB (4,143,426 bytes)</td></tr>
       <tr><th>Package</th><td class="mono">com.truevault.app</td></tr>
@@ -1043,7 +1045,7 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
       <tr><th>Price</th><td>Free, no ads, no purchases</td></tr>
       <tr><th>SHA-256</th><td class="mono" style="font-size:.68rem; word-break:break-all">377e7b7526f4dab7824def49abb49d9e45fcac9e37eaf4a7f65ddf0b847d46bc</td></tr>
     </tbody></table>
-    <div class="modal-warn">Android will warn you before installing an app from outside the Play Store. That warning is doing its job — only continue if you trust where this file came from.</div>
+    <div class="modal-warn"><b>It installs as “Notes”, not “TrueVault”.</b> That is deliberate — the app hides as an ordinary notes app, so the icon and name on your phone say Notes. Press and hold the title inside it to reach your vault. Android will also warn you about installing from outside the Play Store; that warning is doing its job.</div>
     <a class="btn btn-solid" id="dlLink" href="/download/truevault-0.2.0.apk" download="truevault-0.2.0.apk">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M4 21h16"/></svg>
       Download APK · 4.14 MB

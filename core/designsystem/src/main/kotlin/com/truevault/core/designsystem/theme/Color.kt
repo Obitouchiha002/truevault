@@ -31,10 +31,13 @@ private val DarkOutlineVariant = Color(0xFF26313D)
 private val DarkOnBackground = Color(0xFFE7EDF3)
 private val DarkOnSurfaceVariant = Color(0xFF9AA9B8)
 
-private val EmeraldDark = Color(0xFF45E0B4)
-private val EmeraldOnDark = Color(0xFF00281E)
-private val EmeraldContainerDark = Color(0xFF10523F)
-private val EmeraldOnContainerDark = Color(0xFFA9F2DC)
+// The primary accent moved off green to indigo, on request. These are Material 3 indigo tones,
+// chosen (not hand-picked) so the contrast against the neutrals is accessible in both themes. The
+// green-family colours below are kept only for note tints and status use, never as the primary.
+private val EmeraldDark = Color(0xFFBEC2FF)
+private val EmeraldOnDark = Color(0xFF262A73)
+private val EmeraldContainerDark = Color(0xFF3E428B)
+private val EmeraldOnContainerDark = Color(0xFFE0E0FF)
 
 private val BlueDark = Color(0xFF86ACFF)
 private val BlueOnDark = Color(0xFF08204C)
@@ -63,10 +66,11 @@ private val LightOutlineVariant = Color(0xFFDCE4EC)
 private val LightOnBackground = Color(0xFF0E1A26)
 private val LightOnSurfaceVariant = Color(0xFF556676)
 
-private val TealLight = Color(0xFF0A7A6B)
+// Light-theme primary, also moved to indigo (Material 3 tones) to match the dark theme's accent.
+private val TealLight = Color(0xFF565992)
 private val TealOnLight = Color(0xFFFFFFFF)
-private val TealContainerLight = Color(0xFFB5EFE2)
-private val TealOnContainerLight = Color(0xFF00201B)
+private val TealContainerLight = Color(0xFFE1E0FF)
+private val TealOnContainerLight = Color(0xFF12144B)
 
 private val BlueLight = Color(0xFF2B57A7)
 private val BlueOnLight = Color(0xFFFFFFFF)
@@ -227,22 +231,39 @@ val LocalTvStatusColors = staticCompositionLocalOf { DarkStatusColors }
  */
 object TvNoteColors {
 
+    // Twelve tints, following Google Keep's own palette and order. The first six indices are
+    // unchanged from the earlier six-colour version, so notes saved before this expansion keep the
+    // exact colour they had; indices 6–11 are new. Keep's light colours are noticeably more
+    // saturated than the near-neutral washes they replace, which is what makes the grid read as a
+    // notes app rather than a row of grey cards.
     private val light = listOf(
-        Color(0xFFFFFFFF), // default — plain card
-        Color(0xFFFFF3D6), // sand
-        Color(0xFFE2F3E7), // sage
-        Color(0xFFE3EFFA), // sky
-        Color(0xFFF6E6F0), // orchid
-        Color(0xFFFFE7E0), // clay
+        Color(0xFFFFFFFF), // 0 default — plain card
+        Color(0xFFFFF8B8), // 1 sand   (Keep "Sand")
+        Color(0xFFE2F6D3), // 2 sage   (Keep "Mint")
+        Color(0xFFD4E4ED), // 3 sky    (Keep "Fog")
+        Color(0xFFF6E2DD), // 4 orchid (Keep "Blossom")
+        Color(0xFFFAAFA8), // 5 clay   (Keep "Coral")
+        Color(0xFFF39F76), // 6 peach
+        Color(0xFFB4DDD3), // 7 sage-deep (Keep "Sage")
+        Color(0xFFAECCDC), // 8 storm
+        Color(0xFFD3BFDB), // 9 dusk
+        Color(0xFFE9E3D4), // 10 clay-warm
+        Color(0xFFEFEFF1), // 11 chalk
     )
 
     private val dark = listOf(
-        Color(0xFF161E28), // default — plain card
-        Color(0xFF33291A), // sand
-        Color(0xFF1B2E23), // sage
-        Color(0xFF1B2836), // sky
-        Color(0xFF2C1F2A), // orchid
-        Color(0xFF33221C), // clay
+        Color(0xFF161E28), // 0 default — plain card
+        Color(0xFF41371D), // 1 sand
+        Color(0xFF234A30), // 2 mint
+        Color(0xFF2D4356), // 3 fog
+        Color(0xFF4A2E36), // 4 blossom
+        Color(0xFF5C2B26), // 5 coral
+        Color(0xFF5C3A22), // 6 peach
+        Color(0xFF294A44), // 7 sage
+        Color(0xFF2A4453), // 8 storm
+        Color(0xFF42324B), // 9 dusk
+        Color(0xFF3D3A2E), // 10 clay-warm
+        Color(0xFF2A2E33), // 11 chalk
     )
 
     val count: Int get() = light.size

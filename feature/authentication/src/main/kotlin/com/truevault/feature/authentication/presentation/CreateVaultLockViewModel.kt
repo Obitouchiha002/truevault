@@ -33,13 +33,27 @@ import kotlinx.coroutines.launch
 class CreateVaultLockViewModel @Inject constructor(
     private val keyManager: VaultKeyManager,
     private val preferences: UserPreferencesDataSource,
-    biometricCapabilityChecker: BiometricCapabilityChecker,
+    private val biometricCapabilityChecker: BiometricCapabilityChecker,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         CreateVaultLockUiState(biometricCapability = biometricCapabilityChecker.capability()),
     )
     val uiState: StateFlow<CreateVaultLockUiState> = _uiState.asStateFlow()
+
+    /**
+     * Re-reads the biometric capability, and must be called every time the screen resumes.
+     *
+     * `canAuthenticate(BIOMETRIC_STRONG)` returns HW_UNAVAILABLE transiently — a sensor still waking
+     * after boot, momentarily held by the keyguard, or busy for another app. Checking it only once
+     * at construction froze that transient answer into "hardware is not responding" and never asked
+     * again, so a device with a perfectly working fingerprint showed the error for the whole screen.
+     * Re-querying on resume — including right after the user returns from enrolling a fingerprint in
+     * system settings — is what lets the real answer replace the stale one.
+     */
+    fun refreshBiometricCapability() {
+        _uiState.update { it.copy(biometricCapability = biometricCapabilityChecker.capability()) }
+    }
 
     private val _effects = MutableSharedFlow<CreateVaultLockEffect>(
         replay = 0,

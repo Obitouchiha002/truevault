@@ -24,6 +24,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -62,6 +63,14 @@ fun CreateVaultLockScreen(
     val passwordState = rememberTextFieldState()
     val confirmState = rememberTextFieldState()
     val runBiometricPrompt = rememberBiometricPromptRunner()
+
+    // The biometric sensor can report "unavailable" transiently while the app is settling, and it
+    // becomes available the moment the user returns from enrolling a fingerprint. Re-check on every
+    // resume so a stale "hardware is not responding" cannot persist once the hardware is ready.
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refreshBiometricCapability()
+        onPauseOrDispose {}
+    }
 
     val promptTitle = stringResource(R.string.create_lock_biometric_prompt_title)
     val promptSubtitle = stringResource(R.string.create_lock_biometric_prompt_subtitle)

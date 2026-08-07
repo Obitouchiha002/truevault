@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Spacer
@@ -176,7 +177,19 @@ fun NotesListScreen(
                 verticalItemSpacing = TvSpacing.small,
                 horizontalArrangement = Arrangement.spacedBy(TvSpacing.small),
             ) {
-                items(uiState.notes, key = { it.id }) { note ->
+                // Pinned notes rise to the top under their own heading, the way Keep does it — but
+                // only when some are pinned and the user is not searching, since a "PINNED" header
+                // over search results would label a set the search, not the pin, chose.
+                val pinned = uiState.notes.filter { it.isPinned }
+                val others = uiState.notes.filterNot { it.isPinned }
+                val sectioned = pinned.isNotEmpty() && others.isNotEmpty() && !uiState.isSearching
+
+                if (sectioned) {
+                    item(span = StaggeredGridItemSpan.FullLine, key = "hdr_pinned") {
+                        SectionHeader(stringResource(R.string.notes_section_pinned))
+                    }
+                }
+                items(if (sectioned) pinned else uiState.notes, key = { it.id }) { note ->
                     NoteCard(
                         note = note,
                         onOpen = { onOpenNote(note.id) },
@@ -186,9 +199,40 @@ fun NotesListScreen(
                         },
                     )
                 }
+                if (sectioned) {
+                    item(span = StaggeredGridItemSpan.FullLine, key = "hdr_others") {
+                        SectionHeader(stringResource(R.string.notes_section_others))
+                    }
+                    items(others, key = { it.id }) { note ->
+                        NoteCard(
+                            note = note,
+                            onOpen = { onOpenNote(note.id) },
+                            onPinToggled = { viewModel.onAction(NotesListAction.PinToggled(note)) },
+                            onItemToggled = { index ->
+                                viewModel.onAction(NotesListAction.ChecklistItemToggled(note.id, index))
+                            },
+                        )
+                    }
+                }
             }
         }
     }
+}
+
+@Composable
+private fun SectionHeader(text: String) {
+    // Keep's small, quiet, let-spaced section label. It names the group without competing with the
+    // notes for attention.
+    Text(
+        text = text.uppercase(),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(
+            start = TvSpacing.xs,
+            top = TvSpacing.small,
+            bottom = TvSpacing.xs,
+        ),
+    )
 }
 
 @Composable

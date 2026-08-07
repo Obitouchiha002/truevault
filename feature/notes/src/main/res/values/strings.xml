@@ -25,4 +25,6 @@
         <item quantity="one">+%1$d more item</item>
         <item quantity="other">+%1$d more items</item>
     </plurals>
+    <string name="notes_section_pinned">Pinned</string>
+    <string name="notes_section_others">Others</string>
 </resources>

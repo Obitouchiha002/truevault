@@ -40,6 +40,36 @@ on purpose, and the app says so where a user would otherwise expect them.
 
 ---
 
+## Secrets
+
+This app has almost none, by construction. It declares no internet permission, ships no network
+library, and talks to no service — so there is no API key, no database URL, no OAuth client secret
+and no third-party credential anywhere in it. A scan of every tracked file and all 30 commits of
+history found no key, token, connection string or private key.
+
+The one secret the project does have is the **release signing key**:
+
+| Secret | Where it lives | Committed? |
+|--------|----------------|------------|
+| Signing keystore | `truevault-release.jks` at the project root | No — `*.jks` is gitignored |
+| Store and key passwords, alias | `keystore.properties` at the project root | No — gitignored; see `keystore.properties.example` |
+
+`app/build.gradle.kts` reads that file at configuration time and skips release signing entirely when
+it is absent, so a fresh clone builds without it.
+
+Losing the keystore or its password is unrecoverable in a way worth stating plainly: Android refuses
+an update signed by a different key, so every existing install could never be updated again. Back
+both up somewhere you will still have in five years.
+
+**If you ever hardcode a secret, rotating it is the only fix.** Removing the line in a later commit
+does not remove it — the old value stays in git history, in every clone, and in every fork, and is
+recoverable with `git log -p`. Rewriting history does not help once the repository has been pushed
+or cloned. Rotate it at the provider instead, then remove it from the code.
+
+That applies to any credential that has been pasted into a chat, an issue, a screenshot or a CI log,
+not only to ones committed to the repository. This repository is public, so treat anything that has
+touched it as published.
+
 ## How to build
 
 Requirements:

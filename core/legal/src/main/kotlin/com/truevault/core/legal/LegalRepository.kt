@@ -41,8 +41,11 @@ class LegalRepository @Inject constructor(
             },
             // Unreadable is treated exactly like absent. The alternative — assuming acceptance from
             // a record we could not read — would be inventing consent.
-            onFailure = { error ->
-                LegalAcceptanceStatus.Corrupted(error.message ?: "Acceptance record unreadable")
+            // The throwable's own message is deliberately dropped. DataStore corruption messages
+            // embed the absolute path of the backing file, and this string is shown on screen —
+            // the same rule SecureLog applies to provider exceptions applies here.
+            onFailure = { _ ->
+                LegalAcceptanceStatus.Corrupted("Acceptance record unreadable")
             },
         )
     }

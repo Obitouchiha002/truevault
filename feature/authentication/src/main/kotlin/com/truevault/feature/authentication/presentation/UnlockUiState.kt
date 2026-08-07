@@ -43,7 +43,16 @@ sealed interface UnlockAction {
 
     data object RecoveryDismissed : UnlockAction
 
-    data class SubmitRecoveryKey(val key: String) : UnlockAction
+    data class SubmitRecoveryKey(val key: String) : UnlockAction {
+        /**
+         * The recovery key is the only credential that works on a different device, which makes it
+         * the most damaging string in the app to leak. A data class prints every field, so the
+         * generated `toString` would put it verbatim into any log line, crash trace or debugger
+         * frame that ever stringifies this action. [Submit] holds a `CharArray` and is safe by
+         * construction; this one is a `String` and has to say so.
+         */
+        override fun toString(): String = "SubmitRecoveryKey(key=<redacted>)"
+    }
 
     data class BiometricAuthenticated(val cipher: Cipher) : UnlockAction
 

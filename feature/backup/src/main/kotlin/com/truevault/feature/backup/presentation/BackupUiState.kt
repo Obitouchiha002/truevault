@@ -8,8 +8,21 @@ import com.truevault.core.model.VaultError
 @Immutable
 sealed interface BackupStage {
     data object Overview : BackupStage
-    data class RecoveryKeyShown(val key: String, val groups: List<String>) : BackupStage
-    data class RecoveryKeyConfirm(val groupIndex: Int, val expected: String) : BackupStage
+    /**
+     * These two hold the recovery key — the whole of it, and one group of it — as `String`s, and a
+     * data class prints every field. This stage also sits in a `StateFlow` for as long as the
+     * screen is open, so its `toString` is reachable from a debugger frame, a log line, or any
+     * future diagnostic that stringifies UI state. Redacted at the source rather than trusting
+     * every future caller to remember.
+     */
+    data class RecoveryKeyShown(val key: String, val groups: List<String>) : BackupStage {
+        override fun toString(): String = "RecoveryKeyShown(key=<redacted>, groups=${groups.size})"
+    }
+
+    data class RecoveryKeyConfirm(val groupIndex: Int, val expected: String) : BackupStage {
+        override fun toString(): String =
+            "RecoveryKeyConfirm(groupIndex=$groupIndex, expected=<redacted>)"
+    }
     data class Exporting(val completed: Int, val total: Int) : BackupStage
     data class ExportFinished(val itemCount: Int) : BackupStage
     data class RestorePreview(val manifest: BackupManifest, val sourceToken: String) : BackupStage
@@ -30,7 +43,10 @@ data class BackupUiState(
 
 sealed interface BackupAction {
     data object GenerateRecoveryKey : BackupAction
-    data class ConfirmRecoveryGroup(val entry: String) : BackupAction
+    /** What the user typed while confirming a recovery-key group — the key itself, in pieces. */
+    data class ConfirmRecoveryGroup(val entry: String) : BackupAction {
+        override fun toString(): String = "ConfirmRecoveryGroup(entry=<redacted>)"
+    }
     data object RecoveryKeyAcknowledged : BackupAction
     data class ExportDestinationChosen(val uriToken: String?, val passphrase: CharArray) : BackupAction {
         override fun equals(other: Any?): Boolean = other is ExportDestinationChosen &&

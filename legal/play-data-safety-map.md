@@ -20,8 +20,8 @@ form is wrong.
 
 | Question | Answer | Evidence |
 |---|---|---|
-| Does your app collect or share any of the required user data types? | **No** | No `INTERNET` permission; no network library in the dependency graph; no HTTP/socket call in the sources. Inventory §16. |
-| Is all user data encrypted in transit? | **Not applicable** — no data is in transit | Same as above |
+| Does your app collect or share any of the required user data types? | **Yes — collected, not shared** | The app checks in on launch with an install identifier, a self-chosen name, and the app version. Nothing about the vault is sent. See `docs/ADMIN.md` and Privacy Policy §5. |
+| Is all user data encrypted in transit? | **Yes** | HTTPS only; the endpoint is a Supabase project and the client will not fall back to cleartext. |
 | Do you provide a way for users to request data deletion? | **Yes** | Settings → Delete Vault Data; full reset; uninstall. Inventory §19. |
 
 ### Per-category
@@ -29,7 +29,8 @@ form is wrong.
 | Category | Data type | Collected | Shared | Evidence |
 |---|---|---|---|---|
 | Location | Approximate, Precise | No | No | No location permission, no Play Services location |
-| Personal info | Name, Email, User IDs, Address, Phone | No | No | No account system, no server, no sign-in |
+| **Personal info** | **Name** | **Yes** | No | The free-text name typed on first launch. Nothing verifies it and it need not be a real name. Purpose: app functionality (account management is not applicable — there is no account). |
+| Personal info | Email, Address, Phone | No | No | Never requested. There is no sign-in. |
 | Financial info | Payment, Purchase history | No | No | No payment provider, no billing library |
 | Health and fitness | — | No | No | Not accessed |
 | Messages | — | No | No | Not accessed |
@@ -40,14 +41,14 @@ form is wrong.
 | Contacts | — | No | No | Not accessed |
 | **App activity** | Interactions, In-app search, Installed apps, Other actions | **No** | **No** | No analytics SDK. Launchable-app names are read via `LauncherApps` for the launcher grid only, never stored, never transmitted. Inventory §10, §13. |
 | Web browsing | — | No | No | No browser, no WebView carrying user content |
-| **App info and performance** | Crash logs, Diagnostics, Other | **No** | **No** | No crash-reporting SDK. `SecureLog` writes to logcat in debuggable builds only. Inventory §14. |
-| Device or other IDs | Device or other IDs | **No** | **No** | No advertising ID, no device identifier accessed |
+| **App info and performance** | Crash logs, Diagnostics, Other | **No** | **No** | No crash-reporting SDK. The check-in sends the app version and nothing about performance or crashes. `SecureLog` writes to logcat in debuggable builds only. Inventory §14. |
+| **Device or other IDs** | **Device or other IDs** | **Yes** | No | Android's per-app `ANDROID_ID`, used solely as an opaque handle so a specific install can be suspended. No advertising ID is read, and no hardware identifier such as IMEI or serial. Purpose: fraud prevention and app functionality. |
 
 ## Section 2 — Security practices
 
 | Question | Answer | Evidence |
 |---|---|---|
-| Is data encrypted in transit? | Not applicable — nothing is transmitted | Inventory §16 |
+| Is data encrypted in transit? | Yes — HTTPS | The only request is the check-in described above |
 | Can users request data deletion? | Yes | Settings → Delete Vault Data; uninstall removes app-private storage |
 | Has your app been independently reviewed against a global security standard? | **No** | No third-party security review has been performed. Stated plainly in [../qa-reports/10-security-review.md](../qa-reports/10-security-review.md) §7. |
 | Do you follow the Families policy? | Not applicable | App is not directed at children |
@@ -114,7 +115,7 @@ Any contradiction here blocks release (§102).
 
 | Item | Status |
 |---|---|
-| Runtime network capture on a device | **NOT RUN.** The "nothing is transmitted" answer rests on static evidence only. A proxied device run would make it observational, and should be done before submitting the form. |
+| Runtime network capture on a device | **NOT RUN.** The app now makes one request, and the claim that it carries nothing about the vault rests on reading the code rather than on watching the wire. A proxied device run would make it observational, and should be done before submitting the form. |
 | Release-artefact decompilation | **PARTIAL.** Permissions were dumped from the built APK; the R8-processed code was not reviewed. |
 | Play Console form submitted | **NOT DONE — NO ACCESS** |
 | Human legal review | **NOT DONE.** `legalReviewRequired` remains `true` in `legal-config.json`. |

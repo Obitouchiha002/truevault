@@ -145,7 +145,7 @@ Evidence: `SecureShareCoordinator`.
 | | |
 |---|---|
 | Accessed | `LauncherApps.getActivityList` — **launchable activities only** |
-| Collected | No. Nothing is stored and nothing is transmitted. |
+| Collected | No. Nothing here is stored or transmitted. The launch check-in sends only an install identifier, the self-chosen name and the app version — see §16. |
 | `QUERY_ALL_PACKAGES` | **Not requested.** Non-launchable packages are never enumerated. |
 | Purpose | Showing private-profile app entries in Secure Launcher Mode |
 | Leaves device | No |

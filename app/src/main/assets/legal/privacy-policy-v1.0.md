@@ -46,17 +46,38 @@ TrueVault accesses only what you hand it:
 | Biometric verification **result** | Only if you turn on biometric unlock |
 | Launchable apps in a private profile | Only on Android versions that support Private Space, and only while TrueVault is your home app |
 
-The app declares one Android permission: `USE_BIOMETRIC`. It requests no storage permission, no
-"all files access", no camera, no microphone, no location, no contacts, and no internet permission.
+The app declares two Android permissions: `USE_BIOMETRIC` and `INTERNET`. Both are normal
+permissions, so neither shows a runtime dialog. It requests no storage permission, no "all files
+access", no camera, no microphone, no location and no contacts.
+
+`INTERNET` is used for exactly one thing, described in the next section. It is not used to send,
+back up, sync or examine anything in your vault, and there is no code in the app that could.
 
 ## 5. Information the developer collects
 
-**None.** The developer receives no data from your use of the app.
+The app contacts the developer's server when it starts and when you return to it, and sends **four
+things**:
 
-This is a statement about the current version, and it rests on a specific audit rather than on
-intent: the app has no internet permission, contains no network library, and contains no analytics,
-crash-reporting or advertising component. If that ever changes, this section changes with it, the
-app will ask you separately, and you will be told before it happens.
+| Sent | What it is |
+|------|------------|
+| An install identifier | Android's own per-app identifier for your device. It is not your name, your account, your phone number or your advertising ID. It survives reinstalling the app and is cleared by a factory reset. |
+| The name you typed on first launch | Whatever you chose to type. Nothing checks it and nothing verifies it. It can be a single letter. |
+| The app version | For example `0.1.2`. |
+| The time of the request | Recorded as first-seen and last-seen. |
+
+**What is never sent, and what no code path here could send:** anything about your vault. Not its
+contents, not the files in it, not their names, not their number, not their size, not whether a
+vault exists at all. Not your password, not your recovery key, not your notes, not your settings,
+not your location, not your device model.
+
+**Why it exists.** It lets the developer see how many people are using the app, respond to abuse by
+suspending a specific install, and enable optional features on an install. If your install is
+suspended the app will not open and will tell you so. **Your files are not deleted by a suspension**
+— they stay encrypted on your device and open again if it is lifted.
+
+**The app still works offline.** The response is remembered on your device, so starting the app never
+waits for a network and never fails because of one. If there is no connection the app carries on
+exactly as it did the last time it had one.
 
 ## 6. Files you select
 
@@ -196,8 +217,10 @@ The app does not access advertising identifiers, IMEI, phone number, SIM details
 
 ## 18. Diagnostics and analytics
 
-**There are none.** The app contains no analytics SDK and no crash-reporting SDK. Nothing about how
-you use the app is recorded or sent.
+**There are none.** The app contains no analytics SDK, no crash-reporting SDK and no advertising SDK.
+Nothing about how you use the app — which screens you open, which features you use, how long you
+spend, what you search for — is recorded or sent. The check-in described in section 5 reports that
+the app started; it reports nothing about what you then did with it.
 
 The app writes technical log lines only in developer builds, and even then a deliberate rule keeps
 file names, paths, search terms and content out of them.
@@ -213,6 +236,9 @@ library.
 
 These are code libraries that run inside the app on your device. None of them is a service, none
 receives data, and none communicates over a network in this app.
+
+The app does use one hosted service: **Supabase**, which stores the check-in records described in
+section 5 and nothing else. It never receives anything about your vault.
 
 There is no advertising SDK, no attribution SDK, no cloud SDK and no payment provider.
 

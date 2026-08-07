@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <title>Notes — a private file vault hiding inside a notes app | by Vansh Kashyap</title>
 
-<meta name="description" content="An Android vault that opens as a working notes app. Photos and documents are encrypted on your device with AES-256-GCM. No account, no analytics, no internet permission. Free. Built by Vansh Kashyap, co-founder of LZ Worth, New Delhi.">
+<meta name="description" content="An Android vault that opens as a working notes app. Photos and documents are encrypted on your device with AES-256-GCM. No account, no ads, no tracking of what you do. Free. Built by Vansh Kashyap, co-founder of LZ Worth, New Delhi.">
 <meta name="keywords" content="TrueVault, TrueVault app, TrueVault Android, Vansh Kashyap, Vansh Kashyap developer, Vansh Kashyap TrueVault, Tech by Vansh, techbyvansh, Co-founder of LZ Worth, LZ Worth, file vault android, hide photos app, private vault, encrypted gallery, hide files android, notes app vault, offline vault, AES encryption android app">
 <meta name="author" content="Vansh Kashyap">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
@@ -21,14 +21,14 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TrueVault">
 <meta property="og:title" content="A private file vault hiding inside a notes app">
-<meta property="og:description" content="Encrypted file vault for Android. Opens to a real notes app; press and hold the title to reach the vault. No account, no analytics, works offline. Built by Vansh Kashyap.">
+<meta property="og:description" content="Encrypted file vault for Android. Opens to a real notes app; press and hold the title to reach the vault. No account, no ads, works offline. Built by Vansh Kashyap.">
 <meta property="og:url" content="https://truevault-seven.vercel.app/">
 <meta property="og:locale" content="en_IN">
 <meta property="og:see_also" content="https://vanshkashyap.lzworth.in/">
 <meta property="og:see_also" content="https://techbyvansh.lzworth.in/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="A private file vault hiding inside a notes app">
-<meta name="twitter:description" content="Encrypted file vault for Android by Vansh Kashyap. No account, no analytics, no internet permission.">
+<meta name="twitter:description" content="Encrypted file vault for Android by Vansh Kashyap. No account, no ads, nothing about your files ever leaves the device.">
 
 <script type="application/ld+json">
 {
@@ -47,7 +47,7 @@
       "url": "https://truevault-seven.vercel.app/",
       "downloadUrl": "https://truevault-seven.vercel.app/download/truevault-0.1.2.apk",
       "installUrl": "https://truevault-seven.vercel.app/",
-      "description": "An Android file vault that opens to a working notes app. Files are encrypted on the device with AES-256-GCM and a key derived with Argon2id. No account, no analytics, no internet permission.",
+      "description": "An Android file vault that opens to a working notes app. Files are encrypted on the device with AES-256-GCM and a key derived with Argon2id. No account and no ads. Nothing about your files ever leaves the device.",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR", "availability": "https://schema.org/InStock" },
       "author": { "@id": "https://vanshkashyap.lzworth.in/#vansh-kashyap" },
       "creator": { "@id": "https://vanshkashyap.lzworth.in/#vansh-kashyap" },
@@ -120,7 +120,7 @@
       "@type": "FAQPage",
       "mainEntity": [
         { "@type": "Question", "name": "Does TrueVault upload my files anywhere?",
-          "acceptedAnswer": { "@type": "Answer", "text": "No. The app does not declare the internet permission and contains no network library, so it has no way to send anything." } },
+          "acceptedAnswer": { "@type": "Answer", "text": "Nothing about your files, ever. The app checks in on launch with an install identifier, the name you typed and the app version, so a specific install can be suspended or given extra features. Your files, their names, their number and their size are never sent." } },
         { "@type": "Question", "name": "If I delete a photo from my gallery, does it disappear from the vault?",
           "acceptedAnswer": { "@type": "Answer", "text": "No. The vault holds its own encrypted copy, not a reference. Deleting the original changes nothing inside the vault." } },
         { "@type": "Question", "name": "Can TrueVault hide itself completely from Android?",
@@ -676,14 +676,14 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
       <span class="deck-badge">Private file vault</span>
       <h2>Nobody looks twice at a <em style="font-style:normal;color:var(--accent-lit)">notes app.</em></h2>
       <p class="lede">Real notes on the outside. An encrypted vault behind a long press. No account,
-        no analytics, no internet permission at all.</p>
+        no ads, and nothing about your files ever leaves the phone.</p>
       <button class="btn btn-solid js-dl" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M4 21h16"/></svg>
         Download for Android
       </button>
       <div class="deck-marks">
-        <div><b>0</b><span>data collected</span></div>
-        <div><b>1</b><span>permission</span></div>
+        <div><b>0</b><span>files uploaded</span></div>
+        <div><b>2</b><span>permissions</span></div>
         <div><b>4.13<span style="font-size:.6em"> MB</span></b><span>download</span></div>
       </div>
       <p class="deck-swipe">
@@ -765,9 +765,9 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
         <a class="btn btn-ghost" href="#cover">Watch it open</a>
       </div>
       <div class="marks up">
-        <div class="mark"><b>0</b><span>data collected</span></div>
+        <div class="mark"><b>0</b><span>files uploaded</span></div>
         <div class="mark"><b>0</b><span>ads or trackers</span></div>
-        <div class="mark"><b>1</b><span>permission</span></div>
+        <div class="mark"><b>2</b><span>permissions</span></div>
         <div class="mark"><b>4.13<small>MB</small></b><span>download</span></div>
       </div>
     </div>
@@ -840,8 +840,8 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
   <div class="shell">
     <div class="head rise" data-3d>
       <span class="eyebrow">What you get</span>
-      <h2>Everything happens<br>on your phone.</h2>
-      <p class="lede">There is no server to talk to. The app does not declare the internet permission at all.</p>
+      <h2>Your files stay<br>on your phone.</h2>
+      <p class="lede">Encryption, decryption and every file operation happen on the device. Nothing is uploaded, and there is nowhere for a file to go.</p>
     </div>
     <div class="tiles rise stagger" data-3d="deep">
       <article class="tile"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18"/></svg></span>
@@ -859,7 +859,7 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
       <article class="tile"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg></span>
         <h3>Fingerprint or PIN</h3><p>4-digit, 6-digit or a passphrase, with a growing delay after failed attempts. Android does the biometric check — the app never receives it.</p></article>
       <article class="tile"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4h8l2 3h6v13z"/></svg></span>
-        <h3>Works on a plane</h3><p>No sign-in, no email, nothing to create. Install it and it works, offline, forever.</p></article>
+        <h3>Works on a plane</h3><p>No sign-in, no email, nothing to create. Every feature works with no connection at all.</p></article>
     </div>
   </div>
 </section>
@@ -903,7 +903,7 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
       <details open><summary>If I delete a photo from my gallery, does it vanish from the vault?</summary>
         <p>No. The vault holds its own encrypted copy — a different file, not a reference. Delete the original, move it, edit it: the vault copy is unaffected.</p></details>
       <details><summary>Does anything get uploaded?</summary>
-        <p>No. The app does not declare the internet permission and contains no network library, so it has no way to send anything anywhere. There is no account and no server.</p></details>
+        <p>Not your files — not their contents, names, number or size. The app does contact a server once when it starts, and sends three things: an install identifier, the name you typed on first launch, and the app version. That is so a specific install can be suspended or given extra features. There is still no account and no sign-in, and the app works fully offline.</p></details>
       <details><summary>Can it hide itself completely?</summary>
         <p>No, and any app that says otherwise is lying to you. You can change the launcher icon and name, but Android Settings, storage usage and permission screens still list it under its real package. Anyone who looks there will find it.</p></details>
       <details><summary>What if I forget my password?</summary>
@@ -930,8 +930,8 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
         <tr><th>Recovery key</th><td>24 characters, about <b>118 bits</b>, generated by rejection sampling so no character is likelier than another.</td></tr>
         <tr><th>4-digit PIN</th><td>Around <b>104 days</b> on average to guess against the built-in delay. Measured, not estimated.</td></tr>
         <tr><th>6-digit PIN</th><td>Around <b>28 years</b> on the same basis.</td></tr>
-        <tr><th>Permissions</th><td>One: <span style="font-family:var(--mono);font-size:.86em">USE_BIOMETRIC</span>. No storage permission, no all-files access, no internet.</td></tr>
-        <tr><th>Analytics</th><td>None. No crash reporter either.</td></tr>
+        <tr><th>Permissions</th><td>Two: <span style="font-family:var(--mono);font-size:.86em">USE_BIOMETRIC</span> and <span style="font-family:var(--mono);font-size:.86em">INTERNET</span>. No storage permission, no all-files access, no location, no camera, no microphone.</td></tr>
+        <tr><th>Analytics</th><td>None, and no crash reporter. Nothing about what you do in the app is recorded.</td></tr>
         <tr><th>Android backup</th><td>Disabled, so your vault is never swept into a system backup you did not ask for.</td></tr>
         <tr><th>Requires</th><td>Android 8.0 (API 26) or newer</td></tr>
       </tbody></table>
@@ -1036,7 +1036,7 @@ footer { background: var(--night); color: var(--night-ink); padding: 44px 0 80px
       <tr><th>File size</th><td>4.13 MB (4,125,678 bytes)</td></tr>
       <tr><th>Package</th><td class="mono">com.truevault.app</td></tr>
       <tr><th>Requires</th><td>Android 8.0 (API 26) or newer</td></tr>
-      <tr><th>Permissions</th><td>Biometric only</td></tr>
+      <tr><th>Permissions</th><td>Biometric and internet</td></tr>
       <tr><th>Developer</th><td>Vansh Kashyap, New Delhi</td></tr>
       <tr><th>Price</th><td>Free, no ads, no purchases</td></tr>
       <tr><th>SHA-256</th><td class="mono" style="font-size:.68rem; word-break:break-all">5043953afd5e1803fb6bf7e046f272d46949c418eca3fe74ef347a3f9074b76a</td></tr>

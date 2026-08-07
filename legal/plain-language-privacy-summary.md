@@ -14,7 +14,11 @@ permission to browse your storage.
 ### Local storage
 
 Vault files are stored in encrypted form on your device, in the app's private storage. Nothing is
-uploaded. The app has no internet permission and no server to upload to.
+uploaded. There is no code in the app that could send a file anywhere.
+
+The app does contact a server when it starts, and sends three things: an install identifier, the
+name you typed on first launch, and the app version. That is so a specific install can be suspended
+or given extra features. Nothing about your files is included. The app works fully offline.
 
 ### Secure Copy
 

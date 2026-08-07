@@ -42,10 +42,15 @@ on purpose, and the app says so where a user would otherwise expect them.
 
 ## Secrets
 
-This app has almost none, by construction. It declares no internet permission, ships no network
-library, and talks to no service — so there is no API key, no database URL, no OAuth client secret
-and no third-party credential anywhere in it. A scan of every tracked file and all 30 commits of
-history found no key, token, connection string or private key.
+The app declares `USE_BIOMETRIC` and `INTERNET`. The network is used for exactly one thing: a
+check-in that reports an install identifier, a self-chosen name and the app version, so that a
+specific install can be suspended or given optional features. Nothing about the vault is ever sent —
+see `docs/ADMIN.md` and the Privacy Policy.
+
+The Supabase anon key is public by design and ships inside the APK; it is harmless only because
+row-level security is enabled with no policies, so it cannot read or write any table. The admin PIN
+lives only in the database and is never in the app. Beyond that there is no API key, no database URL
+and no OAuth client secret in the source.
 
 The one secret the project does have is the **release signing key**:
 

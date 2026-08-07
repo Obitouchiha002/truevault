@@ -58,10 +58,14 @@ strong { font-weight:650; }
 <h2>4. Information the app accesses</h2>
 <p>TrueVault accesses only what you hand it:</p>
 <div class="table-scroll"><table><tr><th>What</th><th>When</th></tr><tr><td>Files, photos and videos you select</td><td>Only the specific items you pick through the Android photo picker or the document picker</td></tr><tr><td>Basic file details — name, size, type, dates</td><td>For the files you selected, so the app can display and organise them</td></tr><tr><td>Folders you explicitly grant</td><td>Only when you run the Privacy Leak Scanner and choose a folder</td></tr><tr><td>Biometric verification <strong>result</strong></td><td>Only if you turn on biometric unlock</td></tr><tr><td>Launchable apps in a private profile</td><td>Only on Android versions that support Private Space, and only while TrueVault is your home app</td></tr></table></div>
-<p>The app declares one Android permission: <code>USE_BIOMETRIC</code>. It requests no storage permission, no "all files access", no camera, no microphone, no location, no contacts, and no internet permission.</p>
+<p>The app declares two Android permissions: <code>USE_BIOMETRIC</code> and <code>INTERNET</code>. Both are normal permissions, so neither shows a runtime dialog. It requests no storage permission, no "all files access", no camera, no microphone, no location and no contacts.</p>
+<p><code>INTERNET</code> is used for exactly one thing, described in the next section. It is not used to send, back up, sync or examine anything in your vault, and there is no code in the app that could.</p>
 <h2>5. Information the developer collects</h2>
-<p><strong>None.</strong> The developer receives no data from your use of the app.</p>
-<p>This is a statement about the current version, and it rests on a specific audit rather than on intent: the app has no internet permission, contains no network library, and contains no analytics, crash-reporting or advertising component. If that ever changes, this section changes with it, the app will ask you separately, and you will be told before it happens.</p>
+<p>The app contacts the developer's server when it starts and when you return to it, and sends <strong>four things</strong>:</p>
+<div class="table-scroll"><table><tr><th>Sent</th><th>What it is</th></tr><tr><td>An install identifier</td><td>Android's own per-app identifier for your device. It is not your name, your account, your phone number or your advertising ID. It survives reinstalling the app and is cleared by a factory reset.</td></tr><tr><td>The name you typed on first launch</td><td>Whatever you chose to type. Nothing checks it and nothing verifies it. It can be a single letter.</td></tr><tr><td>The app version</td><td>For example <code>0.1.2</code>.</td></tr><tr><td>The time of the request</td><td>Recorded as first-seen and last-seen.</td></tr></table></div>
+<p><strong>What is never sent, and what no code path here could send:</strong> anything about your vault. Not its contents, not the files in it, not their names, not their number, not their size, not whether a vault exists at all. Not your password, not your recovery key, not your notes, not your settings, not your location, not your device model.</p>
+<p><strong>Why it exists.</strong> It lets the developer see how many people are using the app, respond to abuse by suspending a specific install, and enable optional features on an install. If your install is suspended the app will not open and will tell you so. <strong>Your files are not deleted by a suspension</strong> — they stay encrypted on your device and open again if it is lifted.</p>
+<p><strong>The app still works offline.</strong> The response is remembered on your device, so starting the app never waits for a network and never fails because of one. If there is no connection the app carries on exactly as it did the last time it had one.</p>
 <h2>6. Files you select</h2>
 <p>The files you bring into TrueVault are the reason the app exists. They are:</p>
 <ul>
@@ -156,12 +160,13 @@ strong { font-weight:650; }
 <p>The app checks what the device can do — Android version, whether secure hardware is present, whether biometrics are enrolled, whether a private profile exists — so it can offer only features that actually work. These checks happen on the device, produce no stored record beyond the current session, and are not transmitted.</p>
 <p>The app does not access advertising identifiers, IMEI, phone number, SIM details or location.</p>
 <h2>18. Diagnostics and analytics</h2>
-<p><strong>There are none.</strong> The app contains no analytics SDK and no crash-reporting SDK. Nothing about how you use the app is recorded or sent.</p>
+<p><strong>There are none.</strong> The app contains no analytics SDK, no crash-reporting SDK and no advertising SDK. Nothing about how you use the app — which screens you open, which features you use, how long you spend, what you search for — is recorded or sent. The check-in described in section 5 reports that the app started; it reports nothing about what you then did with it.</p>
 <p>The app writes technical log lines only in developer builds, and even then a deliberate rule keeps file names, paths, search terms and content out of them.</p>
 <p>Because no optional data collection exists, the app does not show a "help us improve" consent screen. Showing one for something that does not exist would be theatre.</p>
 <h2>19. Third-party services</h2>
 <p>TrueVault uses open-source software libraries — Android's own AndroidX components, a dependency injection library, Kotlin runtime libraries, an image loader, a media player, and a cryptography library.</p>
 <p>These are code libraries that run inside the app on your device. None of them is a service, none receives data, and none communicates over a network in this app.</p>
+<p>The app does use one hosted service: <strong>Supabase</strong>, which stores the check-in records described in section 5 and nothing else. It never receives anything about your vault.</p>
 <p>There is no advertising SDK, no attribution SDK, no cloud SDK and no payment provider.</p>
 <h2>20. Data sharing</h2>
 <p>The developer shares nothing, because the developer receives nothing.</p>

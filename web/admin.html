@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TrueVault admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<style>
+:root { --bg:#0B0F0E; --card:#121917; --line:#26332F; --ink:#ECF2EF; --soft:#8FA39C;
+  --accent:#3DDCA6; --clay:#D98A6E;
+  --f:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --m:ui-monospace,"SF Mono",Menlo,monospace; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);font-size:16px;line-height:1.55}
+.wrap{width:min(100% - 32px,780px);margin:0 auto;padding:40px 0 80px}
+h1{font-size:1.5rem;letter-spacing:-.03em;margin:0 0 6px}
+.sub{color:var(--soft);font-size:.9rem;margin:0 0 28px}
+input{width:100%;padding:13px 15px;border-radius:12px;border:1px solid var(--line);
+  background:var(--card);color:var(--ink);font:inherit}
+button{padding:12px 20px;border-radius:999px;border:0;background:var(--accent);color:#08110E;
+  font:inherit;font-weight:640;cursor:pointer}
+button:disabled{opacity:.5;cursor:default}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:10px}
+.card h3{margin:0 0 2px;font-size:1rem}
+.meta{color:var(--soft);font-size:.8rem;font-family:var(--m)}
+.pill{font-size:.7rem;font-family:var(--m);padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--soft)}
+.pill.on{border-color:var(--clay);color:var(--clay)}
+.pill.prem{border-color:var(--accent);color:var(--accent)}
+.msg{color:var(--clay);font-size:.88rem;min-height:1.3em}
+.hint{color:var(--soft);font-size:.8rem;margin-top:22px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>TrueVault admin</h1>
+  <p class="sub">Installs of TrueVault only. StreamGarden's rows are filtered out on the server.</p>
+
+  <div id="gate">
+    <div class="row">
+      <input id="pw" type="password" placeholder="Admin password" autocomplete="current-password">
+      <button id="go">Enter</button>
+    </div>
+    <p class="msg" id="msg"></p>
+  </div>
+
+  <div id="panel" hidden>
+    <div class="row" style="justify-content:space-between;margin-bottom:16px">
+      <strong id="count"></strong>
+      <div class="row">
+        <button class="ghost" id="refresh">Refresh</button>
+        <button class="ghost" id="suspendAll">Suspend all</button>
+        <button class="ghost" id="restoreAll">Restore all</button>
+      </div>
+    </div>
+    <div id="list"></div>
+    <p class="msg" id="msg2"></p>
+    <p class="hint">
+      A suspension stops the app from opening. It does not delete anything — the vault stays
+      encrypted on the device and opens again when the suspension is lifted.
+      An install created after "Suspend all" is not caught by it; run it again if that matters.
+    </p>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* The password is held in memory for the session only. It is never written to localStorage or a
+   cookie: this page has no session to resume, and a stored admin password on a shared machine is a
+   worse problem than typing it again. */
+let password = "";
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+async function call(action, extra = {}) {
+  const res = await fetch("/api/admin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password, action, ...extra }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.correlationId ? `${data.error} (${data.correlationId})` : (data.error || "Failed"));
+  return data;
+}
+
+async function load() {
+  const { installs } = await call("list");
+  $("count").textContent = `${installs.length} install${installs.length === 1 ? "" : "s"}`;
+  $("list").innerHTML = installs.map((i) => `
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <h3>${esc(i.name && i.name.trim() ? i.name : "(no name)")}</h3>
+          <div class="meta">v${esc(i.version || "?")} · last seen ${esc((i.last_seen || "").slice(0, 16) || "—")}</div>
+        </div>
+        <div class="row">
+          ${i.blocked ? '<span class="pill on">suspended</span>' : ""}
+          ${i.premium ? '<span class="pill prem">premium</span>' : ""}
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="ghost" data-block="${esc(i.id)}" data-to="${i.blocked ? "0" : "1"}">
+          ${i.blocked ? "Restore" : "Suspend"}
+        </button>
+        <button class="ghost" data-prem="${esc(i.id)}" data-to="${i.premium ? "0" : "1"}">
+          ${i.premium ? "Remove premium" : "Give premium"}
+        </button>
+      </div>
+    </div>`).join("") || '<p class="sub">No installs have checked in yet.</p>';
+  return installs;
+}
+
+async function guard(fn) {
+  $("msg2").textContent = "";
+  try { await fn(); } catch (e) { $("msg2").textContent = e.message; }
+}
+
+$("go").addEventListener("click", async () => {
+  password = $("pw").value;
+  $("msg").textContent = "";
+  $("go").disabled = true;
+  try {
+    await load();
+    $("gate").hidden = true;
+    $("panel").hidden = false;
+  } catch (e) {
+    password = "";
+    $("msg").textContent = e.message;
+  } finally {
+    $("go").disabled = false;
+  }
+});
+$("pw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("go").click(); });
+
+$("refresh").addEventListener("click", () => guard(load));
+
+$("list").addEventListener("click", (e) => {
+  const block = e.target.closest("[data-block]");
+  const prem = e.target.closest("[data-prem]");
+  if (block) guard(async () => {
+    await call("block", { id: block.dataset.block, blocked: block.dataset.to === "1" });
+    await load();
+  });
+  if (prem) guard(async () => {
+    await call("premium", { id: prem.dataset.prem, premium: prem.dataset.to === "1" });
+    await load();
+  });
+});
+
+for (const [id, blocked, label] of [["suspendAll", true, "Suspend"], ["restoreAll", false, "Restore"]]) {
+  $(id).addEventListener("click", () => guard(async () => {
+    const installs = await call("list").then((d) => d.installs);
+    const targets = installs.filter((i) => Boolean(i.blocked) !== blocked);
+    if (!targets.length) { $("msg2").textContent = "Nothing to change."; return; }
+    if (!confirm(`${label} ${targets.length} install(s)?`)) return;
+    for (const i of targets) await call("block", { id: i.id, blocked });
+    await load();
+  }));
+}
+</script>
+</body>
+</html>

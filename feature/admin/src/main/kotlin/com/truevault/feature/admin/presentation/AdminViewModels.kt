@@ -1,12 +1,9 @@
 package com.truevault.feature.admin.presentation
 
-import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.truevault.core.remote.InstallRecord
 import com.truevault.core.remote.InstallStatus
 import com.truevault.core.remote.RemoteGateRepository
-import com.truevault.core.remote.RemoteResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -77,152 +74,6 @@ class BlockedViewModel @Inject constructor(
         viewModelScope.launch {
             gate.checkIn(version)
             _isChecking.value = false
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------------------------
-// Admin panel
-// ---------------------------------------------------------------------------------------------
-
-data class AdminUiState(
-    val pin: String = "",
-    val authorised: Boolean = false,
-    val installs: List<InstallRecord> = emptyList(),
-    val isBusy: Boolean = false,
-    val message: String? = null,
-    /** True when every TrueVault install currently on the backend is blocked. */
-    val suspendedAll: Boolean = false,
-    /** False on a backend without the `admin_premium` function — StreamGarden's, for instance. */
-    val premiumSupported: Boolean = true,
-) {
-    val canSubmitPin: Boolean get() = pin.length >= 4 && !isBusy
-}
-
-@HiltViewModel
-class AdminViewModel @Inject constructor(
-    private val gate: RemoteGateRepository,
-) : ViewModel() {
-
-    private val _uiState = MutableStateFlow(AdminUiState())
-    val uiState: StateFlow<AdminUiState> = _uiState.asStateFlow()
-
-    fun onPinChanged(value: String) = _uiState.update { it.copy(pin = value.take(64)) }
-
-    private var wrongAttempts = 0
-    private var lockedUntil = 0L
-
-    /**
-     * A wrong PIN produces no message at all — the screen simply stays where it is. Anything that
-     * distinguishes "wrong PIN" from "no panel here" turns a hidden door into a discovered one.
-     *
-     * Three wrong tries then a growing wait. Be clear about what this does and does not buy: it
-     * stops someone holding the phone from sitting there guessing, and nothing more. An attacker
-     * with the anon key extracted from the APK is not using this screen at all — they POST to the
-     * endpoint directly, and no amount of client-side counting touches them. The limit that
-     * actually protects the PIN is the one in `docs/PIN-RATE-LIMIT.sql`, which lives in the
-     * database beside the comparison itself.
-     */
-    fun unlock() {
-        if (!_uiState.value.canSubmitPin) return
-        if (SystemClock.elapsedRealtime() < lockedUntil) return
-        refresh(firstUnlock = true)
-    }
-
-    private fun noteWrongPin() {
-        wrongAttempts++
-        if (wrongAttempts >= 3) {
-            // 8s, 16s, 32s … capped, so a long session cannot lock the owner out permanently.
-            val backoff = (8_000L shl (wrongAttempts - 3).coerceAtMost(4))
-            lockedUntil = SystemClock.elapsedRealtime() + backoff
-        }
-    }
-
-    fun refresh(firstUnlock: Boolean = false) {
-        _uiState.update { it.copy(isBusy = true, message = null) }
-        viewModelScope.launch {
-            when (val result = gate.adminInstalls(_uiState.value.pin)) {
-                is RemoteResult.Ok -> {
-                    wrongAttempts = 0
-                    lockedUntil = 0L
-                    // StreamGarden's rows live in the same table and belong to different people.
-                    // Showing them here would invite acting on the wrong install.
-                    val own = gate.ownInstalls(result.value)
-                    _uiState.update {
-                        it.copy(
-                            isBusy = false,
-                            authorised = true,
-                            installs = own,
-                            suspendedAll = own.isNotEmpty() && own.all(InstallRecord::blocked),
-                        )
-                    }
-                }
-                is RemoteResult.Refused -> {
-                    if (firstUnlock) noteWrongPin()
-                    _uiState.update {
-                        it.copy(isBusy = false, message = if (firstUnlock) null else "Refused")
-                    }
-                }
-                RemoteResult.Unreachable -> _uiState.update {
-                    it.copy(isBusy = false, message = "No connection")
-                }
-            }
-        }
-    }
-
-    fun setBlocked(id: String, blocked: Boolean, reason: String?, minutes: Int?, code: String?) =
-        act { gate.adminBlock(_uiState.value.pin, id, blocked, reason, minutes, code) }
-
-    fun setPremium(id: String, premium: Boolean) {
-        _uiState.update { it.copy(isBusy = true) }
-        viewModelScope.launch {
-            when (gate.adminPremium(_uiState.value.pin, id, premium)) {
-                is RemoteResult.Ok -> refresh()
-                // The function does not exist on this backend. Hide the control rather than
-                // leaving a switch that silently does nothing every time it is touched.
-                is RemoteResult.Refused -> _uiState.update {
-                    it.copy(isBusy = false, premiumSupported = false)
-                }
-                RemoteResult.Unreachable -> _uiState.update {
-                    it.copy(isBusy = false, message = "No connection")
-                }
-            }
-        }
-    }
-
-    /**
-     * Suspends every TrueVault install and nothing else.
-     *
-     * Not the global `app_config.kill` flag: that row is shared with StreamGarden, whose users are
-     * different people using a different app. This blocks this app's own rows one by one instead —
-     * no schema change, and no way for it to reach across.
-     */
-    fun setSuspendAll(enabled: Boolean) {
-        _uiState.update { it.copy(isBusy = true, suspendedAll = enabled) }
-        viewModelScope.launch {
-            when (val result = gate.adminSuspendAll(_uiState.value.pin, enabled)) {
-                is RemoteResult.Ok -> {
-                    _uiState.update {
-                        it.copy(message = "${result.value} install(s) updated")
-                    }
-                    refresh()
-                }
-                else -> _uiState.update {
-                    it.copy(isBusy = false, suspendedAll = !enabled, message = "That did not go through")
-                }
-            }
-        }
-    }
-
-    private fun act(block: suspend () -> RemoteResult<Unit>) {
-        _uiState.update { it.copy(isBusy = true) }
-        viewModelScope.launch {
-            val result = block()
-            if (result is RemoteResult.Ok) {
-                refresh()
-            } else {
-                _uiState.update { it.copy(isBusy = false, message = "That did not go through") }
-            }
         }
     }
 }

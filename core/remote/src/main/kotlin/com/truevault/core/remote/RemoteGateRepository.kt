@@ -97,124 +97,14 @@ class RemoteGateRepository @Inject constructor(
 
     suspend fun hasDisplayName(): Boolean = store.displayName().isNotBlank()
 
-    // ---- admin ------------------------------------------------------------------------------
-
-    suspend fun adminInstalls(pin: String): RemoteResult<List<InstallRecord>> = withContext(Dispatchers.IO) {
-        when (val r = rpc.call("admin_devices", buildJsonObject { put("p_pin", JsonPrimitive(pin)) })) {
-            is RemoteResult.Ok -> RemoteResult.Ok(
-                (r.value as? JsonArray)?.map { rpc.json.decodeFromJsonElement(InstallRecord.serializer(), it) }
-                    ?: emptyList(),
-            )
-            is RemoteResult.Refused -> r
-            RemoteResult.Unreachable -> RemoteResult.Unreachable
-        }
-    }
-
-    suspend fun adminBlock(
-        pin: String,
-        id: String,
-        blocked: Boolean,
-        reason: String?,
-        minutes: Int?,
-        code: String?,
-    ): RemoteResult<Unit> = withContext(Dispatchers.IO) {
-        rpc.call(
-            "admin_block",
-            buildJsonObject {
-                put("p_pin", JsonPrimitive(pin))
-                put("p_id", JsonPrimitive(id))
-                put("p_blocked", JsonPrimitive(blocked))
-                put("p_reason", JsonPrimitive(reason))
-                put("p_minutes", JsonPrimitive(minutes))
-                put("p_code", JsonPrimitive(code))
-            },
-        ).unit()
-    }
-
     /**
-     * Optional. StreamGarden's schema has no `premium` column, so on a backend shared with it this
-     * call comes back [RemoteResult.Refused] and the panel simply hides the toggle. Adding the
-     * column and this one function turns it on; nothing else has to change.
+     * Deliberately absent: there are no admin calls here any more.
+     *
+     * Admin moved to the website, where the credential is a service_role key that never leaves the
+     * server. Leaving these methods in would keep the function names, the argument shapes and the
+     * existence of a PIN inside an APK anyone can decompile — and would keep those functions
+     * granted to the public anon key, which is what made the PIN brute-forceable in the first place.
      */
-    suspend fun adminPremium(pin: String, id: String, premium: Boolean): RemoteResult<Unit> =
-        withContext(Dispatchers.IO) {
-            rpc.call(
-                "admin_premium",
-                buildJsonObject {
-                    put("p_pin", JsonPrimitive(pin))
-                    put("p_id", JsonPrimitive(id))
-                    put("p_premium", JsonPrimitive(premium))
-                },
-            ).unit()
-        }
-
-    /**
-     * Suspends or restores every TrueVault install, and only those.
-     *
-     * `app_config.kill` is a single row shared with StreamGarden, so using it here would suspend
-     * that app's users too — different people, different app, no reason. This does the same job by
-     * blocking each of this app's own rows instead, which needs no schema change and cannot reach
-     * anything tagged `android`.
-     *
-     * The honest limitation: it acts on installs that exist right now. Someone who installs
-     * afterwards checks in clean and is not caught, so run it again if that matters.
-     *
-     * @return how many installs were changed, or the first failure.
-     */
-    suspend fun adminSuspendAll(pin: String, suspended: Boolean): RemoteResult<Int> =
-        withContext(Dispatchers.IO) {
-            when (val listed = adminInstalls(pin)) {
-                is RemoteResult.Refused -> listed
-                RemoteResult.Unreachable -> RemoteResult.Unreachable
-                is RemoteResult.Ok -> {
-                    val mine = listed.value.filter { it.platform == PLATFORM }
-                    var changed = 0
-                    for (install in mine) {
-                        if (install.blocked == suspended) continue
-                        val result = adminBlock(
-                            pin = pin,
-                            id = install.id,
-                            blocked = suspended,
-                            reason = if (suspended) "Service temporarily unavailable." else null,
-                            minutes = null,
-                            code = if (suspended) "503" else null,
-                        )
-                        if (result is RemoteResult.Ok) changed++ else return@withContext RemoteResult.Refused(0)
-                    }
-                    RemoteResult.Ok(changed)
-                }
-            }
-        }
-
-    /** Only this app's rows. The table is shared; the list a TrueVault admin wants is not. */
-    fun ownInstalls(all: List<InstallRecord>): List<InstallRecord> =
-        all.filter { it.platform == PLATFORM }
-
-    suspend fun adminConfig(
-        pin: String,
-        kill: Boolean,
-        latest: String?,
-        url: String?,
-        note: String?,
-    ): RemoteResult<Unit> = withContext(Dispatchers.IO) {
-        rpc.call(
-            "admin_config",
-            buildJsonObject {
-                put("p_pin", JsonPrimitive(pin))
-                put("p_kill", JsonPrimitive(kill))
-                put("p_latest", JsonPrimitive(latest))
-                put("p_url", JsonPrimitive(url))
-                put("p_note", JsonPrimitive(note))
-            },
-        ).unit()
-    }
-
-    private fun RemoteResult<*>.unit(): RemoteResult<Unit> = when (this) {
-        is RemoteResult.Ok -> RemoteResult.Ok(Unit)
-        is RemoteResult.Refused -> this
-        RemoteResult.Unreachable -> RemoteResult.Unreachable
-    }
-
     private companion object {
         /**
          * Tags this app's rows in a table it may share with StreamGarden. Changing it orphans every

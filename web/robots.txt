@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://truevault-seven.vercel.app/sitemap.xml
+Sitemap: https://truevault.lzworth.in/sitemap.xml

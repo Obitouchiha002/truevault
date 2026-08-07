@@ -37,7 +37,43 @@ object SharedIntentReader {
         Intent.ACTION_VIEW -> listOfNotNull(intent.data)
 
         else -> emptyList()
-    }.filter { it.scheme == "content" || it.scheme == "file" }
+    }.filter(::isAcceptable)
+
+    /**
+     * Rejects anything the app should not read on a stranger's say-so.
+     *
+     * A share arrives from an untrusted app, and the URI in it is that app's choice. Two kinds have
+     * to be refused:
+     *
+     *  - **`file://`** — a path, with no permission grant behind it. An attacker can name any path
+     *    *this* app can read, which includes TrueVault's own private storage: the vault containers,
+     *    the database, the decrypted plaintext cache. Nothing would leave the device, but the app
+     *    would be importing its own internals at someone else's request, which is exactly the
+     *    confused-deputy shape a security app must not have. Android has discouraged `file://`
+     *    between apps since API 24 anyway; every real sender uses `content://`.
+     *
+     *  - **This app's own provider** — a share naming `com.truevault.app.fileprovider` is either a
+     *    loop or an attempt to walk the vault back into itself.
+     *
+     * A legitimate share is a `content://` URI from somewhere else, carrying a real grant.
+     */
+    private fun isAcceptable(uri: Uri): Boolean =
+        isAcceptableSource(uri.scheme, uri.authority)
+
+    /**
+     * The decision itself, on plain strings.
+     *
+     * Split out from [Uri] so it can be tested without an Android runtime. That matters more than
+     * usual here: this is a security boundary, and a boundary whose test needs an emulator is a
+     * boundary that stops being tested.
+     */
+    internal fun isAcceptableSource(scheme: String?, authority: String?): Boolean {
+        if (scheme != "content") return false
+        return authority.orEmpty() != OWN_AUTHORITY &&
+            !authority.orEmpty().startsWith("$OWN_AUTHORITY.")
+    }
+
+    private const val OWN_AUTHORITY = "com.truevault.app"
 
     /**
      * Takes what read access the sender granted, for as long as it is available.

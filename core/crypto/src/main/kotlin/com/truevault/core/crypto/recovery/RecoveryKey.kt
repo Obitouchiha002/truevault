@@ -31,12 +31,36 @@ object RecoveryKey {
     const val GROUP_COUNT: Int = 6
     const val LENGTH: Int = GROUP_SIZE * GROUP_COUNT
 
-    /** Generates a fresh key. The returned array is the caller's to wipe. */
+    /**
+     * Generates a fresh key. The returned array is the caller's to wipe.
+     *
+     * Rejection sampling, not modulo.
+     *
+     * `randomByte % 30` looks harmless and is not: a byte spans 256 values, 256 is not a multiple of
+     * 30, so the first 16 letters of the alphabet come up 9 times per 256 draws and the rest only 8.
+     * Every character is biased, and the bias is public — an attacker guessing recovery keys would
+     * try the over-represented letters first. Discarding the values that do not divide evenly costs
+     * a few extra random bytes and makes every character exactly uniform.
+     *
+     * This is the one place in the app where entropy is generated for a human to write down, so it
+     * is the one place where a subtle bias would matter most.
+     */
     fun generate(): CharArray {
-        val random = AesGcm.randomBytes(LENGTH)
-        return CharArray(LENGTH) { index ->
-            ALPHABET[(random[index].toInt() and 0xFF) % ALPHABET.length]
+        val limit = 256 - (256 % ALPHABET.length)  // 240: the largest multiple of 30 under 256
+        val key = CharArray(LENGTH)
+        var filled = 0
+
+        while (filled < LENGTH) {
+            // Ask for a batch rather than one byte at a time; roughly 6% get discarded.
+            AesGcm.randomBytes(LENGTH).forEach { byte ->
+                if (filled == LENGTH) return@forEach
+                val value = byte.toInt() and 0xFF
+                if (value < limit) {
+                    key[filled++] = ALPHABET[value % ALPHABET.length]
+                }
+            }
         }
+        return key
     }
 
     /** `XKPT-9R4M-HW2Q-J7BN-3FDC-YV6L`, for display only. */

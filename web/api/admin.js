@@ -27,14 +27,24 @@ import { timingSafeEqual, randomUUID, scrypt, randomBytes } from "node:crypto";
  * appearing in the list is information, and silently dropping it would be the wrong default.
  */
 const APPS = {
-  "android": "StreamGarden",
+  "android": "StreamGarden (Android)",
+  "streamgarden-android": "StreamGarden (Android)",
+  "pc": "StreamGarden (PC)",
+  "streamgarden-pc": "StreamGarden (PC)",
+  "web": "Web downloader",
   "truevault-android": "TrueVault",
-  // CopyEye sends "copyeye", not the "-android" suffix I guessed. Guessing a tag an app has not
-  // shipped yet is how you get a group labelled with a raw platform string in production.
   "copyeye": "CopyEye",
   "copyeye-android": "CopyEye",
 };
-const appOf = (platform) => APPS[platform] || (platform || "unknown");
+
+/**
+ * A readable app name for a platform tag.
+ *
+ * A tag that is not in the map is shown as "Other (<tag>)" rather than "unknown": the raw tag is
+ * information — it tells you a new build is checking in with a name nobody registered yet — and
+ * hiding it behind "unknown" throws that away. A missing tag becomes "Other (none)".
+ */
+const appOf = (platform) => APPS[platform] || `Other (${platform || "none"})`;
 
 /**
  * In-memory, per-instance, and deliberately so.

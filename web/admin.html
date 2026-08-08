@@ -70,6 +70,26 @@ select{padding:8px 12px;border-radius:999px;border:1px solid var(--line);backgro
 .chip.on{background:var(--accent);color:#08110E;border-color:var(--accent)}
 .chip.on b{color:#08110E;opacity:.7}
 
+/* Dashboard tiles. The first thing an admin wants on opening an app is the shape of it: how many
+   installs, how many still active, how many arrived this week. */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:24px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat b{display:block;font-size:1.6rem;font-weight:720;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums}
+.stat span{font-size:.74rem;color:var(--soft)}
+.stat.accent b{color:var(--accent)}
+
+/* The device id, shown but de-emphasised. It is how you tell two "(no name)" installs apart, and
+   the copy button hands it to the block/premium tools without retyping a 40-char string. */
+.idrow{display:flex;align-items:center;gap:8px;margin:2px 0 10px}
+.idrow code{font-family:var(--m);font-size:.72rem;color:var(--soft);background:#0f1512;
+  padding:4px 8px;border-radius:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.idrow button{padding:5px 10px;font-size:.72rem}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:.8rem;margin:8px 0 4px}
+.kv dt{color:var(--soft)}
+.kv dd{margin:0;color:var(--ink);font-variant-numeric:tabular-nums}
+.live{display:inline-block;width:7px;height:7px;border-radius:50%;background:#3DDCA6;margin-right:6px;vertical-align:middle}
+.live.off{background:#5b6b65}
+
 .group{margin-bottom:30px}
 .ghead{display:flex;align-items:center;gap:12px;padding:0 0 12px;margin-bottom:12px;
   border-bottom:1px solid var(--line)}
@@ -121,6 +141,7 @@ button.gold{background:#B4863F;color:#150E04;border:0}
       <button class="ghost" id="refresh">Refresh</button>
     </div>
     <div class="chips" id="chips"></div>
+    <div class="stats" id="stats"></div>
     <div id="list"></div>
     <p class="msg" id="msg2"></p>
     <p class="hint">
@@ -202,11 +223,25 @@ async function load() {
   return installs;
 }
 
+/** Active = seen within the last 7 days. */
+function isActive(iso) {
+  if (!iso) return false;
+  return Date.now() - new Date(iso).getTime() < 7 * 24 * 60 * 60 * 1000;
+}
+function withinDays(iso, n) {
+  if (!iso) return false;
+  return Date.now() - new Date(iso).getTime() < n * 24 * 60 * 60 * 1000;
+}
+function fmtDate(iso) {
+  if (!iso) return "—";
+  return iso.replace("T", " ").slice(0, 16);
+}
+
 function render() {
   const installs = lastInstalls;
 
   // Chips are built from every install, not the filtered set — a filter that hides its own way
-  // back is a trap.
+  // back is a trap. Clicking one is the "dedicated app page": the whole view narrows to that app.
   const counts = new Map();
   for (const i of installs) counts.set(i.app, (counts.get(i.app) || 0) + 1);
   $("chips").innerHTML =
@@ -216,14 +251,28 @@ function render() {
 
   const shown = appFilter ? installs.filter((i) => i.app === appFilter) : installs;
 
+  // Dashboard for whatever is in view — all apps, or the one app a chip selected.
+  const active = shown.filter((i) => isActive(i.last_seen)).length;
+  const newWeek = shown.filter((i) => withinDays(i.first_seen, 7)).length;
+  const suspendedTotal = shown.filter((i) => i.blocked).length;
+  const premiumTotal = shown.filter((i) => i.premium).length;
+  $("stats").innerHTML = [
+    ["stat", shown.length, appFilter ? "installs" : "installs, all apps"],
+    ["stat accent", active, "active (7 days)"],
+    ["stat", newWeek, "new this week"],
+    ["stat", suspendedTotal, "suspended"],
+    ["stat", premiumTotal, "premium"],
+  ].map(([cls, n, label]) => `<div class="${cls}"><b>${n}</b><span>${label}</span></div>`).join("");
+
   const groups = new Map();
   for (const i of shown) {
     if (!groups.has(i.app)) groups.set(i.app, []);
     groups.get(i.app).push(i);
   }
 
-  $("count").textContent =
-    `${shown.length} install${shown.length === 1 ? "" : "s"}${appFilter ? "" : ` across ${groups.size} app${groups.size === 1 ? "" : "s"}`}`;
+  $("count").textContent = appFilter
+    ? esc(appFilter)
+    : `All apps · ${installs.length} install${installs.length === 1 ? "" : "s"}`;
 
   $("list").innerHTML = [...groups.entries()].sort().map(([app, rows]) => {
     const suspended = rows.filter((r) => r.blocked).length;
@@ -235,18 +284,28 @@ function render() {
         <button class="ghost sm danger" data-all="${esc(app)}" data-to="1">Suspend all</button>
         <button class="ghost sm" data-all="${esc(app)}" data-to="0">Restore all</button>
       </div>
-      ${rows.map((i) => `
+      ${rows.slice().sort((a, b) => (b.last_seen || "").localeCompare(a.last_seen || "")).map((i) => `
         <div class="card" data-card="${esc(i.id)}">
           <div class="head" data-toggle="${esc(i.id)}">
             <div class="who">
-              <b>${esc(i.name && i.name.trim() ? i.name : "(no name)")}</b>
-              <span>${esc(i.app)} · v${esc(i.version || "?")} · ${esc(ago(i.last_seen))}</span>
+              <b><span class="live ${isActive(i.last_seen) ? "" : "off"}"></span>${esc(i.name && i.name.trim() ? i.name : "(no name)")}</b>
+              <span>${esc(i.app)} · v${esc(i.version || "?")} · seen ${esc(ago(i.last_seen))}</span>
             </div>
             ${i.blocked ? '<span class="pill on">suspended</span>' : ""}
             ${i.premium ? '<span class="pill prem">premium</span>' : ""}
             <span class="chev">›</span>
           </div>
           <div class="acts">
+            <div class="idrow">
+              <code title="${esc(i.id)}">${esc(i.id)}</code>
+              <button class="ghost" data-copy="${esc(i.id)}" type="button">Copy ID</button>
+            </div>
+            <dl class="kv">
+              <dt>First seen</dt><dd>${esc(fmtDate(i.first_seen))}</dd>
+              <dt>Last seen</dt><dd>${esc(fmtDate(i.last_seen))} <span style="color:var(--soft)">(${esc(ago(i.last_seen))})</span></dd>
+              <dt>Version</dt><dd>v${esc(i.version || "?")}</dd>
+              <dt>Status</dt><dd>${i.blocked ? "suspended" : (isActive(i.last_seen) ? "active" : "inactive")}${i.premium ? " · premium" : ""}</dd>
+            </dl>
             ${i.blocked ? `
               <div class="lbl">Currently suspended${i.block_code ? ` · code ${esc(i.block_code)}` : ""}</div>
               <p class="sub" style="margin:0 0 12px">${esc(i.block_reason || "No reason recorded.")}</p>
@@ -369,6 +428,16 @@ $("list").addEventListener("change", (e) => {
 });
 
 $("list").addEventListener("click", (e) => {
+  const copy = e.target.closest("[data-copy]");
+  if (copy) {
+    navigator.clipboard?.writeText(copy.dataset.copy);
+    const was = copy.textContent;
+    copy.textContent = "Copied";
+    tap(10);
+    setTimeout(() => { copy.textContent = was; }, 1200);
+    return;
+  }
+
   const toggle = e.target.closest("[data-toggle]");
   if (toggle) {
     const id = toggle.dataset.toggle;

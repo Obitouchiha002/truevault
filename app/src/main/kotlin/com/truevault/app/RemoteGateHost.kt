@@ -61,19 +61,27 @@ class RemoteGateViewModel @Inject constructor(
             // whether or not there is a connection right now.
             gate.restore()
 
-            // A reinstall wipes app-private storage, so a blocked device comes back with an empty
-            // cache and "no decision" looks exactly like "not blocked". Opening straight away would
-            // hand it a working app until the background check-in landed — and forever, if it
-            // stayed offline. So the first launch of an install waits for a real answer.
-            //
-            // With a timeout, and then it opens anyway. A genuine new user on a train must not be
-            // shut out of an app that works offline; the trade is a few seconds of access for a
-            // blocked device that reinstalls, against never locking out someone who did nothing.
-            if (gate.isEnabled && !gate.hasEverCheckedIn()) {
-                withTimeoutOrNull(FIRST_CHECK_IN_TIMEOUT_MS) { gate.checkIn(appVersion.await()) }
-            }
+            when {
+                !gate.isEnabled -> _state.value = GateState.Open
 
-            _state.value = decide(gate.currentStatus(), gate.hasDisplayName())
+                // No name yet — a fresh install, or a reinstall whose storage was wiped. Ask for the
+                // name BEFORE the first check-in, never after. Checking in first registered the
+                // install with an empty name, which is exactly the "(no name)" rows showing up in
+                // the admin panel. onNameEntered() does the check-in once there is a name to send.
+                !gate.hasDisplayName() -> _state.value = GateState.NeedsName
+
+                // Name already on file. A reinstall wipes app-private storage, so a blocked device
+                // comes back with an empty cache and "no decision" looks like "not blocked". Opening
+                // straight away would hand it a working app until the background check-in landed —
+                // and forever, if it stayed offline. So wait for a real answer, with a timeout, then
+                // open anyway: a genuine user on a train must not be shut out of an offline app.
+                else -> {
+                    if (!gate.hasEverCheckedIn()) {
+                        withTimeoutOrNull(FIRST_CHECK_IN_TIMEOUT_MS) { gate.checkIn(appVersion.await()) }
+                    }
+                    _state.value = decide(gate.currentStatus(), gate.hasDisplayName())
+                }
+            }
         }
         viewModelScope.launch {
             gate.status.collect { status ->

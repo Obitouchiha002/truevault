@@ -81,7 +81,9 @@
     <string name="security_keystore_software_title">Keys are protected in software on this device</string>
     <string name="security_keystore_software_body">This device has no secure element available to TrueVault, so your vault key is protected by Android\'s software keystore. Your files are still encrypted, but the protection is weaker than on hardware-backed devices.</string>
 
-    <string name="unlock_use_recovery_key">Use my recovery key instead</string>
+    <string name="unlock_use_recovery_key">Forgot your password? Use your recovery key</string>
+    <string name="unlock_forgot_no_recovery">Forgot your password?</string>
+    <string name="unlock_forgot_no_recovery_body">There is no password reset. TrueVault has no account and no server, so no one — not even the developer — can unlock your vault without your password. If you saved a recovery key, use it. If you did not, the vault cannot be opened. Your files are not lost from the device; they are simply encrypted with a key only your password derives.</string>
     <string name="unlock_recovery_label">Recovery key</string>
     <string name="unlock_recovery_hint">Six groups of four characters. Dashes, spaces and letter case do not matter.</string>
     <string name="unlock_recovery_action">Unlock with recovery key</string>

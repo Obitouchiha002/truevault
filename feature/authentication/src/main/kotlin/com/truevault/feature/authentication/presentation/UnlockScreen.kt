@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -230,6 +233,27 @@ internal fun UnlockContent(
                 text = stringResource(R.string.unlock_use_recovery_key),
                 onClick = { onRecoveryRequested() },
             )
+        }
+
+        // A "Forgot password?" affordance even when no recovery key was set — so the user is told
+        // the honest truth (there is no reset) rather than left wondering whether one is hidden
+        // somewhere. Tapping it reveals the explanation inline.
+        if (!uiState.recoveryKeyAvailable && !uiState.showingRecoveryEntry) {
+            var showNoRecovery by rememberSaveable { mutableStateOf(false) }
+            TvTextButton(
+                text = stringResource(R.string.unlock_forgot_no_recovery),
+                onClick = { showNoRecovery = !showNoRecovery },
+            )
+            if (showNoRecovery) {
+                TvBanner(
+                    title = stringResource(R.string.unlock_forgot_no_recovery),
+                    text = stringResource(R.string.unlock_forgot_no_recovery_body),
+                    tone = TvBannerTone.Warning,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = TvSpacing.small),
+                )
+            }
         }
 
         if (uiState.showingRecoveryEntry) {

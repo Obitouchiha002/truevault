@@ -202,7 +202,11 @@ internal fun VideoViewer(
  */
 private fun mediaMimeType(mimeType: String?, fileName: String?): String? {
     val type = mimeType?.lowercase()
-    if (type != null && type.startsWith("video/") && type != "video/octet-stream") return type
+    if (type != null && (type.startsWith("video/") || type.startsWith("audio/")) &&
+        type != "video/octet-stream"
+    ) {
+        return type
+    }
     return when (fileName?.substringAfterLast('.', "")?.lowercase()) {
         "mkv" -> "video/x-matroska"
         "webm" -> "video/webm"
@@ -211,6 +215,11 @@ private fun mediaMimeType(mimeType: String?, fileName: String?): String? {
         "3gp" -> "video/3gpp"
         "avi" -> "video/avi"
         "ts" -> "video/mp2t"
+        "mp3" -> "audio/mpeg"
+        "m4a", "aac" -> "audio/mp4"
+        "flac" -> "audio/flac"
+        "wav" -> "audio/wav"
+        "ogg", "opus" -> "audio/ogg"
         else -> null
     }
 }

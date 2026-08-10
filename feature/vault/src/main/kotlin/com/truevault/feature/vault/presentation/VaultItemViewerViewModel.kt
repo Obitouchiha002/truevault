@@ -104,7 +104,10 @@ class VaultItemViewerViewModel @Inject constructor(
     private fun contentFor(item: VaultItem, file: File): ViewerContent = when {
         item.category == MimeCategory.PHOTO -> ViewerContent.Image(file)
 
-        item.category == MimeCategory.VIDEO ->
+        // Audio plays through the same ExoPlayer as video — it handles audio-only files fine and
+        // PlayerView shows transport controls. Routing it here rather than to Unsupported means an
+        // .mp3 or .m4a in the vault is playable, not just stored.
+        item.category == MimeCategory.VIDEO || item.category == MimeCategory.AUDIO ->
             ViewerContent.Video(file, mimeType = item.mimeType, fileName = item.displayName)
 
         item.mimeType == "application/pdf" -> pdfOrUnsupported(file)

@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 @Immutable
 sealed interface ViewerContent {
     data class Image(val file: File) : ViewerContent
-    data class Video(val file: File) : ViewerContent
+    data class Video(val file: File, val mimeType: String?, val fileName: String?) : ViewerContent
     data class Pdf(val file: File, val pageCount: Int) : ViewerContent
     data class Text(val preview: String, val truncated: Boolean) : ViewerContent
 
@@ -104,7 +104,8 @@ class VaultItemViewerViewModel @Inject constructor(
     private fun contentFor(item: VaultItem, file: File): ViewerContent = when {
         item.category == MimeCategory.PHOTO -> ViewerContent.Image(file)
 
-        item.category == MimeCategory.VIDEO -> ViewerContent.Video(file)
+        item.category == MimeCategory.VIDEO ->
+            ViewerContent.Video(file, mimeType = item.mimeType, fileName = item.displayName)
 
         item.mimeType == "application/pdf" -> pdfOrUnsupported(file)
 

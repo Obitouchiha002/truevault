@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,6 +30,10 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
@@ -108,12 +113,50 @@ private fun renderPdfPage(file: File, pageIndex: Int): Bitmap? = try {
  */
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
-internal fun VideoViewer(file: File, modifier: Modifier = Modifier) {
+internal fun VideoViewer(
+    file: File,
+    mimeType: String?,
+    fileName: String?,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
+    var errorText by remember(file) { mutableStateOf<String?>(null) }
 
     val player = remember(file) {
         ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(file.toURI().toString()))
+            // The decrypted file in the cache has a random name and no extension, so ExoPlayer
+            // cannot guess the container from the path. Telling it the container explicitly is what
+            // lets an MKV pick the Matroska extractor instead of failing to sniff — the exact case
+            // that made .mkv files look broken while .mp4 worked.
+            val resolvedMime = mediaMimeType(mimeType, fileName)
+            val mediaItem = MediaItem.Builder()
+                .setUri(file.toURI().toString())
+                .apply { resolvedMime?.let { setMimeType(it) } }
+                .build()
+            setMediaItem(mediaItem)
+
+            addListener(object : Player.Listener {
+                override fun onPlayerError(error: PlaybackException) {
+                    // A dead frame with no message is what "the video doesn't work" actually looked
+                    // like. Name the two real causes so the user knows which one they hit: a
+                    // container this build cannot read, or — far more common for MKV — an audio or
+                    // video codec (AC3, DTS, HEVC) this device has no decoder for.
+                    errorText = when (error.errorCode) {
+                        PlaybackException.ERROR_CODE_DECODER_INIT_FAILED,
+                        PlaybackException.ERROR_CODE_DECODING_FAILED,
+                        PlaybackException.ERROR_CODE_DECODER_QUERY_FAILED,
+                        ->
+                            "This device has no decoder for this video's codec. MKV files often use " +
+                                "audio (AC3, DTS) or video (HEVC) that Android cannot play. The file " +
+                                "is safe in your vault — export it and play it on a computer."
+
+                        else ->
+                            "This video could not be played on this device. The file itself is " +
+                                "unharmed and still in your vault."
+                    }
+                }
+            })
+
             prepare()
             playWhenReady = false
         }
@@ -121,6 +164,18 @@ internal fun VideoViewer(file: File, modifier: Modifier = Modifier) {
 
     DisposableEffect(player) {
         onDispose { player.release() }
+    }
+
+    if (errorText != null) {
+        Text(
+            text = errorText!!,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(TvSpacing.standard),
+        )
+        return
     }
 
     AndroidView(
@@ -136,6 +191,28 @@ internal fun VideoViewer(file: File, modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .height(240.dp),
     )
+}
+
+/**
+ * The container MIME type to hand ExoPlayer, from the stored type or the original file name.
+ *
+ * Android's picker often reports `video/x-matroska` for an .mkv, but sometimes an empty or
+ * octet-stream type, so the extension is the reliable fallback. Only the container matters here —
+ * ExoPlayer selects the extractor from it; the codecs inside are decoded separately.
+ */
+private fun mediaMimeType(mimeType: String?, fileName: String?): String? {
+    val type = mimeType?.lowercase()
+    if (type != null && type.startsWith("video/") && type != "video/octet-stream") return type
+    return when (fileName?.substringAfterLast('.', "")?.lowercase()) {
+        "mkv" -> "video/x-matroska"
+        "webm" -> "video/webm"
+        "mp4", "m4v" -> "video/mp4"
+        "mov" -> "video/quicktime"
+        "3gp" -> "video/3gpp"
+        "avi" -> "video/avi"
+        "ts" -> "video/mp2t"
+        else -> null
+    }
 }
 
 /** Small helper so the viewer body can show a page counter above a PDF. */

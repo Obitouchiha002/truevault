@@ -154,7 +154,11 @@ private fun ViewerBody(uiState: VaultItemViewerUiState) {
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            is ViewerContent.Video -> VideoViewer(file = content.file)
+            is ViewerContent.Video -> VideoViewer(
+                file = content.file,
+                mimeType = content.mimeType,
+                fileName = content.fileName,
+            )
 
             is ViewerContent.Pdf -> Column(
                 verticalArrangement = Arrangement.spacedBy(TvSpacing.small),

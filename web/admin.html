@@ -339,6 +339,24 @@ async function guard(fn) {
   try { await fn(); } catch (e) { $("msg2").textContent = e.message; }
 }
 
+/**
+ * Say what the action did. `changed` is the row count the server reported: 0 means the id matched
+ * no install, which is the silent "nothing happened" the panel used to hide. null means an older
+ * function that returned void — treated as done. A green tick or a plain warning, cleared on the
+ * next action.
+ */
+function flashResult(result, verb) {
+  const msg = $("msg2");
+  if (result && result.changed === 0) {
+    msg.style.color = "var(--clay)";
+    msg.textContent = `${verb}: no install matched that ID — nothing changed. Run docs/ADMIN-CONTROL-FIX.sql if this keeps happening.`;
+  } else {
+    msg.style.color = "var(--accent)";
+    msg.textContent = `${verb} ✓`;
+    setTimeout(() => { if (msg.textContent === `${verb} \u2713` || msg.textContent === `${verb} ✓`) msg.textContent = ""; }, 2500);
+  }
+}
+
 /* Which screen to show is decided by the server, not guessed here. */
 (async () => {
   try {
@@ -422,7 +440,8 @@ $("list").addEventListener("change", (e) => {
   }
   guard(async () => {
     tap(20);
-    await call("block", { id: sel.dataset.ban, blocked: true, reason, code, minutes });
+    const r = await call("block", { id: sel.dataset.ban, blocked: true, reason, code, minutes });
+    flashResult(r, "Suspended");
     await load();
   });
 });
@@ -452,12 +471,14 @@ $("list").addEventListener("click", (e) => {
   const prem = e.target.closest("[data-prem]");
   if (block) guard(async () => {
     tap(12);
-    await call("block", { id: block.dataset.block, blocked: block.dataset.to === "1" });
+    const r = await call("block", { id: block.dataset.block, blocked: block.dataset.to === "1" });
+    flashResult(r, block.dataset.to === "1" ? "Suspended" : "Restored");
     await load();
   });
   if (prem) guard(async () => {
     tap(12);
-    await call("premium", { id: prem.dataset.prem, premium: prem.dataset.to === "1" });
+    const r = await call("premium", { id: prem.dataset.prem, premium: prem.dataset.to === "1" });
+    flashResult(r, prem.dataset.to === "1" ? "Premium given" : "Premium removed");
     await load();
   });
 });

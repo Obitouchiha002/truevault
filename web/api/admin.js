@@ -245,19 +245,27 @@ export default async function handler(req, res) {
         return res.status(200).json({ installs: rows.map((r) => ({ ...r, app: appOf(r.platform) })) });
       }
 
-      case "block":
-        await rpc("admin_block_srv", {
+      case "block": {
+        // The function returns the number of rows it changed. Zero means the id matched no
+        // install — which is the difference between "did nothing" and "worked" that the panel
+        // needs to show. (An older void version returns null; treat that as "unknown, assume ok".)
+        const changed = scalar(await rpc("admin_block_srv", {
           p_id: body.id,
           p_blocked: Boolean(body.blocked),
           p_reason: body.blocked ? (body.reason || "Access suspended by the developer.") : null,
           p_minutes: body.minutes ?? null,
           p_code: body.blocked ? (body.code || "403") : null,
-        });
-        return res.status(200).json({ ok: true });
+        }));
+        return res.status(200).json({ ok: true, changed: changed == null ? null : Number(changed) });
+      }
 
-      case "premium":
-        await rpc("admin_premium_srv", { p_id: body.id, p_premium: Boolean(body.premium) });
-        return res.status(200).json({ ok: true });
+      case "premium": {
+        const changed = scalar(await rpc("admin_premium_srv", {
+          p_id: body.id,
+          p_premium: Boolean(body.premium),
+        }));
+        return res.status(200).json({ ok: true, changed: changed == null ? null : Number(changed) });
+      }
 
       default:
         return res.status(400).json({ error: "Unknown action" });

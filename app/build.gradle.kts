@@ -11,8 +11,8 @@ android {
     namespace = "com.truevault.app"
 
     defaultConfig {
-        versionCode = 7
-        versionName = "0.3.2"
+        versionCode = 8
+        versionName = "0.3.3"
     }
 
     /**

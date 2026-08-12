@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
+import com.truevault.core.common.log.SecureLog
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -54,9 +55,25 @@ class BiometricCapabilityChecker @Inject constructor(
     fun capability(): BiometricCapability {
         val manager = BiometricManager.from(context)
 
-        return when (manager.canAuthenticate(BIOMETRIC_STRONG)) {
+        val strong = manager.canAuthenticate(BIOMETRIC_STRONG)
+        val weak = manager.canAuthenticate(BIOMETRIC_WEAK)
+        // Exact codes, debug builds only, so a "not available" report from a real device names the
+        // reason instead of guessing. STRONG=0/WEAK=0 means available; -1/-2 are common codes.
+        SecureLog.d(TAG, "biometric canAuthenticate: strong=$strong weak=$weak")
+
+        return when (strong) {
             BiometricManager.BIOMETRIC_SUCCESS -> BiometricCapability.AVAILABLE
-            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> BiometricCapability.NOT_ENROLLED
+            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
+                // Nothing is enrolled for STRONG. But if a WEAK biometric IS enrolled and working,
+                // this device simply has no strong sensor for TrueVault to bind a key to — which is
+                // "only weak", not "please enrol". Telling a user with a working fingerprint to go
+                // enrol one is the falsehood that makes the app look broken.
+                if (weak == BiometricManager.BIOMETRIC_SUCCESS) {
+                    BiometricCapability.ONLY_WEAK_AVAILABLE
+                } else {
+                    BiometricCapability.NOT_ENROLLED
+                }
+            }
 
             BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE,
             BiometricManager.BIOMETRIC_STATUS_UNKNOWN,
@@ -65,9 +82,9 @@ class BiometricCapabilityChecker @Inject constructor(
             BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED ->
                 BiometricCapability.SECURITY_UPDATE_REQUIRED
 
-            // "Not strong here" covers both no sensor and a Class 2 sensor. Which one it is
-            // decides whether the user reads a fact or a falsehood, so ask the second question.
-            else -> if (manager.canAuthenticate(BIOMETRIC_WEAK) != BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE) {
+            // "Not strong here" covers both no sensor and a Class 2 sensor. If a weak sensor exists
+            // — enrolled or not — this is a Class 2 device, not a device with no biometrics at all.
+            else -> if (weak != BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE) {
                 BiometricCapability.ONLY_WEAK_AVAILABLE
             } else {
                 BiometricCapability.UNSUPPORTED
@@ -75,3 +92,5 @@ class BiometricCapabilityChecker @Inject constructor(
         }
     }
 }
+
+private const val TAG = "BiometricCap"

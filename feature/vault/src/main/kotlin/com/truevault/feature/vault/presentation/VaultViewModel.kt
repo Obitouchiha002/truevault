@@ -1,11 +1,14 @@
 package com.truevault.feature.vault.presentation
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.filter
+import com.truevault.core.common.result.Outcome
+import com.truevault.core.data.SecureExportCoordinator
 import com.truevault.core.data.VaultRepository
 import com.truevault.core.data.model.VaultItem
 import com.truevault.core.datastore.UserPreferencesDataSource
@@ -46,9 +49,15 @@ private const val SEARCH_DEBOUNCE_MILLIS = 200L
 @HiltViewModel
 class VaultViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
+    private val exportCoordinator: SecureExportCoordinator,
     private val preferences: UserPreferencesDataSource,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
+
+    /** Held across the folder-picker round trip so its result knows what to write and whether to remove. */
+    private var pendingRemoveAfterSave: Boolean = false
+    private var pendingGalleryItems: List<VaultItem> = emptyList()
+    private var pendingFolderItems: List<VaultItem> = emptyList()
 
     private val _uiState = MutableStateFlow(
         VaultUiState(query = savedStateHandle.get<String>(KEY_QUERY).orEmpty()),
@@ -140,6 +149,14 @@ class VaultViewModel @Inject constructor(
 
             VaultAction.DeleteSelectedConfirmed -> deleteSelected()
 
+            VaultAction.SaveSelectedRequested ->
+                _uiState.update { it.copy(pendingSaveConfirmation = true) }
+
+            VaultAction.SaveSelectedDismissed ->
+                _uiState.update { it.copy(pendingSaveConfirmation = false) }
+
+            is VaultAction.SaveSelectedConfirmed -> saveSelected(action.remove)
+
             VaultAction.AddFilesClicked ->
                 viewModelScope.launch { _effects.emit(VaultEffect.NavigateToImport) }
         }
@@ -192,5 +209,85 @@ class VaultViewModel @Inject constructor(
             }
             _effects.emit(VaultEffect.ItemsDeleted(deleted))
         }
+    }
+
+    /**
+     * "Save copies" ([remove] = false) or "Unhide & remove" ([remove] = true) for the selection.
+     *
+     * Photos and videos go to the gallery with no picker (API 29+); anything else needs a folder,
+     * so if the selection contains such files this asks for one and finishes in [onExportFolderChosen].
+     * When everything is gallery-eligible it runs straight away.
+     */
+    private fun saveSelected(remove: Boolean) {
+        val ids = uiState.value.selectedIds.toList()
+        _uiState.update { it.copy(pendingSaveConfirmation = false) }
+        if (ids.isEmpty()) return
+
+        viewModelScope.launch {
+            val items = vaultRepository.findItems(ids)
+            val (gallery, viaFolder) = items.partition { exportCoordinator.canSaveToGallery(it) }
+
+            if (viaFolder.isEmpty()) {
+                runBatchExport(gallery, emptyList(), treeUri = null, remove = remove)
+            } else {
+                pendingRemoveAfterSave = remove
+                pendingGalleryItems = gallery
+                pendingFolderItems = viaFolder
+                _effects.emit(VaultEffect.PickExportFolder)
+            }
+        }
+    }
+
+    /** Result of the folder picker. A null [treeUri] means the user cancelled the whole export. */
+    fun onExportFolderChosen(treeUri: Uri?) {
+        val remove = pendingRemoveAfterSave
+        val gallery = pendingGalleryItems
+        val folder = pendingFolderItems
+        pendingRemoveAfterSave = false
+        pendingGalleryItems = emptyList()
+        pendingFolderItems = emptyList()
+
+        if (treeUri == null) return
+        viewModelScope.launch { runBatchExport(gallery, folder, treeUri, remove) }
+    }
+
+    private suspend fun runBatchExport(
+        galleryItems: List<VaultItem>,
+        folderItems: List<VaultItem>,
+        treeUri: Uri?,
+        remove: Boolean,
+    ) {
+        _uiState.update { it.copy(isExporting = true) }
+
+        var saved = 0
+        var failed = 0
+        val savedIds = mutableListOf<String>()
+
+        for (item in galleryItems) {
+            when (exportCoordinator.saveToGallery(item)) {
+                is Outcome.Success -> { saved++; savedIds += item.id }
+                is Outcome.Failure -> failed++
+            }
+        }
+        if (treeUri != null) {
+            for (item in folderItems) {
+                when (exportCoordinator.saveToFolderChild(item, treeUri)) {
+                    is Outcome.Success -> { saved++; savedIds += item.id }
+                    is Outcome.Failure -> failed++
+                }
+            }
+        }
+
+        // Only remove what was actually written out, so a failed file is never lost.
+        if (remove && savedIds.isNotEmpty()) vaultRepository.deleteItems(savedIds)
+
+        _uiState.update {
+            it.copy(
+                isExporting = false,
+                selectionMode = false,
+                selectedIds = emptySet(),
+            )
+        }
+        _effects.emit(VaultEffect.Exported(savedCount = saved, failedCount = failed, removed = remove))
     }
 }

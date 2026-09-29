@@ -78,6 +78,11 @@ class UserPreferencesDataSource @Inject constructor(
     suspend fun setLastBackupAt(timestampMillis: Long) =
         edit { it[Keys.LAST_BACKUP_AT] = timestampMillis }
 
+    /** Remembers (or, with null, forgets) the folder chosen for cloud backups. */
+    suspend fun setCloudBackupFolder(uri: String?) = edit {
+        if (uri == null) it.remove(Keys.CLOUD_BACKUP_FOLDER) else it[Keys.CLOUD_BACKUP_FOLDER] = uri
+    }
+
     /**
      * Removes every stored preference, for the "delete all my data" flow.
      *
@@ -111,6 +116,7 @@ class UserPreferencesDataSource @Inject constructor(
         val VAULT_SORT = stringPreferencesKey("vault_sort_order")
         val RECOVERY_KEY_CONFIGURED = booleanPreferencesKey("recovery_key_configured")
         val LAST_BACKUP_AT = longPreferencesKey("last_backup_at")
+        val CLOUD_BACKUP_FOLDER = stringPreferencesKey("cloud_backup_folder_uri")
     }
 
     private fun Preferences.toUserPreferences() = UserPreferences(
@@ -128,6 +134,7 @@ class UserPreferencesDataSource @Inject constructor(
         vaultSortOrder = enumOrDefault(this[Keys.VAULT_SORT], VaultSortOrder.DATE_ADDED_DESC),
         recoveryKeyConfigured = this[Keys.RECOVERY_KEY_CONFIGURED] ?: false,
         lastBackupAtMillis = this[Keys.LAST_BACKUP_AT],
+        cloudBackupFolderUri = this[Keys.CLOUD_BACKUP_FOLDER],
     )
 }
 

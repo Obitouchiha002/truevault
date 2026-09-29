@@ -61,6 +61,7 @@ class BackupViewModel @Inject constructor(
                     it.copy(
                         recoveryKeyConfigured = prefs.recoveryKeyConfigured,
                         lastBackupAtMillis = prefs.lastBackupAtMillis,
+                        cloudFolderUri = prefs.cloudBackupFolderUri,
                     )
                 }
             }
@@ -91,6 +92,36 @@ class BackupViewModel @Inject constructor(
 
     fun requestRestore() {
         viewModelScope.launch { _effects.emit(BackupEffect.OpenArchive) }
+    }
+
+    /** Opens the folder picker so the user can choose (or change) their cloud backup folder. */
+    fun requestConnectCloudFolder() {
+        viewModelScope.launch { _effects.emit(BackupEffect.PickCloudFolder) }
+    }
+
+    /** Remembers the folder the user picked. The screen has already taken the persistable grant. */
+    fun onCloudFolderChosen(treeUriToken: String?) {
+        if (treeUriToken == null) return
+        viewModelScope.launch { preferences.setCloudBackupFolder(treeUriToken) }
+    }
+
+    /** Writes a fresh encrypted archive into the connected cloud folder. */
+    fun backupToCloud(passphrase: CharArray) {
+        val folder = _uiState.value.cloudFolderUri
+        if (folder == null) {
+            passphrase.wipe()
+            viewModelScope.launch { _effects.emit(BackupEffect.PickCloudFolder) }
+            return
+        }
+        viewModelScope.launch {
+            try {
+                backupRepository.backupToFolder(folder.toUri(), passphrase).collect { step ->
+                    _uiState.update { state -> state.applyBackupStep(step) }
+                }
+            } finally {
+                passphrase.wipe()
+            }
+        }
     }
 
     private fun generateRecoveryKey() {
@@ -158,29 +189,21 @@ class BackupViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 backupRepository.export(uriToken.toUri(), passphrase).collect { step ->
-                    _uiState.update { state ->
-                        when (step) {
-                            is BackupStep.Progress ->
-                                state.copy(stage = BackupStage.Exporting(step.completed, step.total))
-
-                            is BackupStep.ExportFinished ->
-                                state.copy(stage = BackupStage.ExportFinished(step.itemCount))
-
-                            is BackupStep.Failed ->
-                                state.copy(
-                                    stage = BackupStage.Overview,
-                                    error = step.error,
-                                    errorDetail = step.detail,
-                                )
-
-                            is BackupStep.RestoreFinished -> state
-                        }
-                    }
+                    _uiState.update { state -> state.applyBackupStep(step) }
                 }
             } finally {
                 passphrase.wipe()
             }
         }
+    }
+
+    /** Shared export/cloud-backup step handling, so both paths report progress identically. */
+    private fun BackupUiState.applyBackupStep(step: BackupStep): BackupUiState = when (step) {
+        is BackupStep.Progress -> copy(stage = BackupStage.Exporting(step.completed, step.total))
+        is BackupStep.ExportFinished -> copy(stage = BackupStage.ExportFinished(step.itemCount))
+        is BackupStep.Failed ->
+            copy(stage = BackupStage.Overview, error = step.error, errorDetail = step.detail)
+        is BackupStep.RestoreFinished -> this
     }
 
     private fun inspect(uriToken: String?) {

@@ -1,8 +1,12 @@
 package com.truevault.feature.vault.presentation
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,12 +21,15 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.automirrored.filled.ViewList
@@ -39,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,6 +76,11 @@ fun VaultScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val items = viewModel.items.collectAsLazyPagingItems()
+    val context = LocalContext.current
+
+    val exportFolderPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { treeUri -> viewModel.onExportFolderChosen(treeUri) }
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
@@ -75,6 +88,33 @@ fun VaultScreen(
                 VaultEffect.NavigateToImport -> onAddFiles()
                 is VaultEffect.OpenItem -> onOpenItem(effect.id)
                 is VaultEffect.ItemsDeleted -> items.refresh()
+                VaultEffect.PickExportFolder -> exportFolderPicker.launch(null)
+                is VaultEffect.Exported -> {
+                    items.refresh()
+                    val message = when {
+                        effect.failedCount > 0 && effect.savedCount == 0 ->
+                            context.getString(R.string.vault_export_failed)
+                        effect.failedCount > 0 ->
+                            context.getString(
+                                R.string.vault_export_partial,
+                                effect.savedCount,
+                                effect.failedCount,
+                            )
+                        effect.removed ->
+                            context.resources.getQuantityString(
+                                R.plurals.vault_export_unhidden,
+                                effect.savedCount,
+                                effect.savedCount,
+                            )
+                        else ->
+                            context.resources.getQuantityString(
+                                R.plurals.vault_export_saved,
+                                effect.savedCount,
+                                effect.savedCount,
+                            )
+                    }
+                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
@@ -83,8 +123,10 @@ fun VaultScreen(
         if (uiState.selectionMode) {
             SelectionBar(
                 count = uiState.selectionCount,
+                exporting = uiState.isExporting,
                 onClear = { viewModel.onAction(VaultAction.ClearSelection) },
                 onSelectAll = { viewModel.onAction(VaultAction.SelectAll) },
+                onSave = { viewModel.onAction(VaultAction.SaveSelectedRequested) },
                 onDelete = { viewModel.onAction(VaultAction.DeleteSelectedRequested) },
             )
         } else {
@@ -183,6 +225,7 @@ fun VaultScreen(
                         VaultGridCell(
                             item = item,
                             selected = item.id in uiState.selectedIds,
+                            selectionMode = uiState.selectionMode,
                             loadThumbnail = viewModel::thumbnailBytes,
                             onClick = { viewModel.onAction(VaultAction.ItemClicked(item.id)) },
                             onLongClick = {
@@ -193,6 +236,7 @@ fun VaultScreen(
                         VaultListRow(
                             item = item,
                             selected = item.id in uiState.selectedIds,
+                            selectionMode = uiState.selectionMode,
                             loadThumbnail = viewModel::thumbnailBytes,
                             onClick = { viewModel.onAction(VaultAction.ItemClicked(item.id)) },
                             onLongClick = {
@@ -238,13 +282,46 @@ fun VaultScreen(
             },
         )
     }
+
+    if (uiState.pendingSaveConfirmation) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(VaultAction.SaveSelectedDismissed) },
+            title = { Text(stringResource(R.string.vault_save_title)) },
+            text = {
+                Text(
+                    pluralStringResource(
+                        R.plurals.vault_save_body,
+                        uiState.selectionCount,
+                        uiState.selectionCount,
+                    ),
+                )
+            },
+            confirmButton = {
+                Column {
+                    TextButton(
+                        onClick = { viewModel.onAction(VaultAction.SaveSelectedConfirmed(remove = false)) },
+                    ) { Text(stringResource(R.string.viewer_save_copy)) }
+                    TextButton(
+                        onClick = { viewModel.onAction(VaultAction.SaveSelectedConfirmed(remove = true)) },
+                    ) { Text(stringResource(R.string.viewer_unhide_remove)) }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onAction(VaultAction.SaveSelectedDismissed) }) {
+                    Text(stringResource(R.string.vault_delete_cancel))
+                }
+            },
+        )
+    }
 }
 
 @Composable
 private fun SelectionBar(
     count: Int,
+    exporting: Boolean,
     onClear: () -> Unit,
     onSelectAll: () -> Unit,
+    onSave: () -> Unit,
     onDelete: () -> Unit,
 ) {
     Row(
@@ -262,10 +339,16 @@ private fun SelectionBar(
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.weight(1f),
         )
-        IconButton(onClick = onSelectAll) {
+        IconButton(onClick = onSelectAll, enabled = !exporting) {
             Icon(Icons.Filled.DoneAll, contentDescription = stringResource(R.string.vault_select_all))
         }
-        IconButton(onClick = onDelete) {
+        IconButton(onClick = onSave, enabled = !exporting) {
+            Icon(
+                Icons.Filled.SaveAlt,
+                contentDescription = stringResource(R.string.vault_save_selected),
+            )
+        }
+        IconButton(onClick = onDelete, enabled = !exporting) {
             Icon(
                 Icons.Filled.Delete,
                 contentDescription = stringResource(R.string.vault_delete_selected),
@@ -275,10 +358,12 @@ private fun SelectionBar(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun VaultGridCell(
     item: VaultItem,
     selected: Boolean,
+    selectionMode: Boolean,
     loadThumbnail: suspend (String) -> ByteArray?,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -297,7 +382,12 @@ private fun VaultGridCell(
                     Modifier
                 },
             )
-            .clickable(onClick = onClick, onClickLabel = item.displayName),
+            .combinedClickable(
+                onClick = onClick,
+                onClickLabel = item.displayName,
+                onLongClick = onLongClick,
+                onLongClickLabel = stringResource(R.string.vault_select_long_press),
+            ),
     ) {
         Box {
             VaultThumbnail(
@@ -315,6 +405,13 @@ private fun VaultGridCell(
                     .align(Alignment.BottomStart)
                     .padding(4.dp),
             )
+            SelectionIndicator(
+                selected = selected,
+                visible = selectionMode,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp),
+            )
         }
         Text(
             text = item.displayName,
@@ -327,10 +424,12 @@ private fun VaultGridCell(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun VaultListRow(
     item: VaultItem,
     selected: Boolean,
+    selectionMode: Boolean,
     loadThumbnail: suspend (String) -> ByteArray?,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -346,11 +445,19 @@ private fun VaultListRow(
                     MaterialTheme.colorScheme.surfaceContainer
                 },
             )
-            .clickable(onClick = onClick, onClickLabel = item.displayName)
+            .combinedClickable(
+                onClick = onClick,
+                onClickLabel = item.displayName,
+                onLongClick = onLongClick,
+                onLongClickLabel = stringResource(R.string.vault_select_long_press),
+            )
             .padding(TvSpacing.small),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TvSpacing.small),
     ) {
+        if (selectionMode) {
+            SelectionIndicator(selected = selected, visible = true)
+        }
         VaultThumbnail(
             itemId = item.id,
             category = item.category,
@@ -375,6 +482,35 @@ private fun VaultListRow(
             )
         }
         TvStatusPill(status = item.privacyStatus)
+    }
+}
+
+/** The check / empty-circle badge that makes a multi-select tap visibly land on an item. */
+@Composable
+private fun SelectionIndicator(
+    selected: Boolean,
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    if (!visible) return
+    if (selected) {
+        Icon(
+            imageVector = Icons.Filled.CheckCircle,
+            contentDescription = stringResource(R.string.vault_selected_item),
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = modifier
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(50))
+                .size(22.dp),
+        )
+    } else {
+        Icon(
+            imageVector = Icons.Outlined.RadioButtonUnchecked,
+            contentDescription = stringResource(R.string.vault_unselected_item),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = modifier
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f), RoundedCornerShape(50))
+                .size(22.dp),
+        )
     }
 }
 

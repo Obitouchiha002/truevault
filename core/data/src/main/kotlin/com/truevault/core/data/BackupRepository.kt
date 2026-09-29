@@ -2,6 +2,7 @@ package com.truevault.core.data
 
 import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.util.Base64
 import com.truevault.core.common.dispatcher.Dispatcher
 import com.truevault.core.common.dispatcher.TrueVaultDispatcher
@@ -242,6 +243,54 @@ class BackupRepository @Inject constructor(
                 send(BackupStep.Failed(VaultError.Unknown("The backup could not be written."), null))
             }
         }
+    }
+
+    /**
+     * Backs up into a folder the user picked once (a Google Drive / cloud folder via the system file
+     * UI), creating a fresh dated archive inside it. This is the "cloud backup" path.
+     *
+     * It only ever *writes a new file*; it never deletes or changes anything already in the folder or
+     * the vault, so a failure here — no network, the folder gone, permission lost — costs nothing.
+     * The archive is the same encrypted format as [export], so the cloud only ever holds ciphertext.
+     */
+    fun backupToFolder(treeUri: Uri, passphrase: CharArray): Flow<BackupStep> = channelFlow {
+        val childUri = try {
+            val dir = DocumentsContract.buildDocumentUriUsingTree(
+                treeUri,
+                DocumentsContract.getTreeDocumentId(treeUri),
+            )
+            DocumentsContract.createDocument(
+                context.contentResolver,
+                dir,
+                "application/octet-stream",
+                cloudBackupFileName(),
+            )
+        } catch (e: Exception) {
+            SecureLog.w(TAG, "Could not create a backup file in the cloud folder (${e.javaClass.simpleName})")
+            null
+        }
+
+        if (childUri == null) {
+            send(
+                BackupStep.Failed(
+                    VaultError.Unknown(
+                        "Couldn't reach your backup folder. Check your internet, then try again.",
+                    ),
+                    null,
+                ),
+            )
+            return@channelFlow
+        }
+
+        // The write itself, the manifest, the re-keying and the progress reporting are all identical
+        // to a local export — reuse it rather than fork a second copy of that logic.
+        export(childUri, passphrase).collect { step -> send(step) }
+    }
+
+    private fun cloudBackupFileName(): String {
+        val stamp = java.text.SimpleDateFormat("yyyy-MM-dd-HHmm", java.util.Locale.US)
+            .format(java.util.Date(timeProvider.currentTimeMillis()))
+        return "truevault-$stamp.tvbackup"
     }
 
     /**

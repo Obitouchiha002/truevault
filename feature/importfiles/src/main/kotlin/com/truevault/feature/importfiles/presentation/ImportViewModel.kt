@@ -77,10 +77,16 @@ class ImportViewModel @Inject constructor(
         }
     }
 
+    /** Sources whose originals the user asked to remove, kept until the system dialog is answered. */
+    private var pendingDeletionTokens: List<String> = emptyList()
+    private var pendingSecuredIds: List<String> = emptyList()
+
     fun onAction(action: ImportAction) {
         when (action) {
             is ImportAction.SourcesPicked -> onSourcesPicked(action.uriTokens, action.fromPhotoPicker)
             ImportAction.PickCancelled -> emit(ImportEffect.Close)
+            is ImportAction.SetRemoveOriginals ->
+                _uiState.update { it.copy(removeOriginals = action.enabled) }
             ImportAction.ReviewConfirmed -> onReviewConfirmed()
             ImportAction.CancelImport -> cancelImport()
             ImportAction.Done -> {
@@ -139,14 +145,12 @@ class ImportViewModel @Inject constructor(
             return
         }
 
-        // One way in, and it never deletes anything.
-        //
-        // There used to be a choice here — Secure Copy or Secure Move — and Move asked Android to
-        // delete the original afterwards. Two names for what a user thinks of as "add this file"
-        // meant a question in the middle of the flow, and the answer they might pick in a hurry was
-        // the one that destroys a file. The app now always copies: your original stays exactly
-        // where it is, and nothing in this flow can remove it.
-        startImport(reviewing.sessionId, ImportMode.SECURE_COPY)
+        // "Hide" should mean the file stops being visible outside the vault, so the default is a
+        // move — remove the original once the encrypted copy is verified. The user can turn that off
+        // on the review screen to keep the original, and either way Android shows its own delete
+        // confirmation, so nothing is ever removed silently or before the vault copy is safe.
+        val mode = if (uiState.value.removeOriginals) ImportMode.SECURE_MOVE else ImportMode.SECURE_COPY
+        startImport(reviewing.sessionId, mode)
     }
 
     private fun startImport(sessionId: String, mode: ImportMode) {
@@ -166,10 +170,45 @@ class ImportViewModel @Inject constructor(
     }
 
     private suspend fun onImportFinished(step: ImportStep.Finished) {
-        // Every import is a copy, so there is never an original awaiting a decision. The whole
-        // deletion conversation — plan it, show the system dialog, re-check the URIs, record what
-        // actually happened — is gone with the feature that needed it.
-        _uiState.update { it.copy(stage = ImportStage.Finished(step.result)) }
+        val result = step.result
+        _uiState.update { it.copy(stage = ImportStage.Finished(result)) }
+
+        // For a move, the encrypted copies are already safe; the originals have not been touched.
+        // Ask the platform how (or whether) they can be removed, and act on its answer only.
+        val tokens = result.pendingDeletionSources.map { it.uriToken }
+        if (tokens.isEmpty()) return
+
+        pendingDeletionTokens = tokens
+        pendingSecuredIds = result.securedItemIds
+
+        when (val request = coordinator.planOriginalDeletion(tokens)) {
+            is OriginalDeletionRequest.NeedsUserConfirmation ->
+                // The screen launches Android's own confirmation; the answer comes back to
+                // onOriginalDeletionResult. Nothing is removed until the user approves it there.
+                emit(ImportEffect.ConfirmOriginalDeletion(request.intentSender))
+
+            is OriginalDeletionRequest.Resolved ->
+                applyDeletionOutcome(request.outcome)
+        }
+    }
+
+    /** Result of Android's delete-confirmation dialog. */
+    fun onOriginalDeletionResult(approved: Boolean) {
+        val tokens = pendingDeletionTokens
+        if (tokens.isEmpty()) return
+        viewModelScope.launch {
+            applyDeletionOutcome(coordinator.confirmDeletion(tokens, approved))
+        }
+    }
+
+    private suspend fun applyDeletionOutcome(outcome: DeletionOutcome) {
+        importEngine.recordDeletionOutcome(pendingSecuredIds, outcome)
+        pendingDeletionTokens = emptyList()
+        pendingSecuredIds = emptyList()
+        _uiState.update { state ->
+            val finished = state.stage as? ImportStage.Finished ?: return@update state
+            state.copy(stage = ImportStage.Finished(finished.result.copy(deletionOutcome = outcome)))
+        }
     }
 
     private fun cancelImport() {

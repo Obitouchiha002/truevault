@@ -29,6 +29,7 @@ import com.truevault.core.storage.VaultFileSystem
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.OutputStream
 import java.security.GeneralSecurityException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -202,6 +203,42 @@ class VaultRepository @Inject constructor(
             SecureLog.w(TAG, "Temporary plaintext could not be deleted immediately")
         }
     }
+
+    /**
+     * Decrypts an item straight into [destination] — the reverse of import, for "save out" / "unhide".
+     *
+     * Unlike [materialiseForViewing], which writes a temporary plaintext into the cache for a viewer
+     * to open, this streams the decrypted bytes directly into the caller's stream — a MediaStore or
+     * SAF output stream the user chose. So the only plaintext copy that ever exists is the one the
+     * user asked to create; nothing is left behind in the app's storage.
+     *
+     * The stream is **not** closed here: the caller owns it and must close it (and, for a gallery
+     * entry, clear `IS_PENDING`) itself. The error mapping mirrors [materialiseForViewing].
+     */
+    suspend fun exportToStream(id: String, destination: OutputStream): Outcome<Unit> =
+        withContext(ioDispatcher) {
+            val entity = vaultItemDao.findById(id)
+                ?: return@withContext VaultError.SourceNotFound.asFailure()
+
+            try {
+                fileSystem.itemFile(id).inputStream().use { input ->
+                    cryptoService.decryptFile(input, destination, entity.wrappedFileKey)
+                }
+                Unit.asSuccess()
+            } catch (e: VaultLockedException) {
+                VaultError.AuthenticationRequired.asFailure()
+            } catch (e: GeneralSecurityException) {
+                markCorrupted(entity.id)
+                VaultError.IntegrityCheckFailed.asFailure()
+            } catch (e: VaultContainerException.UnsupportedVersion) {
+                VaultError.UnsupportedFormatVersion(e.found, e.maxSupported).asFailure()
+            } catch (e: VaultContainerException) {
+                markCorrupted(entity.id)
+                VaultError.IntegrityCheckFailed.asFailure()
+            } catch (e: IOException) {
+                VaultError.DecryptionFailed.asFailure()
+            }
+        }
 
     /**
      * Re-reads a container end to end and records the result.

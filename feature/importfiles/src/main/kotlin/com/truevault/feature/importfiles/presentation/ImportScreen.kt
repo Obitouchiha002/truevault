@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -88,10 +89,20 @@ fun ImportScreen(
         )
     }
 
+    val confirmDeletion = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult(),
+    ) { result ->
+        viewModel.onOriginalDeletionResult(result.resultCode == android.app.Activity.RESULT_OK)
+    }
+
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
             when (effect) {
                 ImportEffect.Close -> onClose()
+                is ImportEffect.ConfirmOriginalDeletion ->
+                    confirmDeletion.launch(
+                        IntentSenderRequest.Builder(effect.intentSender).build(),
+                    )
             }
         }
     }
@@ -154,6 +165,8 @@ internal fun ImportContent(
 
                     is ImportStage.Reviewing -> ReviewStage(
                         review = stage.review,
+                        removeOriginals = uiState.removeOriginals,
+                        onRemoveOriginalsChange = { onAction(ImportAction.SetRemoveOriginals(it)) },
                         onConfirm = { onAction(ImportAction.ReviewConfirmed) },
                         onCancel = onClose,
                     )
@@ -232,7 +245,13 @@ private fun SourceStage(onPickPhotos: () -> Unit, onPickDocuments: () -> Unit) {
 }
 
 @Composable
-private fun ReviewStage(review: ImportReview, onConfirm: () -> Unit, onCancel: () -> Unit) {
+private fun ReviewStage(
+    review: ImportReview,
+    removeOriginals: Boolean,
+    onRemoveOriginalsChange: (Boolean) -> Unit,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+) {
     TvSectionHeader(title = stringResource(R.string.import_review_title))
 
     TvCard {
@@ -285,6 +304,35 @@ private fun ReviewStage(review: ImportReview, onConfirm: () -> Unit, onCancel: (
             ),
             tone = TvBannerTone.Error,
         )
+    }
+
+    TvCard {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = TvSpacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.import_remove_originals_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = stringResource(
+                        if (removeOriginals) {
+                            R.string.import_remove_originals_on
+                        } else {
+                            R.string.import_remove_originals_off
+                        },
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(checked = removeOriginals, onCheckedChange = onRemoveOriginalsChange)
+        }
     }
 
     TvPrimaryButton(
@@ -362,17 +410,34 @@ private fun FinishedStage(stage: ImportStage.Finished, onDone: () -> Unit) {
 
         SummaryRow(
             label = stringResource(R.string.import_result_original),
-            value = stringResource(R.string.import_result_original_kept),
+            value = stringResource(result.deletionOutcome.labelRes(result.mode)),
         )
     }
 
-    // One sentence, and it is always true: the vault holds an encrypted copy and the file you
-    // picked is exactly where you left it. Nothing in this flow can remove it, so there is no
-    // outcome to report and no case where this line could be wrong.
-    TvBanner(
-        text = stringResource(R.string.import_copy_original_remains),
-        tone = TvBannerTone.Info,
-    )
+    // Tell the truth about the original: removed only when the platform confirmed it, kept in every
+    // other case (copy chosen, dialog declined, or a provider that could not delete).
+    when {
+        result.mode == ImportMode.SECURE_COPY -> TvBanner(
+            text = stringResource(R.string.import_copy_original_remains),
+            tone = TvBannerTone.Info,
+        )
+
+        result.deletionOutcome == DeletionOutcome.DELETED ||
+            result.deletionOutcome == DeletionOutcome.ALREADY_MISSING -> TvBanner(
+            text = stringResource(R.string.import_move_original_removed),
+            tone = TvBannerTone.Success,
+        )
+
+        result.deletionOutcome == DeletionOutcome.NOT_ATTEMPTED -> TvBanner(
+            text = stringResource(R.string.import_move_original_pending),
+            tone = TvBannerTone.Info,
+        )
+
+        else -> TvBanner(
+            text = stringResource(R.string.import_move_original_kept),
+            tone = TvBannerTone.Warning,
+        )
+    }
 
     if (result.failedCount > 0) {
         TvBanner(

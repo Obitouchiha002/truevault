@@ -66,4 +66,12 @@
     <string name="import_budget_full_body">You set a %1$s limit for the vault. Nothing was imported and nothing was removed — raise the limit in Settings to add more.</string>
     <string name="import_result_original_kept">Still where you left it</string>
     <string name="import_copy_original_remains">Your original file has not been touched. Deleting it from your gallery later will not affect the encrypted copy in your vault.</string>
+
+    <!-- Move vs copy -->
+    <string name="import_remove_originals_title">Remove originals from gallery</string>
+    <string name="import_remove_originals_on">The originals are removed after they are safely in the vault, so they stop showing in your gallery. Android asks you to confirm.</string>
+    <string name="import_remove_originals_off">The originals stay in your gallery. The vault keeps its own encrypted copy.</string>
+    <string name="import_move_original_removed">Done — the originals were removed from your gallery. The encrypted copies are safe in your vault.</string>
+    <string name="import_move_original_pending">Waiting for you to confirm removing the originals. Your files are already safe in the vault.</string>
+    <string name="import_move_original_kept">The originals are still in your gallery — removal was declined or not possible. The encrypted copies are safe in your vault, so you can delete them yourself any time.</string>
 </resources>

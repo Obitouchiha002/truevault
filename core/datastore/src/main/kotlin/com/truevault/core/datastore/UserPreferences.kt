@@ -27,6 +27,10 @@ data class UserPreferences(
     val vaultSortOrder: VaultSortOrder = VaultSortOrder.DATE_ADDED_DESC,
     val recoveryKeyConfigured: Boolean = false,
     val lastBackupAtMillis: Long? = null,
+    /** The SAF folder the user chose for cloud backups (Google Drive, etc.), or null if not set up.
+     *  This is a destination pointer, not a secret — the archive written there is itself encrypted,
+     *  and the persistable write grant is held by the system, not stored here. */
+    val cloudBackupFolderUri: String? = null,
     /** How much of the phone the vault may occupy. A ceiling on new imports, never on what is
      *  already stored — see [com.truevault.core.model.StorageBudget]. */
     val storageBudget: StorageBudget = StorageBudget.DEFAULT,

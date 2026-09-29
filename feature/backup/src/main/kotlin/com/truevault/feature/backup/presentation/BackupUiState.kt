@@ -36,10 +36,14 @@ data class BackupUiState(
     val recoveryKeyConfigured: Boolean = false,
     val lastBackupAtMillis: Long? = null,
     val vaultItemCount: Int = 0,
+    /** The cloud folder chosen for backups, or null when none is set up yet. */
+    val cloudFolderUri: String? = null,
     val error: VaultError? = null,
     val errorDetail: String? = null,
     val isBusy: Boolean = false,
-)
+) {
+    val cloudBackupConnected: Boolean get() = cloudFolderUri != null
+}
 
 sealed interface BackupAction {
     data object GenerateRecoveryKey : BackupAction
@@ -70,4 +74,7 @@ sealed interface BackupEffect {
     /** Ask the UI to open the system file creator with this suggested name. */
     data class CreateArchive(val suggestedName: String) : BackupEffect
     data object OpenArchive : BackupEffect
+
+    /** Ask the UI to open the folder picker so the user can choose a cloud backup folder. */
+    data object PickCloudFolder : BackupEffect
 }

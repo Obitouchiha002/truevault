@@ -17,6 +17,8 @@ data class VaultUiState(
     val selectedIds: Set<String> = emptySet(),
     val showSortSheet: Boolean = false,
     val pendingDeleteConfirmation: Boolean = false,
+    val pendingSaveConfirmation: Boolean = false,
+    val isExporting: Boolean = false,
 ) {
     val isEmpty: Boolean get() = !isLoading && totalItems == 0
     val selectionCount: Int get() = selectedIds.size
@@ -36,6 +38,9 @@ sealed interface VaultAction {
     data object DeleteSelectedRequested : VaultAction
     data object DeleteSelectedConfirmed : VaultAction
     data object DeleteSelectedDismissed : VaultAction
+    data object SaveSelectedRequested : VaultAction
+    data object SaveSelectedDismissed : VaultAction
+    data class SaveSelectedConfirmed(val remove: Boolean) : VaultAction
     data object AddFilesClicked : VaultAction
 }
 
@@ -43,4 +48,10 @@ sealed interface VaultEffect {
     data object NavigateToImport : VaultEffect
     data class OpenItem(val id: String) : VaultEffect
     data class ItemsDeleted(val count: Int) : VaultEffect
+
+    /** The export needs a destination folder for non-gallery files: open the folder picker. */
+    data object PickExportFolder : VaultEffect
+
+    /** A batch save/unhide finished. */
+    data class Exported(val savedCount: Int, val failedCount: Int, val removed: Boolean) : VaultEffect
 }

@@ -32,6 +32,15 @@
     <string name="backup_exporting">Writing the backup</string>
     <string name="backup_export_done_title">Backup created</string>
 
+    <string name="backup_cloud_title">Cloud backup</string>
+    <string name="backup_cloud_subtitle">Keep an encrypted copy in your own Google Drive (or any cloud) so you never lose your files if this phone is lost.</string>
+    <string name="backup_cloud_connected">Connected. Backups are saved to your chosen folder — only the encrypted archive is uploaded, never your files or passphrase.</string>
+    <string name="backup_cloud_not_connected">Not set up yet. Choose a folder in your Google Drive (or any cloud), then back up with one tap.</string>
+    <string name="backup_cloud_connect">Choose a cloud folder</string>
+    <string name="backup_cloud_change_folder">Change folder</string>
+    <string name="backup_cloud_action">Back up to cloud now</string>
+    <string name="backup_cloud_note">Uses the same passphrase above. Cloud backup needs internet; everything else in TrueVault works fully offline.</string>
+
     <string name="backup_restore_title">Restore</string>
     <string name="backup_restore_subtitle">Bring an encrypted backup into this vault.</string>
     <string name="backup_restore_action">Restore from a backup</string>

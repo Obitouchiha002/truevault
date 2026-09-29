@@ -1,7 +1,10 @@
 package com.truevault.feature.vault.presentation
 
 import android.content.Intent
+import android.widget.Toast
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -22,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -40,6 +45,8 @@ import com.truevault.core.designsystem.component.TvBannerTone
 import com.truevault.core.designsystem.component.TvCard
 import com.truevault.core.designsystem.component.TvEmptyState
 import com.truevault.core.designsystem.component.TvLoadingState
+import com.truevault.core.designsystem.component.TvPrimaryButton
+import com.truevault.core.designsystem.component.TvSecondaryButton
 import com.truevault.core.designsystem.component.TvStatusPill
 import com.truevault.core.designsystem.component.TvTopAppBar
 import com.truevault.core.designsystem.theme.TvSpacing
@@ -67,10 +74,74 @@ fun VaultItemViewerScreen(
     val context = LocalContext.current
     val shareChooserTitle = stringResource(R.string.viewer_share_chooser)
     var showShareWarning by rememberSaveable { mutableStateOf(false) }
+    var showSaveDialog by rememberSaveable { mutableStateOf(false) }
+
+    val savedMessage = stringResource(R.string.viewer_save_done)
+    val unhiddenMessage = stringResource(R.string.viewer_unhide_done)
+    val failedMessage = stringResource(R.string.viewer_save_failed)
+
+    val createDocument = rememberLauncherForActivityResult(
+        // The type is generic on purpose: the suggested file name carries the real extension, and
+        // the stored bytes are correct whatever app the picker defaults to.
+        ActivityResultContracts.CreateDocument("application/octet-stream"),
+    ) { uri -> viewModel.onSaveLocationChosen(uri) }
 
     DisposableEffect(vaultItemId) {
         viewModel.open(vaultItemId)
         onDispose { viewModel.close() }
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                is ViewerEffect.PickSaveLocation -> createDocument.launch(effect.suggestedName)
+                ViewerEffect.Saved ->
+                    Toast.makeText(context, savedMessage, Toast.LENGTH_SHORT).show()
+
+                ViewerEffect.Unhidden -> {
+                    Toast.makeText(context, unhiddenMessage, Toast.LENGTH_SHORT).show()
+                    onNavigateBack()
+                }
+
+                ViewerEffect.ExportFailed ->
+                    Toast.makeText(context, failedMessage, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    if (showSaveDialog) {
+        AlertDialog(
+            onDismissRequest = { showSaveDialog = false },
+            title = { Text(stringResource(R.string.viewer_save_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(TvSpacing.standard)) {
+                    Text(stringResource(R.string.viewer_save_body))
+                    TvPrimaryButton(
+                        text = stringResource(R.string.viewer_save_copy),
+                        onClick = {
+                            showSaveDialog = false
+                            viewModel.save(remove = false)
+                        },
+                        icon = Icons.Filled.SaveAlt,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    TvSecondaryButton(
+                        text = stringResource(R.string.viewer_unhide_remove),
+                        onClick = {
+                            showSaveDialog = false
+                            viewModel.save(remove = true)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showSaveDialog = false }) {
+                    Text(stringResource(R.string.vault_delete_cancel))
+                }
+            },
+        )
     }
 
     if (showShareWarning) {
@@ -103,9 +174,19 @@ fun VaultItemViewerScreen(
             title = uiState.item?.displayName ?: stringResource(R.string.viewer_title),
             onNavigateBack = onNavigateBack,
             actions = {
+                val actionsEnabled = uiState.item != null && uiState.error == null && !uiState.isExporting
+                IconButton(
+                    onClick = { showSaveDialog = true },
+                    enabled = actionsEnabled,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.SaveAlt,
+                        contentDescription = stringResource(R.string.viewer_save),
+                    )
+                }
                 IconButton(
                     onClick = { showShareWarning = true },
-                    enabled = uiState.item != null && uiState.error == null,
+                    enabled = actionsEnabled,
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Share,

@@ -20,10 +20,29 @@
 
     <string name="vault_clear_selection">Clear selection</string>
     <string name="vault_select_all">Select all</string>
+    <string name="vault_select_long_press">Select</string>
+    <string name="vault_selected_item">Selected</string>
+    <string name="vault_unselected_item">Not selected</string>
     <string name="vault_delete_selected">Delete selected</string>
     <string name="vault_delete_title">Delete from vault?</string>
     <string name="vault_delete_confirm">Delete</string>
     <string name="vault_delete_cancel">Cancel</string>
+    <string name="vault_save_selected">Save or unhide selected</string>
+    <string name="vault_save_title">Save out of the vault?</string>
+    <string name="vault_export_failed">Nothing could be saved. The files are still in your vault.</string>
+    <string name="vault_export_partial">Saved %1$d, could not save %2$d. Nothing was removed from the vault.</string>
+    <plurals name="vault_save_body">
+        <item quantity="one">This writes an unprotected copy of %1$d file back to your device. Photos and videos go to your gallery; other files are saved where you choose. Anyone with the phone can then open it.</item>
+        <item quantity="other">This writes unprotected copies of %1$d files back to your device. Photos and videos go to your gallery; other files are saved where you choose. Anyone with the phone can then open them.</item>
+    </plurals>
+    <plurals name="vault_export_saved">
+        <item quantity="one">Saved %1$d file to your device. It is still in your vault too.</item>
+        <item quantity="other">Saved %1$d files to your device. They are still in your vault too.</item>
+    </plurals>
+    <plurals name="vault_export_unhidden">
+        <item quantity="one">Unhid %1$d file. It is back on your device and moved to the vault trash.</item>
+        <item quantity="other">Unhid %1$d files. They are back on your device and moved to the vault trash.</item>
+    </plurals>
 
     <string name="viewer_title">Secured file</string>
     <string name="viewer_unsupported">This file is secured, but TrueVault cannot preview this format.</string>
@@ -51,6 +70,15 @@
     <string name="viewer_share_continue">Share anyway</string>
     <string name="viewer_share_warning_title">TrueVault cannot follow this file</string>
     <string name="viewer_share_warning_body">Once another app receives this file, TrueVault cannot control its copies. There is no expiry and no way to take it back.</string>
+
+    <string name="viewer_save">Save to device</string>
+    <string name="viewer_save_title">Save out of the vault?</string>
+    <string name="viewer_save_body">The copy TrueVault writes back to your device is no longer protected — anyone with the phone can open it. A photo or video goes to your gallery; anything else is saved where you choose.</string>
+    <string name="viewer_save_copy">Save a copy</string>
+    <string name="viewer_unhide_remove">Unhide &amp; remove</string>
+    <string name="viewer_save_done">Saved to your device. Still in your vault too.</string>
+    <string name="viewer_unhide_done">Unhidden. Moved to the vault trash.</string>
+    <string name="viewer_save_failed">Could not save this file. It is still in your vault.</string>
     <string name="viewer_pdf_page">Page %1$d</string>
     <plurals name="viewer_pdf_pages">
         <item quantity="one">%1$d page</item>

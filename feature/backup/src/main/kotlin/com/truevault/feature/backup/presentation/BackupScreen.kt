@@ -1,5 +1,6 @@
 package com.truevault.feature.backup.presentation
 
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +14,7 @@ import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Save
@@ -24,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -56,6 +59,7 @@ fun BackupScreen(
     viewModel: BackupViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val exportPassphrase = rememberTextFieldState()
     val restorePassphrase = rememberTextFieldState()
     val confirmEntry = rememberTextFieldState()
@@ -78,11 +82,27 @@ fun BackupScreen(
         viewModel.onAction(BackupAction.RestoreSourceChosen(uri?.toString()))
     }
 
+    val pickCloudFolder = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { uri ->
+        if (uri != null) {
+            // Keep write access to this folder across reboots, so later backups need no re-picking.
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                )
+            }
+        }
+        viewModel.onCloudFolderChosen(uri?.toString())
+    }
+
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
             when (effect) {
                 is BackupEffect.CreateArchive -> createArchive.launch(effect.suggestedName)
                 BackupEffect.OpenArchive -> openArchive.launch(arrayOf("*/*"))
+                BackupEffect.PickCloudFolder -> pickCloudFolder.launch(null)
             }
         }
     }
@@ -118,6 +138,11 @@ fun BackupScreen(
                     onGenerateRecoveryKey = { viewModel.onAction(BackupAction.GenerateRecoveryKey) },
                     onExport = viewModel::requestExport,
                     onRestore = viewModel::requestRestore,
+                    onConnectCloud = viewModel::requestConnectCloudFolder,
+                    onBackupToCloud = {
+                        viewModel.backupToCloud(exportPassphrase.text.toString().toCharArray())
+                        exportPassphrase.clearText()
+                    },
                 )
 
                 is BackupStage.RecoveryKeyShown -> RecoveryKeyShown(
@@ -223,6 +248,8 @@ private fun Overview(
     onGenerateRecoveryKey: () -> Unit,
     onExport: () -> Unit,
     onRestore: () -> Unit,
+    onConnectCloud: () -> Unit = {},
+    onBackupToCloud: () -> Unit = {},
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(TvSpacing.section)) {
         Column {
@@ -285,6 +312,61 @@ private fun Overview(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = TvSpacing.small),
+            )
+        }
+
+        Column {
+            TvSectionHeader(
+                title = stringResource(R.string.backup_cloud_title),
+                subtitle = stringResource(R.string.backup_cloud_subtitle),
+            )
+
+            TvCard {
+                Text(
+                    text = stringResource(
+                        if (uiState.cloudBackupConnected) {
+                            R.string.backup_cloud_connected
+                        } else {
+                            R.string.backup_cloud_not_connected
+                        },
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+
+            TvSecondaryButton(
+                text = stringResource(
+                    if (uiState.cloudBackupConnected) {
+                        R.string.backup_cloud_change_folder
+                    } else {
+                        R.string.backup_cloud_connect
+                    },
+                ),
+                onClick = onConnectCloud,
+                icon = Icons.Filled.CloudUpload,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TvSpacing.small),
+            )
+
+            TvPrimaryButton(
+                text = stringResource(R.string.backup_cloud_action),
+                onClick = onBackupToCloud,
+                icon = Icons.Filled.CloudUpload,
+                enabled = uiState.cloudBackupConnected &&
+                    uiState.vaultItemCount > 0 &&
+                    exportPassphrase.text.length >= 8,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TvSpacing.small),
+            )
+
+            Text(
+                text = stringResource(R.string.backup_cloud_note),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = TvSpacing.small),
             )
         }
 
